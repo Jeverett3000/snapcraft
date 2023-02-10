@@ -36,7 +36,7 @@ class PluginImpl(PluginV2):
         return {"gcc"}
 
     def get_build_environment(self) -> Dict[str, str]:
-        return dict()
+        return {}
 
     def get_build_commands(self) -> List[str]:
         return [

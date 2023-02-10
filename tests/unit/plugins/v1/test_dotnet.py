@@ -123,9 +123,7 @@ class DotNetProjectBaseTest(PluginsV1BaseTestCase):
         self.addCleanup(patcher.stop)
 
         def side_effect(cmd, *args, **kwargs):
-            if cmd[0].endswith("dotnet"):
-                pass
-            else:
+            if not cmd[0].endswith("dotnet"):
                 original_check_call(cmd, *args, **kwargs)
 
         self.mock_check_call.side_effect = side_effect
@@ -169,7 +167,7 @@ class DotNetProjectTest(DotNetProjectBaseTest):
         plugin = dotnet.DotNetPlugin("test-part", self.options, self.project)
         self.assertThat(
             plugin.env(plugin.installdir),
-            Contains("PATH={}:$PATH".format(plugin._dotnet_sdk_dir)),
+            Contains(f"PATH={plugin._dotnet_sdk_dir}:$PATH"),
         )
         # Be sure that the PATH doesn't leak into the final snap
         self.assertThat(plugin.env(self.project.stage_dir), Equals([]))

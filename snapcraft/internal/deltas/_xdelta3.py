@@ -44,4 +44,4 @@ class XDelta3Generator(BaseDeltasGenerator):
         xdelta_output = subprocess.check_output(
             [self.delta_tool_path, "printhdr", delta_file], universal_newlines=True
         )
-        logger.debug("xdelta3 delta diff generation:\n{}".format(xdelta_output))
+        logger.debug(f"xdelta3 delta diff generation:\n{xdelta_output}")

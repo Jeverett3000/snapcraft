@@ -48,8 +48,7 @@ class MesonPluginPropertiesTest(unit.TestCase):
         self.assertThat(
             meson_parameters["type"],
             Equals("array"),
-            'Expected "meson-parameters" "type" to be "array", '
-            'but it was "{}"'.format(meson_parameters["type"]),
+            f'Expected "meson-parameters" "type" to be "array", but it was "{meson_parameters["type"]}"',
         )
 
         self.assertTrue(
@@ -59,8 +58,7 @@ class MesonPluginPropertiesTest(unit.TestCase):
         self.assertThat(
             meson_parameters["minitems"],
             Equals(1),
-            'Expected "meson-parameters" "minitems" to be 1, but '
-            'it was "{}"'.format(meson_parameters["minitems"]),
+            f'Expected "meson-parameters" "minitems" to be 1, but it was "{meson_parameters["minitems"]}"',
         )
 
         self.assertTrue(

@@ -56,10 +56,9 @@ def _is_build_pending(build: Dict[str, Any]) -> bool:
     # - "Uploading build"
     # - "Cancelling build"
     # - "Cancelled build"
-    if _is_build_status_success(build) or _is_build_status_failure(build):
-        return False
-
-    return True
+    return not _is_build_status_success(
+        build
+    ) and not _is_build_status_failure(build)
 
 
 def _is_build_status_success(build: Dict[str, Any]) -> bool:
@@ -127,7 +126,7 @@ class LaunchpadClient:
         self._lp_processors: Optional[Sequence[str]] = None
 
         if architectures:
-            self._lp_processors = ["/+processors/" + a for a in architectures]
+            self._lp_processors = [f"/+processors/{a}" for a in architectures]
 
         self._architectures = architectures
 
@@ -173,10 +172,7 @@ class LaunchpadClient:
 
     def _get_builds(self, snap: Entry) -> List[Dict[str, Any]]:
         bc = self._get_builds_collection_entry(snap)
-        if bc is None:
-            return []
-
-        return bc.entries
+        return [] if bc is None else bc.entries
 
     def _get_snap(self) -> Optional[Entry]:
         try:
@@ -224,9 +220,7 @@ class LaunchpadClient:
             # Shouldn't end up here.
             self.cleanup()
             raise errors.RemoteBuilderError(
-                builder_error="Unknown builder error - reported status: {}".format(
-                    build_request.status
-                )
+                builder_error=f"Unknown builder error - reported status: {build_request.status}"
             )
         elif not build_request.builds.entries:
             # Shouldn't end up here either.
@@ -241,7 +235,7 @@ class LaunchpadClient:
     def login(self) -> Launchpad:
         try:
             return Launchpad.login_with(
-                "snapcraft remote-build {}".format(snapcraft.__version__),
+                f"snapcraft remote-build {snapcraft.__version__}",
                 "production",
                 self._cache_dir,
                 credentials_file=self._credentials,
@@ -290,7 +284,7 @@ class LaunchpadClient:
         if force:
             self._delete_snap()
 
-        optional_kwargs = dict()
+        optional_kwargs = {}
         if self._lp_processors:
             optional_kwargs["processors"] = self._lp_processors
 
@@ -364,17 +358,14 @@ class LaunchpadClient:
         """Get status of builds."""
         snap = self._get_snap()
         builds = self._get_builds(snap)
-        build_status: Dict[str, str] = dict()
-        for build in builds:
-            state = build["buildstate"]
-            arch = build["arch_tag"]
-            build_status[arch] = state
-
+        build_status: Dict[str, str] = {
+            build["arch_tag"]: build["buildstate"] for build in builds
+        }
         return build_status
 
     def _get_logfile_name(self, arch: str) -> str:
         n = 0
-        base_name = "{}_{}".format(self._snap_name, arch)
+        base_name = f"{self._snap_name}_{arch}"
         log_name = f"{base_name}.txt"
 
         while os.path.isfile(log_name):

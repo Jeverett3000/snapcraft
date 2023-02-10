@@ -70,7 +70,7 @@ class GoPlugin(PluginV2):
 
     def get_build_commands(self) -> List[str]:
         if self.options.go_buildtags:
-            tags = "-tags={}".format(",".join(self.options.go_buildtags))
+            tags = f'-tags={",".join(self.options.go_buildtags)}'
         else:
             tags = ""
 

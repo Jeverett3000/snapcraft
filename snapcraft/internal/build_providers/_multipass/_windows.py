@@ -117,8 +117,7 @@ def _requests_exception_hint(e: requests.RequestException) -> str:
     # Use the __doc__ description to give the user a hint. It seems to be a
     # a decent option over trying to enumerate all of possible types.
     if e.__doc__:
-        split_lines = e.__doc__.splitlines()
-        if split_lines:
+        if split_lines := e.__doc__.splitlines():
             return e.__doc__.splitlines()[0].strip()
 
     # Should never get here.
@@ -144,12 +143,10 @@ def _fetch_installer_url() -> str:
         data = resp.json()
     except simplejson.scanner.JSONDecodeError:
         raise ProviderMultipassDownloadFailed(
-            "failed to fetch valid release data from {}".format(
-                _MULTIPASS_RELEASES_API_URL
-            )
+            f"failed to fetch valid release data from {_MULTIPASS_RELEASES_API_URL}"
         )
 
-    for asset in data.get("assets", list()):
+    for asset in data.get("assets", []):
         # Find matching name.
         if asset.get("name") != _MULTIPASS_DL_NAME:
             continue
@@ -170,7 +167,7 @@ def _download_multipass(dl_dir: str, echoer) -> str:
     dl_basename = os.path.basename(dl_url)
     dl_path = os.path.join(dl_dir, dl_basename)
 
-    echoer.info("Downloading Multipass installer...\n{} -> {}".format(dl_url, dl_path))
+    echoer.info(f"Downloading Multipass installer...\n{dl_url} -> {dl_path}")
 
     try:
         request = requests.get(dl_url, stream=True, allow_redirects=True)
@@ -182,9 +179,7 @@ def _download_multipass(dl_dir: str, echoer) -> str:
     digest = calculate_sha3_384(dl_path)
     if digest != _MULTIPASS_DL_SHA3_384:
         raise ProviderMultipassDownloadFailed(
-            "download failed verification (expected={} but found={})".format(
-                _MULTIPASS_DL_SHA3_384, digest
-            )
+            f"download failed verification (expected={_MULTIPASS_DL_SHA3_384} but found={digest})"
         )
 
     echoer.info("Verified installer successfully...")

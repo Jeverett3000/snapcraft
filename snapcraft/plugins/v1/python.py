@@ -150,7 +150,7 @@ class PythonPlugin(PluginV1):
         stage_packages = [python_base]
 
         if self.project._get_build_base() == "core18" and python_base == "python3":
-            stage_packages.append("{}-distutils".format(python_base))
+            stage_packages.append(f"{python_base}-distutils")
 
         return stage_packages
 
@@ -194,7 +194,7 @@ class PythonPlugin(PluginV1):
                 python_version=self.options.python_version
             )
 
-        self._python_major_version = match.group("major_version")
+        self._python_major_version = match["major_version"]
         self.__pip = None
 
     def _setup_base_tools(self):
@@ -241,18 +241,18 @@ class PythonPlugin(PluginV1):
 
         installed_pipy_packages = self._pip.list()
 
-        requirements = self._get_list_of_packages_from_property(
+        if requirements := self._get_list_of_packages_from_property(
             self.options.requirements
-        )
-        if requirements:
+        ):
             self._manifest["requirements-contents"] = requirements
 
-        constraints = self._get_list_of_packages_from_property(self.options.constraints)
-        if constraints:
+        if constraints := self._get_list_of_packages_from_property(
+            self.options.constraints
+        ):
             self._manifest["constraints-contents"] = constraints
 
         self._manifest["python-packages"] = [
-            "{}={}".format(name, installed_pipy_packages[name])
+            f"{name}={installed_pipy_packages[name]}"
             for name in installed_pipy_packages
         ]
 
@@ -278,16 +278,15 @@ class PythonPlugin(PluginV1):
         return None
 
     def _get_setup_py_dir(self):
-        setup_py_dir = None
-        setup_py_path = self._find_file(filename="setup.py")
-        if setup_py_path:
-            setup_py_dir = os.path.dirname(setup_py_path)
-
-        return setup_py_dir
+        return (
+            os.path.dirname(setup_py_path)
+            if (setup_py_path := self._find_file(filename="setup.py"))
+            else None
+        )
 
     def _get_list_of_packages_from_property(self, property_list: Set[str]) -> List[str]:
         """Return a sorted list of all packages found in property."""
-        package_list = list()  # type: List[str]
+        package_list = []
         for entry in property_list:
             contents = self._get_file_contents(entry)
             package_list.extend(contents.splitlines())
@@ -301,14 +300,13 @@ class PythonPlugin(PluginV1):
         for entry in property_list:
             if isurl(entry):
                 normalized.add(entry)
-            else:
-                entry_file = self._find_file(filename=entry)
-                if not entry_file:
-                    raise SnapcraftPluginPythonFileMissing(
-                        plugin_property=property_name, plugin_property_value=entry
-                    )
+            elif entry_file := self._find_file(filename=entry):
                 normalized.add(entry_file)
 
+            else:
+                raise SnapcraftPluginPythonFileMissing(
+                    plugin_property=property_name, plugin_property_value=entry
+                )
         return normalized
 
     def _install_wheels(self, wheels):
@@ -350,17 +348,13 @@ class PythonPlugin(PluginV1):
             "requirements", self.options.requirements
         )
 
-        # setup.py is handled in a different step as some projects may
-        # need to satisfy dependencies for setup.py to be parsed.
-        wheels = self._pip.wheel(
+        if wheels := self._pip.wheel(
             self.options.python_packages,
             setup_py_dir=None,
             constraints=constraints,
             requirements=requirements,
             process_dependency_links=self.options.process_dependency_links,
-        )
-
-        if wheels:
+        ):
             self._install_wheels(wheels)
 
         # Return early if there is no setup_py_dir to process.
@@ -431,10 +425,9 @@ class PythonPlugin(PluginV1):
     def _get_file_contents(self, path):
         if isurl(path):
             return requests.get(path).text
-        else:
-            file_path = os.path.join(self.sourcedir, path)
-            with open(file_path) as _file:
-                return _file.read()
+        file_path = os.path.join(self.sourcedir, path)
+        with open(file_path) as _file:
+            return _file.read()
 
     def get_manifest(self):
         return self._manifest
@@ -469,9 +462,8 @@ def simple_env_bzr(bin_dir):
     """
     os.makedirs(bin_dir, exist_ok=True)
     bzr_bin = os.path.join(bin_dir, "bzr")
-    real_bzr_bin = which("bzr")
-    if real_bzr_bin:
-        exec_line = 'exec {} "$@"'.format(real_bzr_bin)
+    if real_bzr_bin := which("bzr"):
+        exec_line = f'exec {real_bzr_bin} "$@"'
     else:
         exec_line = "echo bzr needs to be in PATH; exit 1"
     with open(bzr_bin, "w") as f:

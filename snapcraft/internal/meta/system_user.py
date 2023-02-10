@@ -36,7 +36,7 @@ class SystemUser:
 
     @classmethod
     def from_dict(cls, *, user_name: str, user_dict: Dict[str, str]) -> "SystemUser":
-        raw_scope = user_dict.get("scope", None)
+        raw_scope = user_dict.get("scope")
         if raw_scope is None:
             raise errors.SystemUsernamesValidationError(
                 name=user_name, message="'scope' is undefined"

@@ -68,9 +68,7 @@ def _check_output(cmd: List[str], *, extra_env: Dict[str, str]) -> str:
     debug_cmd += cmd
 
     logger.debug("executing: %s", " ".join(debug_cmd))
-    output = subprocess.check_output(cmd, env=env).decode()
-
-    return output
+    return subprocess.check_output(cmd, env=env).decode()
 
 
 def _parse_ldd_output(output: str) -> Dict[str, str]:
@@ -101,10 +99,10 @@ def _parse_ldd_output(output: str) -> Dict[str, str]:
         # As Ubuntu 16.04's ldd provides an empty string for the found
         # path (in group 2) on linux-vdso, check for this and ignore it.
         # See example output above for reference.
-        if not match or match.group(2) == "":
+        if not match or match[2] == "":
             continue
 
-        soname, soname_path = _ldd_resolve(match.group(1), match.group(2))
+        soname, soname_path = _ldd_resolve(match[1], match[2])
         libraries[soname] = soname_path
 
     return libraries
@@ -215,15 +213,15 @@ class SonameCache:
 
     def __init__(self):
         """Initialize a cache for sonames"""
-        self._soname_paths = dict()  # type: SonameCacheDict
+        self._soname_paths = {}
 
     def reset_except_root(self, root):
         """Reset the cache values that aren't contained within root."""
-        new_soname_paths = dict()  # type: SonameCacheDict
-        for key, value in self._soname_paths.items():
-            if value is not None and value.startswith(root):
-                new_soname_paths[key] = value
-
+        new_soname_paths = {
+            key: value
+            for key, value in self._soname_paths.items()
+            if value is not None and value.startswith(root)
+        }
         self._soname_paths = new_soname_paths
 
 
@@ -251,11 +249,9 @@ class Library:
         # Resolve path, if possible.
         self.path = self._crawl_for_path()
 
-        if core_base_path is not None and self.path.startswith(core_base_path):
-            self.in_base_snap = True
-        else:
-            self.in_base_snap = False
-
+        self.in_base_snap = bool(
+            core_base_path is not None and self.path.startswith(core_base_path)
+        )
         logger.debug(
             "{soname} with original path {original_path} found on {path} in base: {in_base}".format(
                 soname=soname,
@@ -347,7 +343,7 @@ class ElfFile:
         self.interp: str = ""
         self.soname: str = ""
         self.versions: Set[str] = set()
-        self.needed: Dict[str, NeededLibrary] = dict()
+        self.needed: Dict[str, NeededLibrary] = {}
         self.execstack_set: bool = False
         self.is_dynamic: bool = True
         self.build_id: str = ""
@@ -502,7 +498,7 @@ class ElfFile:
         if core_base_path is not None:
             search_paths.append(core_base_path)
 
-        ld_library_paths: List[str] = list()
+        ld_library_paths: List[str] = []
         for path in search_paths:
             ld_library_paths.extend(common.get_library_paths(path, arch_triplet))
 
@@ -524,11 +520,11 @@ class ElfFile:
                 )
             )
 
-        # Return the set of dependency paths, minus those found in the base.
-        dependencies: Set[str] = set()
-        for library in self.dependencies:
-            if not library.in_base_snap:
-                dependencies.add(library.path)
+        dependencies: Set[str] = {
+            library.path
+            for library in self.dependencies
+            if not library.in_base_snap
+        }
         return dependencies
 
 
@@ -550,11 +546,9 @@ class Patcher:
         self._dynamic_linker = dynamic_linker
         self._root_path = root_path
 
-        if preferred_patchelf_path:
-            self._patchelf_cmd = preferred_patchelf_path
-        else:
-            self._patchelf_cmd = file_utils.get_snap_tool_path("patchelf")
-
+        self._patchelf_cmd = (
+            preferred_patchelf_path or file_utils.get_snap_tool_path("patchelf")
+        )
         self._strip_cmd = file_utils.get_snap_tool_path("strip")
 
     def patch(self, *, elf_file: ElfFile) -> None:
@@ -623,7 +617,7 @@ class Patcher:
         return output.decode().strip().split(":")
 
     def _get_rpath(self, elf_file) -> str:
-        origin_rpaths = list()  # type: List[str]
+        origin_rpaths = []
         base_rpaths = set()  # type: Set[str]
         existing_rpaths = self._get_existing_rpath(elf_file.path)
 
@@ -652,8 +646,8 @@ class Patcher:
         core_base_rpaths = ":".join(sorted(base_rpaths))
 
         if origin_paths and core_base_rpaths:
-            return "{}:{}".format(origin_paths, core_base_rpaths)
-        elif origin_paths and not core_base_rpaths:
+            return f"{origin_paths}:{core_base_rpaths}"
+        elif origin_paths:
             return origin_paths
         else:
             return core_base_rpaths
@@ -672,7 +666,7 @@ def determine_ld_library_path(root: str) -> List[str]:
               can be found within root.
     """
     # If more ld.so.conf files need to be supported, add them here.
-    ld_config_globs = {"{}/usr/lib/*/mesa*/ld.so.conf".format(root)}
+    ld_config_globs = {f"{root}/usr/lib/*/mesa*/ld.so.conf"}
 
     ld_library_paths = []
     for this_glob in ld_config_globs:
@@ -691,10 +685,7 @@ def _extract_ld_library_paths(ld_conf_file: str) -> List[str]:
     paths = []
     with open(ld_conf_file, "r") as f:
         for line in f:
-            # Remove comments from line
-            line = comments.sub("", line).strip()
-
-            if line:
+            if line := comments.sub("", line).strip():
                 paths.extend(path_delimiters.split(line))
 
     return paths
@@ -749,8 +740,7 @@ def _get_dynamic_linker(library_list: List[str]) -> str:
     regex = re.compile(r"(?P<dynamic_linker>ld-[\d.]+.so)$")
 
     for library in library_list:
-        m = regex.search(os.path.basename(library))
-        if m:
+        if m := regex.search(os.path.basename(library)):
             return library
 
     raise RuntimeError(
@@ -781,12 +771,4 @@ def find_linker(*, root_path: str, snap_base_path: str) -> str:
 
     dynamic_linker = _get_dynamic_linker(libc6_libraries_paths)
 
-    # Get the path to the "would be" dynamic linker when this snap is
-    # installed. Strip the root_path from the retrieved dynamic_linker
-    # variables + the leading `/` so that os.path.join can perform the
-    # proper join with snap_base_path.
-    dynamic_linker_path = os.path.join(
-        snap_base_path, dynamic_linker[len(root_path) + 1 :]
-    )
-
-    return dynamic_linker_path
+    return os.path.join(snap_base_path, dynamic_linker[len(root_path) + 1 :])

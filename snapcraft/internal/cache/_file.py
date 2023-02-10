@@ -63,7 +63,7 @@ class FileCache(SnapcraftCache):
                 # using fileutils.link_or_copy.
                 shutil.copyfile(filename, cached_file_path)
         except OSError:
-            logger.warning("Unable to cache file {}.".format(cached_file_path))
+            logger.warning(f"Unable to cache file {cached_file_path}.")
             return None
         return cached_file_path
 

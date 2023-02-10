@@ -242,28 +242,27 @@ class KernelPlugin(kbuild.KBuildPlugin):
         self.make_targets = [self.kernel_image_target, "modules"]
         self.make_install_targets = [
             "modules_install",
-            "INSTALL_MOD_PATH={}".format(self.installdir),
+            f"INSTALL_MOD_PATH={self.installdir}",
         ]
-        self.dtbs = ["{}.dtb".format(i) for i in self.options.kernel_device_trees]
+        self.dtbs = [f"{i}.dtb" for i in self.options.kernel_device_trees]
         if self.dtbs:
             self.make_targets.extend(self.dtbs)
-        elif self.project.kernel_arch == "arm" or self.project.kernel_arch == "arm64":
+        elif self.project.kernel_arch in ["arm", "arm64"]:
             self.make_targets.append("dtbs")
             self.make_install_targets.extend(
-                ["dtbs_install", "INSTALL_DTBS_PATH={}/dtbs".format(self.installdir)]
+                ["dtbs_install", f"INSTALL_DTBS_PATH={self.installdir}/dtbs"]
             )
         self.make_install_targets.extend(self._get_fw_install_targets())
 
     def _get_fw_install_targets(self):
-        if not self.options.kernel_with_firmware:
-            return []
-
-        return [
-            "firmware_install",
-            "INSTALL_FW_PATH={}".format(
-                os.path.join(self.installdir, "lib", "firmware")
-            ),
-        ]
+        return (
+            [
+                "firmware_install",
+                f'INSTALL_FW_PATH={os.path.join(self.installdir, "lib", "firmware")}',
+            ]
+            if self.options.kernel_with_firmware
+            else []
+        )
 
     def _unpack_generic_initrd(self):
         initrd_path = os.path.join("boot", "initrd.img-core")
@@ -306,9 +305,7 @@ class KernelPlugin(kbuild.KBuildPlugin):
     def _make_initrd(self):
 
         logger.info(
-            "Generating driver initrd for kernel release: {}".format(
-                self.kernel_release
-            )
+            f"Generating driver initrd for kernel release: {self.kernel_release}"
         )
 
         initrd_unpacked_path = self._unpack_generic_initrd()
@@ -337,7 +334,7 @@ class KernelPlugin(kbuild.KBuildPlugin):
 
         modprobe_outs = [_ for _ in modprobe_outs if _]
         modules_path = os.path.join("lib", "modules", self.kernel_release)
-        for src in set(_.split()[1] for _ in modprobe_outs):
+        for src in {_.split()[1] for _ in modprobe_outs}:
             dst = os.path.join(
                 initrd_unpacked_path, os.path.relpath(src, self.installdir)
             )
@@ -361,11 +358,10 @@ class KernelPlugin(kbuild.KBuildPlugin):
             else:
                 os.link(src, dst)
 
-        initrd = "initrd-{}.img".format(self.kernel_release)
+        initrd = f"initrd-{self.kernel_release}.img"
         initrd_path = os.path.join(self.installdir, initrd)
         subprocess.check_call(
-            "find . | cpio --create --format=newc | "
-            "{} > {}".format(self.compression_cmd, initrd_path),
+            f"find . | cpio --create --format=newc | {self.compression_cmd} > {initrd_path}",
             shell=True,
             cwd=initrd_unpacked_path,
         )
@@ -391,7 +387,7 @@ class KernelPlugin(kbuild.KBuildPlugin):
         return os.path.join(self.builddir, "arch", self.project.kernel_arch, "boot")
 
     def _copy_vmlinuz(self):
-        kernel = "{}-{}".format(self.kernel_image_target, self.kernel_release)
+        kernel = f"{self.kernel_image_target}-{self.kernel_release}"
         src = os.path.join(self._get_build_arch_dir(), self.kernel_image_target)
         dst = os.path.join(self.installdir, kernel)
         if not os.path.exists(src):
@@ -404,7 +400,7 @@ class KernelPlugin(kbuild.KBuildPlugin):
 
     def _copy_system_map(self):
         src = os.path.join(self.builddir, "System.map")
-        dst = os.path.join(self.installdir, "System.map-{}".format(self.kernel_release))
+        dst = os.path.join(self.installdir, f"System.map-{self.kernel_release}")
         if not os.path.exists(src):
             raise ValueError(
                 "kernel build did not output a System.map in top level dir"
@@ -444,65 +440,63 @@ class KernelPlugin(kbuild.KBuildPlugin):
         return builtin, modules
 
     def _do_check_config(self, builtin, modules):
-        # check the resulting .config has all the necessary options
-        msg = (
-            "**** WARNING **** WARNING **** WARNING **** WARNING ****\n"
-            "Your kernel config is missing some features that Ubuntu Core "
-            "recommends or requires.\n"
-            "While we will not prevent you from building this kernel snap, "
-            "we suggest you take a look at these:\n"
-        )
         required_opts = (
             required_generic + required_security + required_snappy + required_systemd
         )
         missing = []
 
         for code in required_opts:
-            opt = "CONFIG_{}".format(code)
-            if opt in builtin:
-                continue
-            elif opt in modules:
+            opt = f"CONFIG_{code}"
+            if opt in builtin or opt in modules:
                 continue
             else:
                 missing.append(opt)
 
         if missing:
-            warn = "\n{}\n".format(msg)
+            # check the resulting .config has all the necessary options
+            msg = (
+                "**** WARNING **** WARNING **** WARNING **** WARNING ****\n"
+                "Your kernel config is missing some features that Ubuntu Core "
+                "recommends or requires.\n"
+                "While we will not prevent you from building this kernel snap, "
+                "we suggest you take a look at these:\n"
+            )
+            warn = f"\n{msg}\n"
             for opt in missing:
                 note = ""
                 if opt == "CONFIG_CC_STACKPROTECTOR_STRONG":
                     note = "(4.1.x and later versions only)"
                 elif opt == "CONFIG_DEVPTS_MULTIPLE_INSTANCES":
                     note = "(4.8.x and earlier versions only)"
-                warn += "{} {}\n".format(opt, note)
+                warn += f"{opt} {note}\n"
             logger.warning(warn)
 
     def _do_check_initrd(self, builtin, modules):
-        # check all required_boot[] items are either builtin or part of initrd
-        msg = (
-            "**** WARNING **** WARNING **** WARNING **** WARNING ****\n"
-            "The following features are deemed boot essential for\n"
-            "ubuntu core, consider making them static[=Y] or adding\n"
-            "the corresponding module to initrd:\n"
-        )
         missing = []
 
         for code in required_boot:
-            opt = "CONFIG_{}".format(code.upper())
-            if opt in builtin:
-                continue
-            elif opt in modules:
-                if code in self.options.kernel_initrd_modules:
-                    continue
-                else:
-                    missing.append(opt)
-            else:
+            opt = f"CONFIG_{code.upper()}"
+            if (
+                opt not in builtin
+                and opt in modules
+                and code not in self.options.kernel_initrd_modules
+                or opt not in builtin
+                and opt not in modules
+            ):
                 missing.append(opt)
-
+            elif opt in builtin:
+                continue
         if missing:
-            warn = "\n{}\n".format(msg)
+            # check all required_boot[] items are either builtin or part of initrd
+            msg = (
+                "**** WARNING **** WARNING **** WARNING **** WARNING ****\n"
+                "The following features are deemed boot essential for\n"
+                "ubuntu core, consider making them static[=Y] or adding\n"
+                "the corresponding module to initrd:\n"
+            )
+            warn = f"\n{msg}\n"
             for opt in missing:
-                warn += "{}\n".format(opt)
+                warn += f"{opt}\n"
             logger.warning(warn)
 
     def pull(self):
@@ -539,7 +533,7 @@ class KernelPlugin(kbuild.KBuildPlugin):
             )
         os.rmdir(os.path.join(self.installdir, "lib"))
         # install .config as config-$version
-        config = "config-{}".format(self.kernel_release)
+        config = f"config-{self.kernel_release}"
         config_path = os.path.join(self.installdir, config)
         dot_config_path = self.get_config_path()
         os.link(dot_config_path, config_path)

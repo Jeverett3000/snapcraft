@@ -52,11 +52,7 @@ class Deb(FileBase):
             raise errors.SnapcraftSourceInvalidOptionError("deb", "source-branch")
 
     def provision(self, dst, clean_target=True, keep_deb=False, src=None):
-        if src:
-            deb_file = src
-        else:
-            deb_file = os.path.join(self.source_dir, os.path.basename(self.source))
-
+        deb_file = src or os.path.join(self.source_dir, os.path.basename(self.source))
         if clean_target:
             tmp_deb = tempfile.NamedTemporaryFile().name
             shutil.move(deb_file, tmp_deb)

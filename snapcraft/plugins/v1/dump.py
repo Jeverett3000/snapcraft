@@ -73,10 +73,10 @@ def _link_or_copy(source, destination, boundary):
         link = os.readlink(source)
         destination_dirname = os.path.dirname(destination)
         normalized = os.path.normpath(os.path.join(destination_dirname, link))
-        if os.path.isabs(link) or not normalized.startswith(boundary):
-            # Only follow symlinks that are NOT pointing at libc (LP: #1658774)
-            if link not in snapcraft.repo.Repo.get_package_libraries("libc6"):
-                follow_symlinks = True
+        if (
+            os.path.isabs(link) or not normalized.startswith(boundary)
+        ) and link not in snapcraft.repo.Repo.get_package_libraries("libc6"):
+            follow_symlinks = True
 
     try:
         snapcraft.file_utils.link_or_copy(

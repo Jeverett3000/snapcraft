@@ -49,11 +49,10 @@ logger = logging.getLogger(__name__)
 
 
 def _deprecation_message(id):
-    message = _DEPRECATION_MESSAGES.get(id)
-    if not message:
+    if message := _DEPRECATION_MESSAGES.get(id):
+        return message
+    else:
         raise RuntimeError("No deprecation notice with id {!r}".format(id))
-
-    return message
 
 
 def handle_deprecation_notice(id):

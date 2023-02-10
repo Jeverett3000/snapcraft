@@ -44,11 +44,7 @@ logger = logging.getLogger(name=__name__)
 
 class _Flag:
     def __str__(self) -> str:
-        if self.value is None:
-            flag = self.name
-        else:
-            flag = "{}={}".format(self.name, self.value)
-        return flag
+        return self.name if self.value is None else f"{self.name}={self.value}"
 
     def __init__(self, flag: str) -> None:
         parts = flag.split("=")
@@ -97,8 +93,7 @@ class CMakePlugin(PluginV1):
             logger.warning("make-paramaters is deprecated, ignoring.")
 
     def build(self):
-        source_subdir = getattr(self.options, "source_subdir", None)
-        if source_subdir:
+        if source_subdir := getattr(self.options, "source_subdir", None):
             sourcedir = os.path.join(self.sourcedir, source_subdir)
         else:
             sourcedir = self.sourcedir
@@ -111,7 +106,7 @@ class CMakePlugin(PluginV1):
         # TODO: there is a better way to specify the job count on newer versions of cmake
         # https://github.com/Kitware/CMake/commit/1ab3881ec9e809ac5f6cad5cd84048310b8683e2
         self.run(
-            ["cmake", "--build", ".", "--", "-j{}".format(self.parallel_build_count)],
+            ["cmake", "--build", ".", "--", f"-j{self.parallel_build_count}"],
             env=env,
         )
 
@@ -130,21 +125,17 @@ class CMakePlugin(PluginV1):
         flags = [_Flag(f) for f in self.options.configflags]
         for flag in flags:
             if flag.name == "-DCMAKE_FIND_ROOT_PATH":
-                flag.value = "{};{}".format(flag.value, ";".join(build_snap_paths))
+                flag.value = f'{flag.value};{";".join(build_snap_paths)}'
                 break
         else:
-            flags.append(
-                _Flag("-DCMAKE_FIND_ROOT_PATH={}".format(";".join(build_snap_paths)))
-            )
+            flags.append(_Flag(f'-DCMAKE_FIND_ROOT_PATH={";".join(build_snap_paths)}'))
 
         return [str(f) for f in flags]
 
     def _build_environment(self):
         env = os.environ.copy()
         env["DESTDIR"] = self.installdir
-        env["CMAKE_PREFIX_PATH"] = "$CMAKE_PREFIX_PATH:{}".format(
-            self.project.stage_dir
-        )
+        env["CMAKE_PREFIX_PATH"] = f"$CMAKE_PREFIX_PATH:{self.project.stage_dir}"
         env["CMAKE_INCLUDE_PATH"] = "$CMAKE_INCLUDE_PATH:" + ":".join(
             ["{0}/include", "{0}/usr/include", "{0}/include/{1}", "{0}/usr/include/{1}"]
         ).format(self.project.stage_dir, self.project.arch_triplet)

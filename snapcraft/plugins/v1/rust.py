@@ -179,7 +179,7 @@ class RustPlugin(PluginV1):
 
         toolchain = self._get_toolchain()
         if toolchain is not None:
-            fetch_cmd.insert(1, "+{}".format(toolchain))
+            fetch_cmd.insert(1, f"+{toolchain}")
         self.run(fetch_cmd, env=self._build_env())
 
     def _get_target(self) -> str:
@@ -192,14 +192,14 @@ class RustPlugin(PluginV1):
             "ppc64el": "powerpc64le-{}-{}",
             "s390x": "s390x-{}-{}",
         }
-        rust_target = targets.get(self.project.deb_arch)
-        if not rust_target:
+        if rust_target := targets.get(self.project.deb_arch):
+            return rust_target.format("unknown-linux", "gnu")
+        else:
             raise errors.SnapcraftEnvironmentError(
                 "{!r} is not supported as a target architecture ".format(
                     self.project.deb_arch
                 )
             )
-        return rust_target.format("unknown-linux", "gnu")
 
     def _project_uses_workspace(self) -> bool:
         cargo_toml_path = Path(self.builddir, "Cargo.toml")
@@ -273,7 +273,7 @@ class RustPlugin(PluginV1):
 
         toolchain = self._get_toolchain()
         if toolchain is not None:
-            install_cmd.insert(1, "+{}".format(toolchain))
+            install_cmd.insert(1, f"+{toolchain}")
 
         # Even though this is mostly harmless when not cross compiling
         # the flag is in place to avoid a situation where an earlier
@@ -282,9 +282,7 @@ class RustPlugin(PluginV1):
             install_cmd.extend(["--target", self._get_target()])
 
         if self.options.rust_features:
-            install_cmd.append("--features")
-            install_cmd.append(" ".join(self.options.rust_features))
-
+            install_cmd.extend(("--features", " ".join(self.options.rust_features)))
         # build and install.
         self.run(install_cmd, env=self._build_env(), cwd=self.builddir)
 
@@ -301,9 +299,8 @@ class RustPlugin(PluginV1):
 
         env.update(dict(RUSTUP_HOME=self._rustup_dir, CARGO_HOME=self._cargo_dir))
 
-        rustflags = self._get_rustflags()
-        if rustflags:
-            string_fmt = " ".join(["{}".format(i) for i in rustflags]).strip()
+        if rustflags := self._get_rustflags():
+            string_fmt = " ".join([f"{i}" for i in rustflags]).strip()
             env.update(RUSTFLAGS=string_fmt)
 
         return env
@@ -322,22 +319,20 @@ class RustPlugin(PluginV1):
         rust_toolchain_path = os.path.join(sourcedir, "rust-toolchain")
 
         if self.options.rust_revision:
-            toolchain = self.options.rust_revision
+            return self.options.rust_revision
         elif self.options.rust_channel:
-            toolchain = self.options.rust_channel
+            return self.options.rust_channel
         elif not os.path.exists(rust_toolchain_path):
-            toolchain = "stable"
+            return "stable"
         else:
-            toolchain = None
-
-        return toolchain
+            return None
 
     def _get_linker(self) -> str:
         arch_triplet = self.project.arch_triplet
         if arch_triplet == "i386-linux-gnu":
             return "i686-linux-gnu-gcc"
         else:
-            return "{}-gcc".format(arch_triplet)
+            return f"{arch_triplet}-gcc"
 
     def _write_cargo_config(self, cargo_config_path: Optional[str] = None) -> None:
         if cargo_config_path is None:
@@ -363,10 +358,10 @@ class RustPlugin(PluginV1):
         rustldflags = []
         flags = {flag for flag in ldflags.split(" ") if flag}
         for flag in flags:
-            rustldflags.extend(["-C", "link-arg={}".format(flag)])
+            rustldflags.extend(["-C", f"link-arg={flag}"])
 
         if self.project.is_cross_compiling:
-            rustldflags.extend(["-C", "linker={}".format(self._get_linker())])
+            rustldflags.extend(["-C", f"linker={self._get_linker()}"])
 
         return rustldflags
 
@@ -376,7 +371,7 @@ class RustPlugin(PluginV1):
         )
         toolchain = self._get_toolchain()
         if toolchain is not None:
-            toolchain_option = "+{}".format(toolchain)
+            toolchain_option = f"+{toolchain}"
             self._manifest["rustc-version"] = self.run_output(
                 [self._rustc_cmd, toolchain_option, "--version"], env=self._build_env()
             )
@@ -391,8 +386,9 @@ class RustPlugin(PluginV1):
                 [self._cargo_cmd, "--version"], env=self._build_env()
             )
         with suppress(FileNotFoundError, IsADirectoryError):
-            with open(os.path.join(self.builddir, "Cargo.lock")) as lock_file:
-                self._manifest["cargo-lock-contents"] = lock_file.read()
+            self._manifest["cargo-lock-contents"] = Path(
+                os.path.join(self.builddir, "Cargo.lock")
+            ).read_text()
 
     def get_manifest(self):
         return self._manifest

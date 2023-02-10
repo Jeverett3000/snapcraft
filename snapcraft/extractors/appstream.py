@@ -101,11 +101,12 @@ def extract(relpath: str, *, workdir: str) -> ExtractedMetadata:
         if common_id.endswith(".desktop"):
             desktop_file_ids.append(common_id)
         else:
-            desktop_file_ids.append(common_id + ".desktop")
+            desktop_file_ids.append(f"{common_id}.desktop")
 
     for desktop_file_id in desktop_file_ids:
-        desktop_file_path = _desktop_file_id_to_path(desktop_file_id, workdir=workdir)
-        if desktop_file_path:
+        if desktop_file_path := _desktop_file_id_to_path(
+            desktop_file_id, workdir=workdir
+        ):
             desktop_file_paths.append(desktop_file_path)
 
     icon = _extract_icon(dom, workdir, desktop_file_paths)
@@ -157,23 +158,21 @@ def _get_value_from_xml_element(tree, key) -> Optional[str]:
 
 
 def _get_latest_release_from_nodes(nodes) -> Optional[str]:
-    for node in nodes:
-        if "version" in node.attrib:
-            return node.attrib["version"]
-    return None
+    return next(
+        (node.attrib["version"] for node in nodes if "version" in node.attrib),
+        None,
+    )
 
 
 def _get_desktop_file_ids_from_nodes(nodes) -> List[str]:
-    desktop_file_ids = []  # type: List[str]
-    for node in nodes:
-        if "type" in node.attrib and node.attrib["type"] == "desktop-id":
-            desktop_file_ids.append(node.text.strip())
-    return desktop_file_ids
+    return [
+        node.text.strip()
+        for node in nodes
+        if "type" in node.attrib and node.attrib["type"] == "desktop-id"
+    ]
 
 
 def _desktop_file_id_to_path(desktop_file_id: str, *, workdir: str) -> Optional[str]:
-    # For details about desktop file ids and their corresponding paths, see
-    # https://standards.freedesktop.org/desktop-entry-spec/desktop-entry-spec-latest.html#desktop-file-id  # noqa
     for xdg_data_dir in ("usr/local/share", "usr/share"):
         desktop_file_path = os.path.join(
             xdg_data_dir, "applications", desktop_file_id.replace("-", "/")
@@ -183,8 +182,7 @@ def _desktop_file_id_to_path(desktop_file_id: str, *, workdir: str) -> Optional[
         # used.
         if os.path.exists(os.path.join(workdir, desktop_file_path)):
             return desktop_file_path
-    else:
-        return None
+    return None
 
 
 def _extract_icon(dom, workdir: str, desktop_file_paths: List[str]) -> Optional[str]:
@@ -223,13 +221,11 @@ def _get_icon_from_desktop_file(
         entry = DesktopEntry()
         entry.parse(os.path.join(workdir, path))
         icon = entry.getIcon()
-        icon_path = (
+        return (
             icon
             if os.path.isabs(icon)
             else _get_icon_from_theme(workdir, "hicolor", icon)
         )
-        return icon_path
-
     return None
 
 

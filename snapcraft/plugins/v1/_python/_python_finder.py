@@ -37,7 +37,7 @@ def get_python_command(python_major_version, *, stage_dir, install_dir):
     :raises MissingPythonCommandError: If no python could be found in the
                                        staging or part's install area.
     """
-    python_command_name = "python{}".format(python_major_version)
+    python_command_name = f"python{python_major_version}"
     python_command = os.path.join("usr", "bin", python_command_name)
     staged_python = os.path.join(stage_dir, python_command)
     part_python = os.path.join(install_dir, python_command)
@@ -65,8 +65,8 @@ def get_python_headers(python_major_version, *, stage_dir):
     :return: Path to the python headers that were found ('' if none)
     :rtype: str
     """
-    python_command_name = "python{}".format(python_major_version)
-    base_match = os.path.join("usr", "include", "{}*".format(python_command_name))
+    python_command_name = f"python{python_major_version}"
+    base_match = os.path.join("usr", "include", f"{python_command_name}*")
     staged_python = glob.glob(os.path.join(stage_dir, base_match))
     host_python = glob.glob(os.path.join(os.path.sep, base_match))
 

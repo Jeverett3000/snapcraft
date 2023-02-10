@@ -167,8 +167,8 @@ class AntPlugin(PluginV1):
                 version=version, base=base, valid_versions=valid_versions
             )
 
-        self.stage_packages.append("openjdk-{}-jre-headless".format(version))
-        self.build_packages.append("openjdk-{}-jdk-headless".format(version))
+        self.stage_packages.append(f"openjdk-{version}-jre-headless")
+        self.build_packages.append(f"openjdk-{version}-jdk-headless")
         self._java_version = version
 
     def _setup_ant(self):
@@ -182,9 +182,9 @@ class AntPlugin(PluginV1):
             self.use_archive_tarball = False
 
             if self.options.ant_channel:
-                build_snap = "ant/" + self.options.ant_channel
+                build_snap = f"ant/{self.options.ant_channel}"
             else:
-                build_snap = "ant/" + _DEFAULT_ANT_SNAP_CHANNEL
+                build_snap = f"ant/{_DEFAULT_ANT_SNAP_CHANNEL}"
 
             self.build_snaps.append(build_snap)
 
@@ -212,11 +212,10 @@ class AntPlugin(PluginV1):
             command.extend(self.options.ant_build_targets)
 
         for prop, value in self.options.ant_properties.items():
-            command.extend(["-D{}={}".format(prop, value)])
+            command.extend([f"-D{prop}={value}"])
 
         self.run(command, rootdir=self.builddir)
-        files = glob(os.path.join(self.builddir, "target", "*.jar"))
-        if files:
+        if files := glob(os.path.join(self.builddir, "target", "*.jar")):
             jardir = os.path.join(self.installdir, "jar")
             os.makedirs(jardir)
             for f in files:
@@ -233,7 +232,7 @@ class AntPlugin(PluginV1):
                 "usr",
                 "lib",
                 "jvm",
-                "java-{}-openjdk-*".format(self._java_version),
+                f"java-{self._java_version}-openjdk-*",
                 "bin",
                 "java",
             )
@@ -247,17 +246,17 @@ class AntPlugin(PluginV1):
         super().run(cmd, cwd=rootdir, env=self._build_environment())
 
     def get_proxy_options(self, scheme):
-        proxy = os.environ.get("{}_proxy".format(scheme))
-        if proxy:
-            parsed = urlsplit(proxy)
-            if parsed.hostname is not None:
-                yield "-D{}.proxyHost={}".format(scheme, parsed.hostname)
-            if parsed.port is not None:
-                yield "-D{}.proxyPort={}".format(scheme, parsed.port)
-            if parsed.username is not None:
-                yield "-D{}.proxyUser={}".format(scheme, parsed.username)
-            if parsed.password is not None:
-                yield "-D{}.proxyPassword={}".format(scheme, parsed.password)
+        if not (proxy := os.environ.get(f"{scheme}_proxy")):
+            return
+        parsed = urlsplit(proxy)
+        if parsed.hostname is not None:
+            yield f"-D{scheme}.proxyHost={parsed.hostname}"
+        if parsed.port is not None:
+            yield f"-D{scheme}.proxyPort={parsed.port}"
+        if parsed.username is not None:
+            yield f"-D{scheme}.proxyUser={parsed.username}"
+        if parsed.password is not None:
+            yield f"-D{scheme}.proxyPassword={parsed.password}"
 
     def _build_environment(self):
         env = os.environ.copy()
@@ -267,11 +266,7 @@ class AntPlugin(PluginV1):
         else:
             ant_bin = os.path.join("snap", "bin", "ant")
 
-        if env.get("PATH"):
-            new_path = "{}:{}".format(ant_bin, env.get("PATH"))
-        else:
-            new_path = ant_bin
-
+        new_path = f'{ant_bin}:{env.get("PATH")}' if env.get("PATH") else ant_bin
         env["PATH"] = new_path
 
         # Getting ant to use a proxy requires a little work; the JRE doesn't
@@ -288,10 +283,9 @@ class AntPlugin(PluginV1):
 
     def env(self, root):
         env = super().env(root)
-        jars = glob(os.path.join(self.installdir, "jar", "*.jar"))
-        if jars:
+        if jars := glob(os.path.join(self.installdir, "jar", "*.jar")):
             jars = [
                 os.path.join(root, "jar", os.path.basename(x)) for x in sorted(jars)
             ]
-            env.extend(["CLASSPATH={}:$CLASSPATH".format(":".join(jars))])
+            env.extend([f'CLASSPATH={":".join(jars)}:$CLASSPATH'])
         return env

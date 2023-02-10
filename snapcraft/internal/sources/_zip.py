@@ -50,11 +50,7 @@ class Zip(FileBase):
             raise errors.SnapcraftSourceInvalidOptionError("zip", "source-depth")
 
     def provision(self, dst, clean_target=True, keep_zip=False, src=None):
-        if src:
-            zip = src
-        else:
-            zip = os.path.join(self.source_dir, os.path.basename(self.source))
-
+        zip = src or os.path.join(self.source_dir, os.path.basename(self.source))
         if clean_target:
             tmp_zip = tempfile.NamedTemporaryFile().name
             shutil.move(zip, tmp_zip)
@@ -67,17 +63,7 @@ class Zip(FileBase):
             for info in f.infolist():
                 extracted_file = f.extract(info.filename, path=dst)
 
-                # Extract the mode from the file. Note that external_attr is
-                # a four-byte value, where the high two bytes represent UNIX
-                # permissions and file type bits, and the low two bytes contain
-                # MS-DOS FAT file attributes. Keep the mode to permissions
-                # only-- no sticky bit, uid bit, or gid bit.
-                mode = info.external_attr >> 16 & 0x1FF
-
-                # If the zip file was created on a non-unix system, it's
-                # possible for the mode to end up being zero. That makes it
-                # pretty useless, so ignore it if so.
-                if mode:
+                if mode := info.external_attr >> 16 & 0x1FF:
                     os.chmod(extracted_file, mode)
 
         if not keep_zip:

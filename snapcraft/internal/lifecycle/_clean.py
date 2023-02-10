@@ -44,18 +44,15 @@ def _clean_part(part_name, step, config, staged_state, primed_state):
 
 
 def get_dirty_reverse_dependencies(part_name, step, config):
-    # If other parts are depending on this step of the part, they're now
-    # dirty
-    dirty_reverse_dependencies = set()
     reverse_dependencies = config.parts.get_reverse_dependencies(
         part_name, recursive=True
     )
     dirty_step = steps.dirty_step_if_dependency_changes(step)
-    for reverse_dependency in reverse_dependencies:
-        if not reverse_dependency.should_step_run(dirty_step):
-            dirty_reverse_dependencies.add(reverse_dependency)
-
-    return dirty_reverse_dependencies
+    return {
+        reverse_dependency
+        for reverse_dependency in reverse_dependencies
+        if not reverse_dependency.should_step_run(dirty_step)
+    }
 
 
 def _clean_parts(part_names, step, config, staged_state, primed_state):
@@ -66,8 +63,7 @@ def _clean_parts(part_names, step, config, staged_state, primed_state):
         dirty_parts = _clean_part(part_name, step, config, staged_state, primed_state)
         dirty_part_names = {p.name for p in dirty_parts}
 
-        parts_not_being_cleaned = dirty_part_names.difference(part_names)
-        if parts_not_being_cleaned:
+        if parts_not_being_cleaned := dirty_part_names.difference(part_names):
             logger.warning(
                 "Cleaned {!r}, which makes the following {} out of date: "
                 "{}".format(
@@ -98,8 +94,7 @@ def _cleanup_common_directories(config, project: "Project") -> None:
             if not max_step or step > max_step:
                 max_step = step
 
-    next_step = steps.next_step(max_step)
-    if next_step:
+    if next_step := steps.next_step(max_step):
         _cleanup_common_directories_for_step(next_step, project)
 
 

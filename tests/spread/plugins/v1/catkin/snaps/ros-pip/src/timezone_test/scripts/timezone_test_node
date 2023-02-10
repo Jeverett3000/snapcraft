@@ -9,7 +9,7 @@ def main():
     rospy.init_node('timezone_test')
 
     # This line verifies that we can use tzlocal, which is a pip dependency
-    print('Local timezone: {}'.format(tzlocal.get_localzone()))
+    print(f'Local timezone: {tzlocal.get_localzone()}')
 
 if __name__ == '__main__':
     main()

@@ -102,7 +102,7 @@ class Wstool:
                 [
                     "init",
                     self._ros_package_path,
-                    "-j{}".format(self._project.parallel_build_count),
+                    f"-j{self._project.parallel_build_count}",
                 ]
             )
         except subprocess.CalledProcessError as e:
@@ -126,7 +126,7 @@ class Wstool:
                     "merge",
                     rosinstall_file,
                     "--confirm-all",
-                    "-t{}".format(self._ros_package_path),
+                    f"-t{self._ros_package_path}",
                 ]
             ).strip()
         except subprocess.CalledProcessError as e:
@@ -146,8 +146,8 @@ class Wstool:
             return self._run(
                 [
                     "update",
-                    "-j{}".format(self._project.parallel_build_count),
-                    "-t{}".format(self._ros_package_path),
+                    f"-j{self._project.parallel_build_count}",
+                    f"-t{self._ros_package_path}",
                 ]
             )
         except subprocess.CalledProcessError as e:

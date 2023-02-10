@@ -64,7 +64,7 @@ _ALWAYS_VALUES = ["always", "a"]
 _VIEW_VALUES = ["view", "v"]
 
 TRACEBACK_MANAGED = os.path.join(tempfile.gettempdir(), "snapcraft_provider_traceback")
-TRACEBACK_HOST = TRACEBACK_MANAGED + ".{}".format(os.getpid())
+TRACEBACK_HOST = f"{TRACEBACK_MANAGED}.{os.getpid()}"
 
 
 logger = logging.getLogger(__name__)
@@ -90,10 +90,7 @@ def _is_reportable_error(exc_info) -> bool:
         return True
 
     # Report SnapcraftReportableError errors.
-    if issubclass(exc_info[0], errors.SnapcraftReportableError):
-        return True
-
-    return False
+    return issubclass(exc_info[0], errors.SnapcraftReportableError)
 
 
 def _is_printable_traceback(exc_info, debug) -> bool:
@@ -106,14 +103,11 @@ def _is_printable_traceback(exc_info, debug) -> bool:
         return False
 
     # Print if not connected to a tty.
-    if not _is_connected_to_tty():
-        return True
-
-    # Print if not using snap.
-    if not snapcraft.internal.common.is_snap():
-        return True
-
-    return False
+    return (
+        not snapcraft.internal.common.is_snap()
+        if _is_connected_to_tty()
+        else True
+    )
 
 
 def _handle_sentry_submission(exc_info) -> None:
@@ -133,9 +127,7 @@ def _handle_sentry_submission(exc_info) -> None:
         except Exception as exc:
             # Failed to send - let user know and suggest manual reporting.
             echo.error(
-                "Encountered an issue while trying to submit the report: {}".format(
-                    str(exc)
-                )
+                f"Encountered an issue while trying to submit the report: {str(exc)}"
             )
             click.echo(_MSG_MANUALLY_REPORT)
         else:
@@ -146,16 +138,13 @@ def _handle_sentry_submission(exc_info) -> None:
 def _print_snapcraft_exception_message(exception: errors.SnapcraftException):
     parts = [exception.get_brief()]
 
-    resolution = exception.get_resolution()
-    if resolution:
+    if resolution := exception.get_resolution():
         parts.extend(["", "Recommended resolution:", resolution])
 
-    details = exception.get_details()
-    if details:
+    if details := exception.get_details():
         parts.extend(["", "Detailed information:", details])
 
-    docs_url = exception.get_docs_url()
-    if docs_url:
+    if docs_url := exception.get_docs_url():
         parts.extend(["", "For more information, check out:", docs_url])
 
     echo.error("\n".join(parts))
@@ -195,23 +184,21 @@ def _process_outer_exception(exc_info, debug):
         # If traceback file exists, it has already been processed by
         # the inside snapcraft (i.e. printing and sentry submission)
         # we just need to retrieve it for the user if it's reportable.
-        if not _is_reportable_error(exc_info):
-            return
-
-        shutil.move(TRACEBACK_HOST, trace_filepath)
-    else:
-        # No traceback found, this must be captured and processed.
-        # If reportable or debug is enabled, capture trace file.
-        if _is_reportable_error(exc_info) or debug:
-            # Only show this message for reportable errors.
-            click.echo(_MSG_TRACEBACK_PRINT)
-
-            _process_exception(exc_info, debug, trace_filepath)
+        if _is_reportable_error(exc_info):
+            shutil.move(TRACEBACK_HOST, trace_filepath)
         else:
-            _process_exception(exc_info, debug, None)
-
-            # No trace file, nothing left to do.
             return
+
+    elif _is_reportable_error(exc_info) or debug:
+        # Only show this message for reportable errors.
+        click.echo(_MSG_TRACEBACK_PRINT)
+
+        _process_exception(exc_info, debug, trace_filepath)
+    else:
+        _process_exception(exc_info, debug, None)
+
+        # No trace file, nothing left to do.
+        return
 
     # This is a reportable error, let the user know where to find the trace.
     click.echo(_MSG_TRACEBACK_LOCATION.format(trace_filepath))
@@ -360,7 +347,7 @@ def _prompt_sentry():
 
 
 def _submit_trace(exc_info):
-    kwargs: Dict[str, str] = dict()
+    kwargs: Dict[str, str] = {}
     if "+git" not in snapcraft.__version__:
         kwargs["release"] = snapcraft.__version__
 

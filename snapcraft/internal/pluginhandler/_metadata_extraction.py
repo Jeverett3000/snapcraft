@@ -40,9 +40,7 @@ def extract_metadata(
     for _, module_name, _ in pkgutil.iter_modules(extractors.__path__):  # type: ignore
         # We only care about non-private modules in here
         if not module_name.startswith("_"):
-            module = importlib.import_module(
-                "snapcraft.extractors.{}".format(module_name)
-            )
+            module = importlib.import_module(f"snapcraft.extractors.{module_name}")
 
             try:
                 # mypy is confused since we dynamically loaded the module. It

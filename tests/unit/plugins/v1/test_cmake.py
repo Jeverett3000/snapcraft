@@ -133,13 +133,22 @@ class CMakeTest(CMakeBaseTest):
         os.makedirs(plugin.builddir)
         plugin.build()
 
-        expected = {}
+        expected = {
+            "DESTDIR": plugin.installdir,
+            "CMAKE_PREFIX_PATH": f"$CMAKE_PREFIX_PATH:{self.stage_dir}",
+            "CMAKE_INCLUDE_PATH": (
+                "$CMAKE_INCLUDE_PATH:"
+                + ":".join(
+                    [
+                        "{0}/include",
+                        "{0}/usr/include",
+                        "{0}/include/{1}",
+                        "{0}/usr/include/{1}",
+                    ]
+                ).format(self.stage_dir, plugin.project.arch_triplet)
+            ),
+        }
 
-        expected["DESTDIR"] = plugin.installdir
-        expected["CMAKE_PREFIX_PATH"] = "$CMAKE_PREFIX_PATH:{}".format(self.stage_dir)
-        expected["CMAKE_INCLUDE_PATH"] = "$CMAKE_INCLUDE_PATH:" + ":".join(
-            ["{0}/include", "{0}/usr/include", "{0}/include/{1}", "{0}/usr/include/{1}"]
-        ).format(self.stage_dir, plugin.project.arch_triplet)
         expected["CMAKE_LIBRARY_PATH"] = "$CMAKE_LIBRARY_PATH:" + ":".join(
             ["{0}/lib", "{0}/usr/lib", "{0}/lib/{1}", "{0}/usr/lib/{1}"]
         ).format(self.stage_dir, plugin.project.arch_triplet)
@@ -150,15 +159,13 @@ class CMakeTest(CMakeBaseTest):
             for variable, value in expected.items():
                 self.assertTrue(
                     variable in environment,
-                    'Expected variable "{}" to be in environment'.format(variable),
+                    f'Expected variable "{variable}" to be in environment',
                 )
 
                 self.assertThat(
                     environment[variable],
                     Equals(value),
-                    "Expected ${}={}, but it was {}".format(
-                        variable, value, environment[variable]
-                    ),
+                    f"Expected ${variable}={value}, but it was {environment[variable]}",
                 )
 
     def test_unsupported_base(self):

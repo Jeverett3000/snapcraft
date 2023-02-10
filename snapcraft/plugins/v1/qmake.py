@@ -102,8 +102,7 @@ class QmakePlugin(PluginV1):
         sources = []
         if self.options.project_files:
             sourcedir = self.sourcedir
-            source_subdir = getattr(self.options, "source_subdir", None)
-            if source_subdir:
+            if source_subdir := getattr(self.options, "source_subdir", None):
                 sourcedir = os.path.join(sourcedir, source_subdir)
             sources = [
                 os.path.join(sourcedir, project_file)
@@ -114,22 +113,18 @@ class QmakePlugin(PluginV1):
             ["qmake"] + self._extra_config() + self.options.options + sources, env=env
         )
 
-        self.run(["make", "-j{}".format(self.parallel_build_count)], env=env)
+        self.run(["make", f"-j{self.parallel_build_count}"], env=env)
 
-        self.run(["make", "install", "INSTALL_ROOT=" + self.installdir], env=env)
+        self.run(["make", "install", f"INSTALL_ROOT={self.installdir}"], env=env)
 
     def _extra_config(self):
         extra_config = []
 
         for root in [self.installdir, self.project.stage_dir]:
             paths = common.get_library_paths(root, self.project.arch_triplet)
-            for path in paths:
-                extra_config.append('LIBS+="-L{}"'.format(path))
-
+            extra_config.extend(f'LIBS+="-L{path}"' for path in paths)
             paths = common.get_include_paths(root, self.project.arch_triplet)
-            for path in paths:
-                extra_config.append('INCLUDEPATH+="{}"'.format(path))
-
+            extra_config.extend(f'INCLUDEPATH+="{path}"' for path in paths)
         return extra_config
 
     def _build_environment(self):

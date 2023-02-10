@@ -58,10 +58,10 @@ class Extension(metaclass=abc.ABCMeta):
         """
         self._sanity_check(extension_name=extension_name, yaml_data=yaml_data)
 
-        self.root_snippet = dict()  # type: Dict[str, Any]
-        self.app_snippet = dict()  # type: Dict[str, Any]
-        self.part_snippet = dict()  # type: Dict[str, Any]
-        self.parts = dict()  # type: Dict[str, Any]
+        self.root_snippet = {}
+        self.app_snippet = {}
+        self.part_snippet = {}
+        self.parts = {}
 
     def _sanity_check(self, *, extension_name: str, yaml_data: Dict[str, Any]) -> None:
         base = yaml_data.get("base")

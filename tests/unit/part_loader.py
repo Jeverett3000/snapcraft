@@ -37,9 +37,9 @@ def load_part(
         plugin_name = "nil"
     properties = {"plugin": plugin_name}
     if part_properties:
-        properties.update(part_properties)
+        properties |= part_properties
     if "build-environment" not in properties:
-        properties["build-environment"] = list()
+        properties["build-environment"] = []
     if not project:
         project = Project()
 

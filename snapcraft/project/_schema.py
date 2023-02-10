@@ -27,7 +27,7 @@ from snapcraft.internal import common
 class Validator:
     def __init__(self, snapcraft_yaml=None):
         """Create a validation instance for snapcraft_yaml."""
-        self._snapcraft = snapcraft_yaml if snapcraft_yaml else {}
+        self._snapcraft = snapcraft_yaml or {}
         self._load_schema()
 
     @property
@@ -41,8 +41,7 @@ class Validator:
         """Return part-specific schema properties."""
 
         sub = self.schema["parts"]["patternProperties"]
-        properties = sub["^(?!plugins$)[a-z0-9][a-z0-9+-]*$"]["properties"]
-        return properties
+        return sub["^(?!plugins$)[a-z0-9][a-z0-9+-]*$"]["properties"]
 
     @property
     def definitions_schema(self):

@@ -104,7 +104,7 @@ class KBuildPluginTestCase(PluginsV1BaseTestCase):
                     [
                         "make",
                         "-j2",
-                        "CONFIG_PREFIX={}".format(plugin.installdir),
+                        f"CONFIG_PREFIX={plugin.installdir}",
                         "install",
                     ]
                 ),
@@ -153,7 +153,7 @@ class KBuildPluginTestCase(PluginsV1BaseTestCase):
                         "make",
                         "-j2",
                         "V=1",
-                        "CONFIG_PREFIX={}".format(plugin.installdir),
+                        f"CONFIG_PREFIX={plugin.installdir}",
                         "install",
                     ]
                 ),
@@ -196,7 +196,7 @@ class KBuildPluginTestCase(PluginsV1BaseTestCase):
                     [
                         "make",
                         "-j2",
-                        "CONFIG_PREFIX={}".format(plugin.installdir),
+                        f"CONFIG_PREFIX={plugin.installdir}",
                         "install",
                     ]
                 ),

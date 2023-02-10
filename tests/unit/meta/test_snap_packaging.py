@@ -41,7 +41,7 @@ class SnapPackagingRunnerTests(unit.TestCase):
         return _SnapPackaging(project_config=config, extracted_metadata=None)
 
     def test_no_apps(self):
-        apps = dict()
+        apps = {}
 
         sp = self._get_snap_packaging(apps=apps, confinement="strict")
         runner = sp._generate_snapcraft_runner()

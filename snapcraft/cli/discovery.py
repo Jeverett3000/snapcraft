@@ -66,12 +66,11 @@ def list_plugins(base):
     if base is None:
         base = _try_get_base_from_project()
 
-    plugins = []
-    for _, modname, _ in _get_modules_iter(base):
-        # Only add non-private modules/packages to the plugin list
-        if not modname.startswith("_"):
-            plugins.append(modname.replace("_", "-"))
-
+    plugins = [
+        modname.replace("_", "-")
+        for _, modname, _ in _get_modules_iter(base)
+        if not modname.startswith("_")
+    ]
     # we wrap the output depending on terminal size
     width = get_terminal_width()
     click.echo(f"Displaying plugins available for {base!r}")

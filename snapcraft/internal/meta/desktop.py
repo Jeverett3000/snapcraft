@@ -47,7 +47,7 @@ class DesktopFile:
         if self._app_name == self._snap_name:
             exec_split[0] = self._app_name
         else:
-            exec_split[0] = "{}.{}".format(self._snap_name, self._app_name)
+            exec_split[0] = f"{self._snap_name}.{self._app_name}"
 
         self._parser[section]["Exec"] = " ".join(exec_split)
 
@@ -58,11 +58,7 @@ class DesktopFile:
         self._parse_and_reformat_section_exec(section)
 
         if "Icon" in self._parser[section]:
-            icon = self._parser[section]["Icon"]
-
-            if icon_path is not None:
-                icon = icon_path
-
+            icon = icon_path if icon_path is not None else self._parser[section]["Icon"]
             # Strip any leading slash.
             icon = icon[1:] if icon.startswith("/") else icon
             # Strip any leading ${SNAP}.
@@ -70,10 +66,8 @@ class DesktopFile:
             # With everything stripped, check to see if the icon is there.
             if not os.path.exists(os.path.join(self._prime_dir, icon)):
                 logger.warning(
-                    "Icon {} specified in desktop file {} not found "
-                    "in prime directory".format(icon, self._filename)
+                    f"Icon {icon} specified in desktop file {self._filename} not found in prime directory"
                 )
-            # if it is, add "${SNAP}" back and set the icon
             else:
                 self._parser[section]["Icon"] = os.path.join("${SNAP}", icon)
 
@@ -98,7 +92,7 @@ class DesktopFile:
 
         # Rename the desktop file to match the app name. This will help
         # unity8 associate them (https://launchpad.net/bugs/1659330).
-        target_filename = "{}.desktop".format(self._app_name)
+        target_filename = f"{self._app_name}.desktop"
         target = os.path.join(gui_dir, target_filename)
         if os.path.exists(target):
             # Unlikely. A desktop file in setup/gui/ already existed for

@@ -53,11 +53,11 @@ class PartPatcher:
         self._is_libc6_staged = "libc6" in stage_packages
 
     def _get_glibc_compatibility(self, linker_version: str) -> Dict[str, str]:
-        linker_incompat = dict()  # type: Dict[str, str]
-        for elf_file in self._elf_files:
-            if not elf_file.is_linker_compatible(linker_version=linker_version):
-                linker_incompat[elf_file.path] = elf_file.get_required_glibc()
-        return linker_incompat
+        return {
+            elf_file.path: elf_file.get_required_glibc()
+            for elf_file in self._elf_files
+            if not elf_file.is_linker_compatible(linker_version=linker_version)
+        }
 
     def _get_preferred_patchelf_path(self):
         # TODO revisit if we need to support variations and permutations

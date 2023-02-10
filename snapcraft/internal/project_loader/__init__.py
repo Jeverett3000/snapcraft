@@ -41,10 +41,10 @@ def replace_attr(
         for replacement, value in replacements.items():
             attr = attr.replace(replacement, str(value))
         return attr
-    elif isinstance(attr, list) or isinstance(attr, tuple):
+    elif isinstance(attr, (list, tuple)):
         return [cast(str, replace_attr(i, replacements)) for i in attr]
     elif isinstance(attr, dict):
-        result = dict()  # type: Dict[str, str]
+        result = {}
         for key, value in attr.items():
             # Run replacements on both the key and value
             key = cast(str, replace_attr(key, replacements))

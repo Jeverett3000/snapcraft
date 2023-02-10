@@ -41,9 +41,9 @@ class ReviewError(SnapcraftException):
         )
 
     def _get_issues(self, issue_type: str) -> Dict[str, Any]:
-        issues: Dict[str, Any] = dict()
+        issues: Dict[str, Any] = {}
         for severity in ("error", "warn"):
-            issues.update(self._review_json[issue_type].get(severity))
+            issues |= self._review_json[issue_type].get(severity)
 
         return issues
 
@@ -71,7 +71,6 @@ class ReviewError(SnapcraftException):
                     details += "- {text} (Refer to {link})\n".format(**issue)
                 else:
                     details += "- {text}\n".format(**issue)
-            else:
-                details += "\n"
+            details += "\n"
 
         return details.strip()

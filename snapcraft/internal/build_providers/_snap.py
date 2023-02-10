@@ -40,8 +40,7 @@ def _get_snap_channel(snap_name: str) -> storeapi.channels.Channel:
     if env_channel is not None and snap_name == "snapcraft":
         channel = env_channel
         logger.warning(
-            "SNAPCRAFT_BUILD_ENVIRONMENT_CHANNEL_SNAPCRAFT is set: installing "
-            "snapcraft from {}".format(channel)
+            f"SNAPCRAFT_BUILD_ENVIRONMENT_CHANNEL_SNAPCRAFT is set: installing snapcraft from {channel}"
         )
     else:
         channel = "latest/stable"
@@ -113,20 +112,12 @@ class _SnapManager:
         #   match the one on the host, then a snap injection from the host will take place.
         if not is_installed and self._latest_revision is None:
             op = _SnapOp.INSTALL
-        elif not is_installed and self._latest_revision is not None:
+        elif not is_installed:
             op = _SnapOp.REFRESH
-        elif is_installed and self._latest_revision == host_snap_info["revision"]:
+        elif self._latest_revision == host_snap_info["revision"]:
             op = _SnapOp.NOP
-        elif is_installed and self._latest_revision != host_snap_info["revision"]:
-            op = _SnapOp.INJECT
         else:
-            # This is a programmatic error
-            raise RuntimeError(
-                "Unhandled scenario for {!r} (host installed: {}, latest_revision {})".format(
-                    self.snap_name, is_installed, self._latest_revision
-                )
-            )
-
+            op = _SnapOp.INJECT
         self.__required_operation = op
         return op
 
@@ -134,10 +125,8 @@ class _SnapManager:
         # TODO not being able to lock down on a snap revision can lead to races.
         host_snap_repo = self._get_snap_repo()
         with tempfile.TemporaryDirectory() as temp_dir:
-            snap_file_path = os.path.join(temp_dir, "{}.snap".format(self.snap_name))
-            assertion_file_path = os.path.join(
-                temp_dir, "{}.assert".format(self.snap_name)
-            )
+            snap_file_path = os.path.join(temp_dir, f"{self.snap_name}.snap")
+            assertion_file_path = os.path.join(temp_dir, f"{self.snap_name}.assert")
             host_snap_repo.local_download(
                 snap_path=snap_file_path, assertion_path=assertion_file_path
             )
@@ -154,9 +143,9 @@ class _SnapManager:
         op = self.get_op()
         host_snap_repo = self._get_snap_repo()
 
-        install_cmd = list()  # type: List[str]
+        install_cmd = []
         switch_cmd: Optional[List[str]] = None
-        assertion_ack_cmd = list()  # type: List[str]
+        assertion_ack_cmd = []
         snap_revision = None
 
         if op == _SnapOp.INJECT:
@@ -182,19 +171,17 @@ class _SnapManager:
 
             # File names need to be the last items in these two.
             install_cmd.append(
-                os.path.join(
-                    self._remote_snap_dir, "{}.snap".format(host_snap_repo.name)
-                )
+                os.path.join(self._remote_snap_dir, f"{host_snap_repo.name}.snap")
             )
             assertion_ack_cmd = [
                 "snap",
                 "ack",
                 os.path.join(
-                    self._remote_snap_dir, "{}.assert".format(host_snap_repo.name)
+                    self._remote_snap_dir, f"{host_snap_repo.name}.assert"
                 ),
             ]
 
-        elif op == _SnapOp.INSTALL or op == _SnapOp.REFRESH:
+        elif op in [_SnapOp.INSTALL, _SnapOp.REFRESH]:
             install_cmd = ["snap", op.name.lower()]
             snap_channel = _get_snap_channel(self.snap_name)
 
@@ -205,9 +192,13 @@ class _SnapManager:
             snap_revision = snap_channel_map.revision
             if snap_channel_map.confinement == "classic":
                 install_cmd.append("--classic")
-            install_cmd.extend(["--channel", snap_channel_map.channel_details.name])
-            install_cmd.append(host_snap_repo.name)
-
+            install_cmd.extend(
+                [
+                    "--channel",
+                    snap_channel_map.channel_details.name,
+                    host_snap_repo.name,
+                ]
+            )
         self.__install_cmd = install_cmd
         self.__switch_cmd = switch_cmd
         self.__assertion_ack_cmd = assertion_ack_cmd
@@ -266,7 +257,7 @@ class _SnapManager:
 
 def _load_registry(registry_filepath: Optional[str]) -> Dict[str, List[Any]]:
     if registry_filepath is None or not os.path.exists(registry_filepath):
-        return dict()
+        return {}
 
     with open(registry_filepath) as registry_file:
         return yaml_utils.load(registry_file)
@@ -278,8 +269,7 @@ def _save_registry(
     if registry_filepath is None:
         return
 
-    dirpath = os.path.dirname(registry_filepath)
-    if dirpath:
+    if dirpath := os.path.dirname(registry_filepath):
         os.makedirs(dirpath, exist_ok=True)
 
     with open(registry_filepath, "w") as registry_file:
@@ -332,7 +322,7 @@ class SnapInjector:
         hold_time = datetime.datetime.now() + datetime.timedelta(days=1)
         logger.debug("Holding refreshes for snaps.")
         self._runner(
-            ["snap", "set", "system", "refresh.hold={}Z".format(hold_time.isoformat())],
+            ["snap", "set", "system", f"refresh.hold={hold_time.isoformat()}Z"],
             hide_output=True,
         )
 

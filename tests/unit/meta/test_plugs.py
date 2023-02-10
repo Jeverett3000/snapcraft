@@ -55,7 +55,7 @@ class GenericPlugTests(unit.TestCase):
         plug = Plug.from_object(plug_name="plug-name", plug_object=None)
         plug.validate()
 
-        self.assertThat(plug._plug_dict, Equals(dict()))
+        self.assertThat(plug._plug_dict, Equals({}))
 
     def test_from_object_string(self):
         plug = Plug.from_object(plug_name="plug-name", plug_object="some-interface")

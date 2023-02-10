@@ -54,7 +54,7 @@ def test_convert_metrics_to_table_no_data(caplog, metric_name):
     )
 
     assert convert_metrics_to_table(results) == []
-    assert [rec.message for rec in caplog.records] == []
+    assert not [rec.message for rec in caplog.records]
 
 
 @pytest.mark.parametrize("metric_name", [n.value for n in metrics.MetricsNames])
@@ -87,7 +87,7 @@ def test_convert_metrics_to_table_store_one_bucket(caplog, metric_name):
         (get_series_label_from_metric_name(metric_name), "2021-01-01"),
         ("Blah", 1),
     ]
-    assert [rec.message for rec in caplog.records] == []
+    assert not [rec.message for rec in caplog.records]
 
 
 @pytest.mark.parametrize("metric_name", [n.value for n in metrics.MetricsNames])
@@ -115,4 +115,4 @@ def test_convert_metrics_to_table_store_multiple_buckets(caplog, metric_name):
         ("Blahh", 4, 5, 6),
         ("Blahhh", 7, 8, 9),
     ]
-    assert [rec.message for rec in caplog.records] == []
+    assert not [rec.message for rec in caplog.records]

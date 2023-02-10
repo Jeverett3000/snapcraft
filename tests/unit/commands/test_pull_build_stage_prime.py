@@ -102,7 +102,7 @@ class TestPullBuildStagePrimeCommand(LifecycleCommandsBaseTestCase):
         self.assertThat(result.exit_code, Equals(0))
         self.fake_get_provider_for.mock.assert_not_called()
         self.fake_lifecycle_execute.mock.assert_called_once_with(
-            step, mock.ANY, tuple(["part0", "part1", "part2"])
+            step, mock.ANY, ("part0", "part1", "part2")
         )
 
     def test_pull_defaults(self):

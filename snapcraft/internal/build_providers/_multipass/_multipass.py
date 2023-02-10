@@ -97,7 +97,7 @@ class Multipass(Provider):
         )
 
     def _get_disk_image(self) -> str:
-        return "snapcraft:{}".format(self.project._get_build_base())
+        return f"snapcraft:{self.project._get_build_base()}"
 
     def _launch(self) -> None:
         image = self._get_disk_image()
@@ -130,11 +130,11 @@ class Multipass(Provider):
         self._multipass_cmd.start(instance_name=self.instance_name)
 
     def _umount(self, *, mountpoint: str) -> None:
-        mount = "{}:{}".format(self.instance_name, mountpoint)
+        mount = f"{self.instance_name}:{mountpoint}"
         self._multipass_cmd.umount(mount=mount)
 
     def _push_file(self, *, source: str, destination: str) -> None:
-        destination = "{}:{}".format(self.instance_name, destination)
+        destination = f"{self.instance_name}:{destination}"
         with open(source, "rb") as file:
             self._multipass_cmd.push_file(source=file, destination=destination)
 
@@ -199,7 +199,7 @@ class Multipass(Provider):
             # Nothing to do if already mounted.
             return
 
-        target = "{}:{}".format(self.instance_name, target)
+        target = f"{self.instance_name}:{target}"
         if sys.platform != "win32":
             uid_map = {str(os.getuid()): "0"}
             gid_map = {str(os.getgid()): "0"}
@@ -224,7 +224,7 @@ class Multipass(Provider):
         self._run(command=["test", "-f", name])
 
         # copy file from instance
-        source = "{}:{}".format(self.instance_name, name)
+        source = f"{self.instance_name}:{name}"
         with open(destination, "wb") as file:
             self._multipass_cmd.pull_file(source=source, destination=file)
         if delete:

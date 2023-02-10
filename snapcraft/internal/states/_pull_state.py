@@ -79,10 +79,9 @@ class PullState(PartState):
     def properties_of_interest(self, part_properties):
         """Extract the properties concerning this step from part_properties."""
 
-        properties = {}
-        for name in self.schema_properties:
-            properties[name] = part_properties.get(name)
-
+        properties = {
+            name: part_properties.get(name) for name in self.schema_properties
+        }
         for name in _schema_properties():
             properties[name] = part_properties.get(name)
 

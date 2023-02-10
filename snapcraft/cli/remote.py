@@ -140,11 +140,7 @@ def remote_build(
     architectures = _determine_architectures(project, build_on)
 
     # Calculate timeout timestamp, if specified.
-    if launchpad_timeout > 0:
-        deadline = int(time.time()) + launchpad_timeout
-    else:
-        deadline = 0
-
+    deadline = int(time.time()) + launchpad_timeout if launchpad_timeout > 0 else 0
     lp = LaunchpadClient(
         project=project,
         build_id=build_id,
@@ -239,11 +235,9 @@ def _monitor_build(lp: LaunchpadClient) -> None:
 
 
 def _check_supported_architectures(archs: List[str]) -> None:
-    unsupported_archs = []
-    for item in archs:
-        if item not in _SUPPORTED_ARCHS:
-            unsupported_archs.append(item)
-    if unsupported_archs:
+    if unsupported_archs := [
+        item for item in archs if item not in _SUPPORTED_ARCHS
+    ]:
         raise errors.UnsupportedArchitectureError(archs=unsupported_archs)
 
 

@@ -169,8 +169,7 @@ class Runner:
             status = None
             try:
                 while status is None:
-                    function_call = call_fifo.read()
-                    if function_call:
+                    if function_call := call_fifo.read():
                         # Handle the function and let caller know that function
                         # call has been handled (must contain at least a
                         # newline, anything beyond is considered an error by
@@ -246,10 +245,8 @@ class _NonBlockingRWFifo:
     def read(self) -> str:
         total_read = ""
         with contextlib.suppress(BlockingIOError):
-            value = os.read(self._fd, 1024)
-            while value:
+            while value := os.read(self._fd, 1024):
                 total_read += value.decode(sys.getfilesystemencoding())
-                value = os.read(self._fd, 1024)
         return total_read
 
     def write(self, data: str) -> int:

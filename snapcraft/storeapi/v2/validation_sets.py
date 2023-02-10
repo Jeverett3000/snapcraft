@@ -52,14 +52,15 @@ class Snap:
         return payload
 
     def __eq__(self, other) -> bool:
-        if not isinstance(other, Snap):
-            return False
-
         return (
-            self.name == other.name
-            and self.snap_id == other.snap_id
-            and self.presence == other.presence
-            and self.revision == other.revision
+            (
+                self.name == other.name
+                and self.snap_id == other.snap_id
+                and self.presence == other.presence
+                and self.revision == other.revision
+            )
+            if isinstance(other, Snap)
+            else False
         )
 
     def __repr__(self) -> str:
@@ -111,19 +112,20 @@ class BuildAssertion:
         }
 
     def __eq__(self, other) -> bool:
-        if not isinstance(other, BuildAssertion):
-            return False
-
         return (
-            self.name == other.name
-            and self.account_id == other.account_id
-            and self.authority_id == other.authority_id
-            and self.revision == other.revision
-            and self.sequence == other.sequence
-            and self.snaps == other.snaps
-            and self.timestamp == other.timestamp
-            and self.assertion_type == other.assertion_type
-            and self.series == other.series
+            (
+                self.name == other.name
+                and self.account_id == other.account_id
+                and self.authority_id == other.authority_id
+                and self.revision == other.revision
+                and self.sequence == other.sequence
+                and self.snaps == other.snaps
+                and self.timestamp == other.timestamp
+                and self.assertion_type == other.assertion_type
+                and self.series == other.series
+            )
+            if isinstance(other, BuildAssertion)
+            else False
         )
 
     def __repr__(self) -> str:
@@ -159,7 +161,7 @@ class ValidationSets:
         return cls(
             assertions=[
                 BuildAssertion.unmarshal(a["headers"])
-                for a in payload.get("assertions", list())
+                for a in payload.get("assertions", [])
             ]
         )
 

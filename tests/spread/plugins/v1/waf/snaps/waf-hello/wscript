@@ -110,10 +110,7 @@ from waflib import TaskGen
 
 @TaskGen.feature('strictlib')
 def check_lib_in_libpath(self):
-	#For use in a configuration check: raise an exception
-	#if the library file does not exist in the folders pointed by 'libpath'
-	pths = self.to_list(getattr(self, 'libpath', []))
-	if pths:
+	if pths := self.to_list(getattr(self, 'libpath', [])):
 		for l in self.to_list(Utils.to_list(getattr(self, 'lib', []))):
 			for x in pths:
 				names = Utils.listdir(x)
@@ -121,5 +118,5 @@ def check_lib_in_libpath(self):
 				if lname in names:
 					break
 			else:
-				self.bld.fatal('wrong path for the library %s' % l)
+				self.bld.fatal(f'wrong path for the library {l}')
 

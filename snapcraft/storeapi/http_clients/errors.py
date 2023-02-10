@@ -36,7 +36,7 @@ class HttpClientError(SnapcraftError):
 
     def __init__(self, **kwargs):
         with contextlib.suppress(KeyError, AttributeError):
-            logger.debug("Store error response: {}".format(kwargs["response"].__dict__))
+            logger.debug(f'Store error response: {kwargs["response"].__dict__}')
         super().__init__(**kwargs)
 
 
@@ -48,9 +48,7 @@ class StoreServerError(HttpClientError):
         what = "The Snap Store encountered an error while processing your request"
         error_code = response.status_code
         error_text = response.reason
-        action = "The operational status of the Snap Store can be checked at {}".format(
-            _STORE_STATUS_URL
-        )
+        action = f"The operational status of the Snap Store can be checked at {_STORE_STATUS_URL}"
         self.response = response
 
         super().__init__(
@@ -71,11 +69,7 @@ class StoreNetworkError(HttpClientError):
         with contextlib.suppress(IndexError):
             underlying_exception = exception.args[0]
             if isinstance(underlying_exception, urllib3.exceptions.MaxRetryError):
-                message = (
-                    "maximum retries exceeded trying to reach the store.\n"
-                    "Check your network connection, and check the store "
-                    "status at {}".format(_STORE_STATUS_URL)
-                )
+                message = f"maximum retries exceeded trying to reach the store.\nCheck your network connection, and check the store status at {_STORE_STATUS_URL}"
         super().__init__(message=message)
 
 
@@ -103,7 +97,7 @@ class StoreAuthenticationError(HttpClientError):
                 extra_error_message = response_json["message"]
 
             if extra_error_message:
-                message += ": {}".format(extra_error_message)
+                message += f": {extra_error_message}"
 
         super().__init__(response=response, message=message)
 

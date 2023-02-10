@@ -63,16 +63,13 @@ class NpmPlugin(PluginV2):
     @staticmethod
     def _get_architecture() -> str:
         snap_arch = os.getenv("SNAP_ARCH")
-        # The first scenario is the general case as snapcraft will be running from the snap.
-        if snap_arch is not None:
-            node_arch = _NODE_ARCH_FROM_SNAP_ARCH[snap_arch]
-        # But there may be times when running from a virtualenv while doing development.
-        else:
-            node_arch = _NODE_ARCH_FROM_PLATFORM[platform.machine()][
+        return (
+            _NODE_ARCH_FROM_SNAP_ARCH[snap_arch]
+            if snap_arch is not None
+            else _NODE_ARCH_FROM_PLATFORM[platform.machine()][
                 platform.architecture()[0]
             ]
-
-        return node_arch
+        )
 
     def get_build_snaps(self) -> Set[str]:
         return set()

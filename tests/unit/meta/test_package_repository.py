@@ -327,11 +327,11 @@ def test_ppa_unmarshal_invalid_apt_ppa_extra_keys():
 
 
 def test_unmarshal_package_repositories_list_none():
-    assert PackageRepository.unmarshal_package_repositories(None) == list()
+    assert PackageRepository.unmarshal_package_repositories(None) == []
 
 
 def test_unmarshal_package_repositories_list_empty():
-    assert PackageRepository.unmarshal_package_repositories(list()) == list()
+    assert PackageRepository.unmarshal_package_repositories([]) == []
 
 
 def test_unmarshal_package_repositories_list_ppa():

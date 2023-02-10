@@ -75,27 +75,21 @@ class CatkinToolsPlugin(catkin.CatkinPlugin):
 
     def _configure_catkin_profile(self):
         # Use catkin config to set all configurations before running build.
-        catkincmd = ["catkin", "config"]
+        catkincmd = [
+            "catkin",
+            "config",
+            "--profile",
+            "default",
+            *["--build-space", self.builddir],
+            *[
+                "--source-space",
+                os.path.join(self.builddir, self.options.source_space),
+            ],
+        ]
 
-        # Use the newly created default profile.
-        catkincmd.extend(["--profile", "default"])
-
-        # Configure catkin tools to use the snapcraft source, build, and
-        # install directories.
-        catkincmd.extend(["--build-space", self.builddir])
-
-        catkincmd.extend(
-            ["--source-space", os.path.join(self.builddir, self.options.source_space)]
-        )
-
-        catkincmd.extend(["--install", "--install-space", self.rosdir])
-
-        # Add any cmake-args requested from the plugin options.
-        catkincmd.append("--cmake-args")
-        build_type = "Release"
-        if "debug" in self.options.build_attributes:
-            build_type = "Debug"
-        catkincmd.append("-DCMAKE_BUILD_TYPE={}".format(build_type))
+        catkincmd.extend(["--install", "--install-space", self.rosdir, "--cmake-args"])
+        build_type = "Debug" if "debug" in self.options.build_attributes else "Release"
+        catkincmd.append(f"-DCMAKE_BUILD_TYPE={build_type}")
 
         catkincmd.extend(self._parse_cmake_args())
 
@@ -107,13 +101,7 @@ class CatkinToolsPlugin(catkin.CatkinPlugin):
             return
 
         # Call catkin build.
-        catkincmd = ["catkin", "build"]
-
-        # Prevent notification that the build is complete.
-        catkincmd.append("--no-notify")
-
-        # Use the newly created default profile.
-        catkincmd.extend(["--profile", "default"])
+        catkincmd = ["catkin", "build", "--no-notify", "--profile", "default"]
 
         if self.catkin_packages:
             catkincmd.extend(self.catkin_packages)

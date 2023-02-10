@@ -49,10 +49,7 @@ class CacheUpdateFailedError(RepoError):
     )
 
     def __init__(self, errors: str) -> None:
-        if errors:
-            errors = "\n\n{}\n\n".format(errors.replace(", ", "\n"))
-        else:
-            errors = " "
+        errors = "\n\n{}\n\n".format(errors.replace(", ", "\n")) if errors else " "
         super().__init__(errors=errors)
 
 
@@ -105,10 +102,7 @@ class PackageNotFoundError(RepoError):
         if _is_deb_based(distro) and ":" in self.package_name:
             (name, arch) = self.package_name.split(":", 2)
             if arch:
-                message += (
-                    "\nYou may need to add support for this architecture with "
-                    "'dpkg --add-architecture {}'.".format(arch)
-                )
+                message += f"\nYou may need to add support for this architecture with 'dpkg --add-architecture {arch}'."
         return message
 
     def __init__(self, package_name):

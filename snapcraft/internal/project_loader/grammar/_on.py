@@ -96,7 +96,7 @@ class OnStatement(Statement):
         return False
 
     def __str__(self) -> str:
-        return "on {}".format(",".join(sorted(self.selectors)))
+        return f'on {",".join(sorted(self.selectors))}'
 
 
 def _extract_on_clause_selectors(on: str) -> Set[str]:

@@ -157,21 +157,19 @@ class HelpCommandTestCase(HelpCommandBaseTestCase):
     def test_no_unicode_in_help_strings(self):
         helps = ["topics"]
 
-        for key in _TOPICS.keys():
-            helps.append(str(key))
-
+        helps.extend(str(key) for key in _TOPICS.keys())
         # Get a list of plugins
         import os
         from pathlib import Path
 
         import snapcraft.plugins
 
-        for plugin in Path(snapcraft.plugins.__path__[0]).glob("*.py"):
-            if os.path.isfile(str(plugin)) and not os.path.basename(
-                str(plugin)
-            ).startswith("_"):
-                helps.append(os.path.basename(str(plugin)[:-3]))
-
+        helps.extend(
+            os.path.basename(str(plugin)[:-3])
+            for plugin in Path(snapcraft.plugins.__path__[0]).glob("*.py")
+            if os.path.isfile(str(plugin))
+            and not os.path.basename(str(plugin)).startswith("_")
+        )
         for key in helps:
             result = self.run_command(["help", key])
             # An UnicodeEncodeError will be raised if the help text has

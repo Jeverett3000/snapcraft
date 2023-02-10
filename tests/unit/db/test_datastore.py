@@ -49,7 +49,7 @@ def test_create_no_migration(tmp_path):
     db_path = tmp_path / "db.yaml"
 
     with datastore.Datastore(path=db_path, migrations=[], snapcraft_version="42") as db:
-        assert isinstance(db, tinydb.TinyDB) is True
+        assert isinstance(db, tinydb.TinyDB)
         db.table("test").insert({"foo": "bar"})
 
     assert db_path.read_text() == textwrap.dedent(
@@ -65,9 +65,9 @@ def test_create_default_migration(tmp_path):
     db_path = tmp_path / "db.yaml"
 
     with datastore.Datastore(
-        path=db_path, migrations=[migration.MigrationV1], snapcraft_version="42"
-    ) as db:
-        assert isinstance(db, tinydb.TinyDB) is True
+            path=db_path, migrations=[migration.MigrationV1], snapcraft_version="42"
+        ) as db:
+        assert isinstance(db, tinydb.TinyDB)
         db.table("test").insert({"foo": "bar"})
 
     assert db_path.read_text() == textwrap.dedent(
@@ -94,7 +94,7 @@ def test_unknown_version(tmp_path):
 
     # Populate test db with schema version greater than 1.
     with datastore.Datastore(path=db_path, migrations=[], snapcraft_version="42") as db:
-        assert isinstance(db, tinydb.TinyDB) is True
+        assert isinstance(db, tinydb.TinyDB)
         db.table("control").insert(control_record)
 
     # Re-open db, should raise version unsupported error.

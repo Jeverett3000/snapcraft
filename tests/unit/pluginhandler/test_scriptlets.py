@@ -64,13 +64,13 @@ class ScriptletCommandsTestCase(CommandBaseTestCase):
 
         fake_install_build_packages = fixtures.MockPatch(
             "snapcraft.internal.lifecycle._runner._install_build_packages",
-            return_value=list(),
+            return_value=[],
         )
         self.useFixture(fake_install_build_packages)
 
         fake_install_build_snaps = fixtures.MockPatch(
             "snapcraft.internal.lifecycle._runner._install_build_snaps",
-            return_value=list(),
+            return_value=[],
         )
         self.useFixture(fake_install_build_snaps)
 
@@ -107,9 +107,7 @@ class TestScriptletSetter:
     def test_set_in_pull(self, tmp_work_path, setter, getter, value):
         handler = unit.load_part(
             "test_part",
-            part_properties={
-                "override-pull": "snapcraftctl {} {}".format(setter, value)
-            },
+            part_properties={"override-pull": f"snapcraftctl {setter} {value}"},
         )
 
         handler.pull()
@@ -121,9 +119,7 @@ class TestScriptletSetter:
     def test_set_in_build(self, tmp_work_path, setter, getter, value):
         handler = unit.load_part(
             "test_part",
-            part_properties={
-                "override-build": "snapcraftctl {} {}".format(setter, value)
-            },
+            part_properties={"override-build": f"snapcraftctl {setter} {value}"},
         )
 
         handler.pull()
@@ -138,9 +134,7 @@ class TestScriptletSetter:
     def test_set_in_stage(self, tmp_work_path, setter, getter, value):
         handler = unit.load_part(
             "test_part",
-            part_properties={
-                "override-stage": "snapcraftctl {} {}".format(setter, value)
-            },
+            part_properties={"override-stage": f"snapcraftctl {setter} {value}"},
         )
 
         handler.pull()
@@ -158,9 +152,7 @@ class TestScriptletSetter:
     def test_set_in_prime(self, tmp_work_path, setter, getter, value):
         handler = unit.load_part(
             "test_part",
-            part_properties={
-                "override-prime": "snapcraftctl {} {}".format(setter, value)
-            },
+            part_properties={"override-prime": f"snapcraftctl {setter} {value}"},
         )
 
         handler.pull()
@@ -279,7 +271,7 @@ class TestScriptletMultipleSettersError:
         # an error.
         if len(part_properties) == 1:
             for key, value in part_properties.items():
-                part_properties[key] += "\n{}".format(value)
+                part_properties[key] += f"\n{value}"
 
         handler = unit.load_part("test_part", part_properties=part_properties)
 

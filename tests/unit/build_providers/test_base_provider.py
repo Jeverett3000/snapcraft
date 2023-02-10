@@ -53,7 +53,7 @@ class BaseProviderTest(BaseProviderBaseTest):
         )
         self.assertThat(
             provider.snap_filename,
-            Equals("project-name_1.0_{}.snap".format(self.project.deb_arch)),
+            Equals(f"project-name_1.0_{self.project.deb_arch}.snap"),
         )
 
     def test_context(self):
@@ -92,7 +92,7 @@ class BaseProviderTest(BaseProviderBaseTest):
 
         self.assertThat(
             provider.snap_filename,
-            Equals("project-name_test-version_{}.snap".format(self.project.deb_arch)),
+            Equals(f"project-name_test-version_{self.project.deb_arch}.snap"),
         )
 
     def test_launch_instance(self):
@@ -287,7 +287,7 @@ class BaseProviderTest(BaseProviderBaseTest):
         )
 
         # Not present.
-        provider.build_provider_flags = dict()
+        provider.build_provider_flags = {}
         provider._mount_project()
         provider.mount_mock.assert_has_calls(
             [call(self.project._project_dir, "/root/project")]
@@ -355,7 +355,7 @@ class BaseProviderTest(BaseProviderBaseTest):
 
     def test_passthrough_environment_flags_empty(self):
         provider = ProviderImpl(project=self.project, echoer=self.echoer_mock)
-        provider.build_provider_flags = dict()
+        provider.build_provider_flags = {}
 
         results = provider._get_env_command()
 
@@ -688,7 +688,7 @@ def test_setup_environment_content_x86(
 
     monkeypatch.setattr(platform, "machine", lambda: machine_platform[0])
 
-    recorded_files = dict()
+    recorded_files = {}
 
     @contextlib.contextmanager
     def fake_namedtempfile(*, suffix: str, **kwargs):

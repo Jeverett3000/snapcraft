@@ -67,76 +67,36 @@ class Snap:
     ) -> None:
         self.adopt_info = adopt_info
 
-        if apps is None:
-            self.apps: Dict[str, Application] = dict()
-        else:
-            self.apps = apps
-
-        if architectures is None:
-            self.architectures: Sequence[str] = list()
-        else:
-            self.architectures = architectures
-
-        if assumes is None:
-            self.assumes: Set[str] = set()
-        else:
-            self.assumes = assumes
-
+        self.apps = {} if apps is None else apps
+        self.architectures = [] if architectures is None else architectures
+        self.assumes = set() if assumes is None else assumes
         self.base = base
         self.build_base = build_base
         self.compression = compression
         self.confinement = confinement
         self.description = description
 
-        if environment is None:
-            self.environment: Dict[str, Any] = dict()
-        else:
-            self.environment = environment
-
+        self.environment = {} if environment is None else environment
         self.epoch = epoch
         self.grade = grade
 
-        if hooks is None:
-            self.hooks: Dict[str, Hook] = dict()
-        else:
-            self.hooks = hooks
-
-        if layout is None:
-            self.layout: Dict[str, Any] = dict()
-        else:
-            self.layout = layout
-
+        self.hooks = {} if hooks is None else hooks
+        self.layout = {} if layout is None else layout
         self.license = license
         self.links = links
         self.name = name
 
         if package_repositories is None:
-            self.package_repositories: List[PackageRepository] = list()
+            self.package_repositories: List[PackageRepository] = []
         else:
             self.package_repositories = package_repositories
 
-        if passthrough is None:
-            self.passthrough: Dict[str, Any] = dict()
-        else:
-            self.passthrough = passthrough
-
-        if plugs is None:
-            self.plugs: Dict[str, Plug] = dict()
-        else:
-            self.plugs = plugs
-
-        if slots is None:
-            self.slots: Dict[str, Slot] = dict()
-        else:
-            self.slots = slots
-
+        self.passthrough = {} if passthrough is None else passthrough
+        self.plugs = {} if plugs is None else plugs
+        self.slots = {} if slots is None else slots
         self.summary = summary
 
-        if system_usernames is None:
-            self.system_usernames: Dict[str, SystemUser] = dict()
-        else:
-            self.system_usernames = system_usernames
-
+        self.system_usernames = {} if system_usernames is None else system_usernames
         self.title = title
         self.type = type
         self.version = version
@@ -156,11 +116,7 @@ class Snap:
             if app.passthrough:
                 return True
 
-        for hook in self.hooks.values():
-            if hook.passthrough:
-                return True
-
-        return False
+        return any(hook.passthrough for hook in self.hooks.values())
 
     def get_build_base(self) -> str:
         """
@@ -286,9 +242,8 @@ class Snap:
         architectures = snap_dict.pop("architectures", None)
 
         # Process apps into Applications.
-        apps: Dict[str, Application] = dict()
-        apps_dict = snap_dict.pop("apps", None)
-        if apps_dict:
+        apps: Dict[str, Application] = {}
+        if apps_dict := snap_dict.pop("apps", None):
             for app_name, app_dict in apps_dict.items():
                 app = Application.from_dict(app_dict=app_dict, app_name=app_name)
                 apps[app_name] = app
@@ -306,9 +261,8 @@ class Snap:
         grade = snap_dict.pop("grade", None)
 
         # Process hooks into Hooks.
-        hooks: Dict[str, Hook] = dict()
-        hooks_dict = snap_dict.pop("hooks", None)
-        if hooks_dict:
+        hooks: Dict[str, Hook] = {}
+        if hooks_dict := snap_dict.pop("hooks", None):
             for hook_name, hook_dict in hooks_dict.items():
                 # This can happen, but should be moved into Hook.from_object().
                 if hook_dict is None:
@@ -332,7 +286,7 @@ class Snap:
         # today it would lead to a compatible result once snapd supports this.
         links = snap_dict.pop("links", None)
         if links is None:
-            links = dict()
+            links = {}
             for link_name in (
                 "contact",
                 "donation",
@@ -359,17 +313,15 @@ class Snap:
         passthrough = snap_dict.pop("passthrough", None)
 
         # Process plugs into Plugs.
-        plugs: Dict[str, Plug] = dict()
-        plugs_dict = snap_dict.pop("plugs", None)
-        if plugs_dict:
+        plugs: Dict[str, Plug] = {}
+        if plugs_dict := snap_dict.pop("plugs", None):
             for plug_name, plug_object in plugs_dict.items():
                 plug = Plug.from_object(plug_object=plug_object, plug_name=plug_name)
                 plugs[plug_name] = plug
 
         # Process slots into Slots.
-        slots: Dict[str, Slot] = dict()
-        slots_dict = snap_dict.pop("slots", None)
-        if slots_dict:
+        slots: Dict[str, Slot] = {}
+        if slots_dict := snap_dict.pop("slots", None):
             for slot_name, slot_object in slots_dict.items():
                 slot = Slot.from_object(slot_object=slot_object, slot_name=slot_name)
                 slots[slot_name] = slot
@@ -377,9 +329,8 @@ class Snap:
         summary = snap_dict.pop("summary", None)
 
         # Process sytemusers into SystemUsers.
-        system_usernames: Dict[str, SystemUser] = dict()
-        system_usernames_dict = snap_dict.pop("system-usernames", None)
-        if system_usernames_dict:
+        system_usernames: Dict[str, SystemUser] = {}
+        if system_usernames_dict := snap_dict.pop("system-usernames", None):
             for user_name, user_object in system_usernames_dict.items():
                 system_username = SystemUser.from_object(
                     user_object=user_object, user_name=user_name
@@ -490,8 +441,7 @@ class Snap:
         if self.links:
             snap_dict["links"] = self.links
 
-        package_repos = [repo.marshal() for repo in self.package_repositories]
-        if package_repos:
+        if package_repos := [repo.marshal() for repo in self.package_repositories]:
             snap_dict["package-repositories"] = package_repos
 
         if self.passthrough:
@@ -530,7 +480,7 @@ class Snap:
         snap_dict.pop("package-repositories", None)
 
         # Apply passthrough keys.
-        passthrough = snap_dict.pop("passthrough", dict())
+        passthrough = snap_dict.pop("passthrough", {})
         snap_dict.update(passthrough)
 
         return snap_dict

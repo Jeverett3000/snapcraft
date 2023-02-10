@@ -71,24 +71,21 @@ class CondaPluginPropertiesTest(unit.TestCase):
         self.assertThat(
             conda_packages_type,
             Equals("array"),
-            'Expected "conda-packages" "type" to be "array", but '
-            'it was "{}"'.format(conda_packages_type),
+            f'Expected "conda-packages" "type" to be "array", but it was "{conda_packages_type}"',
         )
 
         conda_packages_default = conda_packages["default"]
         self.assertThat(
             conda_packages_default,
             Equals([]),
-            'Expected "conda-packages" "default" to be '
-            '"d[]", but it was "{}"'.format(conda_packages_default),
+            f'Expected "conda-packages" "default" to be "d[]", but it was "{conda_packages_default}"',
         )
 
         conda_packages_minitems = conda_packages["minitems"]
         self.assertThat(
             conda_packages_minitems,
             Equals(1),
-            'Expected "conda-packages" "minitems" to be 1, but '
-            "it was {}".format(conda_packages_minitems),
+            f'Expected "conda-packages" "minitems" to be 1, but it was {conda_packages_minitems}',
         )
 
         self.assertTrue(conda_packages["uniqueItems"])
@@ -103,8 +100,7 @@ class CondaPluginPropertiesTest(unit.TestCase):
         self.assertThat(
             conda_packages_items_type,
             Equals("string"),
-            'Expected "conda-packages" "item" "type" to be '
-            '"string", but it was "{}"'.format(conda_packages_items_type),
+            f'Expected "conda-packages" "item" "type" to be "string", but it was "{conda_packages_items_type}"',
         )
 
         # Check conda-python-version
@@ -121,16 +117,14 @@ class CondaPluginPropertiesTest(unit.TestCase):
         self.assertThat(
             conda_channel_type,
             Equals("string"),
-            'Expected "conda-python-version" "type" to be "string", but '
-            'it was "{}"'.format(conda_channel_type),
+            f'Expected "conda-python-version" "type" to be "string", but it was "{conda_channel_type}"',
         )
 
         conda_channel_default = conda_channel["default"]
         self.assertThat(
             conda_channel_default,
             Equals(""),
-            'Expected "conda-python-version" "default" to be '
-            '"latest/stable", but it was "{}"'.format(conda_channel_default),
+            f'Expected "conda-python-version" "default" to be "latest/stable", but it was "{conda_channel_default}"',
         )
 
         # Check conda-miniconda-version
@@ -147,16 +141,14 @@ class CondaPluginPropertiesTest(unit.TestCase):
         self.assertThat(
             conda_channel_type,
             Equals("string"),
-            'Expected "conda-miniconda-version" "type" to be "string", but '
-            'it was "{}"'.format(conda_channel_type),
+            f'Expected "conda-miniconda-version" "type" to be "string", but it was "{conda_channel_type}"',
         )
 
         conda_channel_default = conda_channel["default"]
         self.assertThat(
             conda_channel_default,
             Equals("latest"),
-            'Expected "conda-miniconda-version" "default" to be '
-            '"latest", but it was "{}"'.format(conda_channel_default),
+            f'Expected "conda-miniconda-version" "default" to be "latest", but it was "{conda_channel_default}"',
         )
 
         # Check required properties

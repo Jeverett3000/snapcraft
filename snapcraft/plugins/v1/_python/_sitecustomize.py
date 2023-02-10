@@ -50,13 +50,12 @@ _SITECUSTOMIZE_TEMPLATE = dedent(
 
 def _get_user_site_dir(python_major_version, *, install_dir):
     path_glob = os.path.join(
-        install_dir, "lib", "python{}*".format(python_major_version), "site-packages"
+        install_dir, "lib", f"python{python_major_version}*", "site-packages"
     )
-    user_site_dirs = glob.glob(path_glob)
-    if not user_site_dirs:
+    if user_site_dirs := glob.glob(path_glob):
+        return user_site_dirs[0][len(install_dir) + 1 :]
+    else:
         raise errors.MissingUserSitePackagesError(path_glob)
-
-    return user_site_dirs[0][len(install_dir) + 1 :]
 
 
 def _get_sitecustomize_path(python_major_version, *, stage_dir, install_dir):
@@ -70,7 +69,7 @@ def _get_sitecustomize_path(python_major_version, *, stage_dir, install_dir):
             base_dir = stage_dir
 
     site_py_glob = os.path.join(
-        base_dir, "usr", "lib", "python{}*".format(python_major_version), "site.py"
+        base_dir, "usr", "lib", f"python{python_major_version}*", "site.py"
     )
     python_sites = glob.glob(site_py_glob)
     if not python_sites:

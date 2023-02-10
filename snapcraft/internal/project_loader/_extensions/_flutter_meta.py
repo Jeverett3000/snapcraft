@@ -155,7 +155,7 @@ class FlutterMetaExtension(type):
             ],
         }
 
-        x.part_snippet = dict()
+        x.part_snippet = {}
 
         x.parts = {
             "gnome-3-28-extension": {

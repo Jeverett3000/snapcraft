@@ -37,17 +37,11 @@ def lifecycle_status(config: _config.Config) -> List[Dict[str, str]]:
             if cache.has_step_run(part, step):
                 part_summary[step.name] = "complete"
 
-            dirty_report = cache.get_dirty_report(part, step)
-            if dirty_report:
-                part_summary[step.name] = "dirty ({})".format(
-                    dirty_report.get_summary()
-                )
+            if dirty_report := cache.get_dirty_report(part, step):
+                part_summary[step.name] = f"dirty ({dirty_report.get_summary()})"
 
-            outdated_report = cache.get_outdated_report(part, step)
-            if outdated_report:
-                part_summary[step.name] = "outdated ({})".format(
-                    outdated_report.get_summary()
-                )
+            if outdated_report := cache.get_outdated_report(part, step):
+                part_summary[step.name] = f"outdated ({outdated_report.get_summary()})"
         summary.append(part_summary)
 
     return summary

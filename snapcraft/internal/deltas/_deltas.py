@@ -110,7 +110,7 @@ class BaseDeltasGenerator:
         target = path_hint
         counter = 0
         while os.path.exists(target):
-            target = "{}-{}".format(path_hint, counter)
+            target = f"{path_hint}-{counter}"
             counter += 1
         return target
 
@@ -122,12 +122,12 @@ class BaseDeltasGenerator:
         _, delta_name = os.path.split(delta_file)
 
         stdout_path = self.find_unique_file_name(
-            os.path.join(workdir, "{}.out".format(delta_name))
+            os.path.join(workdir, f"{delta_name}.out")
         )
         stdout_file = open(stdout_path, "wb")
 
         stderr_path = self.find_unique_file_name(
-            os.path.join(workdir, "{}.err".format(delta_name))
+            os.path.join(workdir, f"{delta_name}.err")
         )
         stderr_file = open(stderr_path, "wb")
 
@@ -170,13 +170,13 @@ class BaseDeltasGenerator:
             _, _file_name = os.path.split(self.target_path)
             full_filename = os.path.join(output_dir, _file_name)
             delta_file = self.find_unique_file_name(
-                "{}.{}".format(full_filename, self.delta_file_extname)
+                f"{full_filename}.{self.delta_file_extname}"
             )
         else:
             # create the delta file under the target_path with
             # the generated filename.
             delta_file = self.find_unique_file_name(
-                "{}.{}".format(self.target_path, self.delta_file_extname)
+                f"{self.target_path}.{self.delta_file_extname}"
             )
 
         delta_cmd = self.get_delta_cmd(self.source_path, self.target_path, delta_file)

@@ -35,10 +35,7 @@ class Step:
         return self.__order
 
     def previous_step(self) -> Optional["Step"]:
-        if self._order > 0:
-            return STEPS[self._order - 1]
-        else:
-            return None
+        return STEPS[self._order - 1] if self._order > 0 else None
 
     def next_step(self) -> Optional["Step"]:
         try:
@@ -65,10 +62,7 @@ class Step:
         return NotImplemented
 
     def __eq__(self, other) -> bool:
-        if type(other) is type(self):
-            return self.name == other.name
-
-        return NotImplemented
+        return self.name == other.name if type(other) is type(self) else NotImplemented
 
     def __gt__(self, other) -> bool:
         if type(other) is type(self):
@@ -108,10 +102,7 @@ def next_step(step):
     :return: The next step in the lifecycle
     :rtype: Step
     """
-    if step:
-        return step.next_step()
-    else:
-        return STEPS[0]
+    return step.next_step() if step else STEPS[0]
 
 
 def get_step_by_name(step_name):
@@ -122,24 +113,17 @@ def get_step_by_name(step_name):
     :rtype: Step
     :raises: errors.InvalidStepError if there is no step with the given name.
     """
-    if step_name:
-        for step in STEPS:
-            if step.name == step_name:
-                return step
-        raise errors.InvalidStepError(step_name)
-    else:
+    if not step_name:
         return STEPS[0]
+    for step in STEPS:
+        if step.name == step_name:
+            return step
+    raise errors.InvalidStepError(step_name)
 
 
 def get_dependency_prerequisite_step(step):
-    if step <= STAGE:
-        return STAGE
-    else:
-        return step
+    return STAGE if step <= STAGE else step
 
 
 def dirty_step_if_dependency_changes(changed_step):
-    if changed_step <= STAGE:
-        return STEPS[0]
-    else:
-        return changed_step
+    return STEPS[0] if changed_step <= STAGE else changed_step

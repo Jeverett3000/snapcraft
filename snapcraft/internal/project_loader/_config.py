@@ -84,11 +84,7 @@ def _validate_architectures(instance):
             build_on = _get_architectures_set(item, "build-on")
             build_ons.update(build_on)
 
-            # Add to the list of run-ons. However, if no run-on is specified,
-            # we know it's implicitly the value of build-on, so use that
-            # for validation instead.
-            run_on = _get_architectures_set(item, "run-on")
-            if run_on:
+            if run_on := _get_architectures_set(item, "run-on"):
                 run_ons.update(run_on)
             else:
                 standalone_build_ons.update(build_on)
@@ -112,17 +108,13 @@ def _validate_architectures(instance):
     number_of_snaps = len(instance)
     if "all" in run_ons and number_of_snaps > 1:
         raise jsonschema.exceptions.ValidationError(
-            "one of the items has 'all' in 'run-on', but there are {} "
-            "items: upon release they will conflict. 'all' should only be "
-            "used if there is a single item".format(number_of_snaps),
+            f"one of the items has 'all' in 'run-on', but there are {number_of_snaps} items: upon release they will conflict. 'all' should only be used if there is a single item",
             path=["architectures"],
             instance=instance,
         )
     if "all" in build_ons and number_of_snaps > 1:
         raise jsonschema.exceptions.ValidationError(
-            "one of the items has 'all' in 'build-on', but there are {} "
-            "items: snapcraft doesn't know which one to use. 'all' should "
-            "only be used if there is a single item".format(number_of_snaps),
+            f"one of the items has 'all' in 'build-on', but there are {number_of_snaps} items: snapcraft doesn't know which one to use. 'all' should only be used if there is a single item",
             path=["architectures"],
             instance=instance,
         )
@@ -131,29 +123,20 @@ def _validate_architectures(instance):
     # don't include the same arch, or they'll clash with each other when
     # releasing.
     all_run_ons = run_ons + standalone_build_ons
-    duplicates = {arch for (arch, count) in all_run_ons.items() if count > 1}
-    if duplicates:
+    if duplicates := {
+        arch for (arch, count) in all_run_ons.items() if count > 1
+    }:
         raise jsonschema.exceptions.ValidationError(
-            "multiple items will build snaps that claim to run on {}".format(
-                formatting_utils.humanize_list(duplicates, "and")
-            ),
+            f'multiple items will build snaps that claim to run on {formatting_utils.humanize_list(duplicates, "and")}',
             path=["architectures"],
             instance=instance,
         )
 
-    # Finally, ensure that multiple `build-on`s don't include the same arch
-    # or Snapcraft has no way of knowing which one to use.
-    duplicates = {arch for (arch, count) in build_ons.items() if count > 1}
-    if duplicates:
+    if duplicates := {
+        arch for (arch, count) in build_ons.items() if count > 1
+    }:
         raise jsonschema.exceptions.ValidationError(
-            "{} {} present in the 'build-on' of multiple items, which means "
-            "snapcraft doesn't know which 'run-on' to use when building on "
-            "{} {}".format(
-                formatting_utils.humanize_list(duplicates, "and"),
-                formatting_utils.pluralize(duplicates, "is", "are"),
-                formatting_utils.pluralize(duplicates, "that", "those"),
-                formatting_utils.pluralize(duplicates, "architecture", "architectures"),
-            ),
+            f"""{formatting_utils.humanize_list(duplicates, "and")} {formatting_utils.pluralize(duplicates, "is", "are")} present in the 'build-on' of multiple items, which means snapcraft doesn't know which 'run-on' to use when building on {formatting_utils.pluralize(duplicates, "that", "those")} {formatting_utils.pluralize(duplicates, "architecture", "architectures")}""",
             path=["architectures"],
             instance=instance,
         )
@@ -163,11 +146,7 @@ def _validate_architectures(instance):
 
 def _get_architectures_set(item, name):
     value = item.get(name, set())
-    if isinstance(value, str):
-        value_set = {value}
-    else:
-        value_set = set(value)
-
+    value_set = {value} if isinstance(value, str) else set(value)
     _validate_architectures_set(value_set, name)
 
     return value_set
@@ -338,11 +317,10 @@ class Config:
     def get_project_state(self, step: steps.Step):
         """Returns a dict of states for the given step of each part."""
 
-        state = {}
-        for part in self.parts.all_parts:
-            state[part.name] = states.get_state(part.part_state_dir, step)
-
-        return state
+        return {
+            part.name: states.get_state(part.part_state_dir, step)
+            for part in self.parts.all_parts
+        }
 
     def snap_env(self):
         prime_dir = self.project.prime_dir
@@ -354,13 +332,9 @@ class Config:
             env += part.env(prime_dir)
             dependency_paths |= part.get_primed_dependency_paths()
 
-        # Dependency paths are only valid if they actually exist. Sorting them
-        # here as well so the LD_LIBRARY_PATH is consistent between runs.
-        dependency_paths = sorted(
+        if dependency_paths := sorted(
             {path for path in dependency_paths if os.path.isdir(path)}
-        )
-
-        if dependency_paths:
+        ):
             # Add more specific LD_LIBRARY_PATH from the dependencies.
             env.append(
                 'LD_LIBRARY_PATH="'
@@ -372,7 +346,7 @@ class Config:
 
     def project_env(self):
         return [
-            '{}="{}"'.format(variable, value)
+            f'{variable}="{value}"'
             for variable, value in get_snapcraft_global_environment(
                 self.project
             ).items()
@@ -413,8 +387,7 @@ def _expand_filesets_for(step, properties):
                 new_step_set.extend(filesets[item[1:]])
             except KeyError:
                 raise errors.SnapcraftLogicError(
-                    "'{}' referred to in the '{}' fileset but it is not "
-                    "in filesets".format(item, step)
+                    f"'{item}' referred to in the '{step}' fileset but it is not in filesets"
                 )
         else:
             new_step_set.append(item)
@@ -424,11 +397,7 @@ def _expand_filesets_for(step, properties):
 
 class _Architecture:
     def __init__(self, *, build_on, run_on=None):
-        if isinstance(build_on, str):
-            self.build_on = [build_on]
-        else:
-            self.build_on = build_on
-
+        self.build_on = [build_on] if isinstance(build_on, str) else build_on
         # If there is no run_on, it defaults to the value of build_on
         if not run_on:
             self.run_on = self.build_on

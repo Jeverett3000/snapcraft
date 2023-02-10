@@ -59,11 +59,7 @@ def _macaroon_auth(conf):
     unbound = _deserialize_macaroon(unbound_raw)
     bound = root_macaroon.prepare_for_request(unbound)
     discharge_macaroon_raw = bound.serialize()
-    auth = "Macaroon root={}, discharge={}".format(
-        root_macaroon_raw, discharge_macaroon_raw
-    )
-
-    return auth
+    return f"Macaroon root={root_macaroon_raw}, discharge={discharge_macaroon_raw}"
 
 
 class UbuntuOneSSOConfig(_config.Config):
@@ -113,8 +109,7 @@ class UbuntuOneAuthClient(_http_client.Client):
         for caveat in macaroon.caveats:
             if caveat.location == sso_host:
                 return caveat.caveat_id
-        else:
-            raise errors.InvalidCredentialsError("Invalid root macaroon")
+        raise errors.InvalidCredentialsError("Invalid root macaroon")
 
     def login(
         self,
@@ -178,7 +173,7 @@ class UbuntuOneAuthClient(_http_client.Client):
         try:
             response_json = response.json()
         except JSONDecodeError:
-            response_json = dict()
+            response_json = {}
 
         if response.status_code == requests.codes.unauthorized and any(
             error.get("code") == "twofactor-required"

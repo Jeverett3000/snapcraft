@@ -70,14 +70,7 @@ def _install_build_snaps(build_snaps: Set[str], content_snaps: Set[str]) -> List
     if common.is_process_container() and build_snaps:
         installed_snaps: List[str] = []
         logger.warning(
-            (
-                "The following snaps are required but not installed as snapcraft "
-                "is running inside docker or podman container: {}.\n"
-                "Please ensure the environment is properly setup before continuing.\n"
-                "Ignore this message if the appropriate measures have already been taken".format(
-                    ", ".join(build_snaps)
-                )
-            )
+            f'The following snaps are required but not installed as snapcraft is running inside docker or podman container: {", ".join(build_snaps)}.\nPlease ensure the environment is properly setup before continuing.\nIgnore this message if the appropriate measures have already been taken'
         )
     else:
         installed_snaps = repo.snaps.install_snaps(build_snaps)
@@ -210,7 +203,7 @@ class _Executor:
     ) -> None:
         # If this step hasn't yet run, all we need to do is run it
         if not self._cache.has_step_run(part, current_step):
-            getattr(self, "_run_{}".format(current_step.name))(part)
+            getattr(self, f"_run_{current_step.name}")(part)
             return
 
         # Alright, this step has already run. In that case, a few different
@@ -228,28 +221,20 @@ class _Executor:
             and current_step == requested_step
             and part.name in requested_part_names
         ):
-            getattr(self, "_re{}".format(current_step.name))(part)
+            getattr(self, f"_re{current_step.name}")(part)
             return
 
-        # 2. If a step has already run, it might be dirty, in which case we
-        #    need to clean and run it again.
-        dirty_report = self._cache.get_dirty_report(part, current_step)
-        if dirty_report:
+        if dirty_report := self._cache.get_dirty_report(part, current_step):
             self._handle_dirty(part, current_step, dirty_report, cli_config)
             return
 
-        # 3. If a step has already run, it might be outdated, in which case we
-        #    need to update it (without cleaning if possible).
-        outdated_report = self._cache.get_outdated_report(part, current_step)
-        if outdated_report:
+        if outdated_report := self._cache.get_outdated_report(part, current_step):
             self._handle_outdated(part, current_step, outdated_report, cli_config)
             return
 
         # 4. The step has already run, and is up-to-date, no need to run it
         #    again.
-        notify_part_progress(
-            part, "Skipping {}".format(current_step.name), "(already ran)"
-        )
+        notify_part_progress(part, f"Skipping {current_step.name}", "(already ran)")
 
     def _run_pull(self, part):
         self._run_step(step=steps.PULL, part=part, progress="Pulling")
@@ -297,13 +282,11 @@ class _Executor:
         # Filter dependencies down to only those that need to run the
         # prerequisite step
         prerequisite_step = steps.get_dependency_prerequisite_step(step)
-        dependencies = {
+        if dependencies := {
             p
             for p in all_dependencies
             if self._cache.should_step_run(p, prerequisite_step)
-        }
-
-        if dependencies:
+        }:
             dependency_names = {p.name for p in dependencies}
             # Dependencies need to go all the way to the prerequisite step to
             # be able to share the common assets that make them a dependency
@@ -314,10 +297,8 @@ class _Executor:
             )
             self.run(prerequisite_step, dependency_names)
 
-        # Run the preparation function for this step (if implemented)
-        preparation_function = getattr(part, "prepare_{}".format(step.name), None)
-        if preparation_function:
-            notify_part_progress(part, "Preparing to {}".format(step.name), debug=True)
+        if preparation_function := getattr(part, f"prepare_{step.name}", None):
+            notify_part_progress(part, f"Preparing to {step.name}", debug=True)
             preparation_function()
 
         if isinstance(part.plugin, plugins.v1.PluginV1):
@@ -361,31 +342,32 @@ class _Executor:
 
     def _handle_dirty(self, part, step, dirty_report, cli_config):
         dirty_action = cli_config.get_outdated_step_action()
-        if not step.clean_if_dirty:
-            if dirty_action == config.OutdatedStepAction.ERROR:
-                raise errors.StepOutdatedError(
-                    step=step, part=part.name, dirty_report=dirty_report
-                )
+        if (
+            not step.clean_if_dirty
+            and dirty_action == config.OutdatedStepAction.ERROR
+        ):
+            raise errors.StepOutdatedError(
+                step=step, part=part.name, dirty_report=dirty_report
+            )
 
-        getattr(self, "_re{}".format(step.name))(
-            part, hint="({})".format(dirty_report.get_summary())
-        )
+        getattr(self, f"_re{step.name}")(part, hint=f"({dirty_report.get_summary()})")
 
     def _handle_outdated(self, part, step, outdated_report, cli_config):
         dirty_action = cli_config.get_outdated_step_action()
-        if not step.clean_if_dirty:
-            if dirty_action == config.OutdatedStepAction.ERROR:
-                raise errors.StepOutdatedError(
-                    step=step, part=part.name, outdated_report=outdated_report
-                )
+        if (
+            not step.clean_if_dirty
+            and dirty_action == config.OutdatedStepAction.ERROR
+        ):
+            raise errors.StepOutdatedError(
+                step=step, part=part.name, outdated_report=outdated_report
+            )
 
-        update_function = getattr(part, "update_{}".format(step.name), None)
-        if update_function:
+        if update_function := getattr(part, f"update_{step.name}", None):
             self._prepare_step(step=step, part=part)
             notify_part_progress(
                 part,
-                "Updating {} step for".format(step.name),
-                "({})".format(outdated_report.get_summary()),
+                f"Updating {step.name} step for",
+                f"({outdated_report.get_summary()})",
             )
             update_function()
 
@@ -393,9 +375,7 @@ class _Executor:
             # twiddle the cache
             self._complete_step(part, step)
         else:
-            getattr(self, "_re{}".format(step.name))(
-                part, "({})".format(outdated_report.get_summary())
-            )
+            getattr(self, f"_re{step.name}")(part, f"({outdated_report.get_summary()})")
 
 
 def notify_part_progress(part, progress, hint="", debug=False):

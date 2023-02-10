@@ -127,10 +127,7 @@ class AptCache(ContextDecorator):
             arch_conf_path = cache_etc_apt_path / "apt.conf.d" / "00default-arch"
             arch_conf_path.write_text(f'APT::Architecture "{self.stage_cache_arch}";\n')
 
-        # dpkg also needs to be in the rootdir in order to support multiarch
-        # (apt calls dpkg --print-foreign-architectures).
-        dpkg_path = shutil.which("dpkg")
-        if dpkg_path:
+        if dpkg_path := shutil.which("dpkg"):
             # Symlink it into place
             destination = Path(self.stage_cache, dpkg_path[1:])
             if not destination.exists():
@@ -148,24 +145,24 @@ class AptCache(ContextDecorator):
                 package.mark_keep()
 
     def _set_pkg_version(self, package: apt.Package, version: str) -> None:
-        # Set candidate version to a specific version if available
-        if version in package.versions:
-            package_version = package.versions.get(version)
-            package.candidate = package_version
-        else:
-            raise errors.PackageNotFoundError("{}={}".format(package.name, version))
+        if version not in package.versions:
+            raise errors.PackageNotFoundError(f"{package.name}={version}")
+        package_version = package.versions.get(version)
+        package.candidate = package_version
 
     def _verify_marked_install(self, package: apt.Package):
         if not package.installed and not package.marked_install:
-            broken_deps: List[str] = list()
+            broken_deps: List[str] = []
 
             if package.candidate is None:
                 raise errors.PackageNotFoundError(package.name)
 
             for package_dependencies in package.candidate.dependencies:
-                for dep in package_dependencies:
-                    if not dep.target_versions:
-                        broken_deps.append(dep.name)
+                broken_deps.extend(
+                    dep.name
+                    for dep in package_dependencies
+                    if not dep.target_versions
+                )
             raise errors.PackageBrokenError(package.name, broken_deps)
 
     def is_package_valid(self, package_name: str) -> bool:
@@ -184,15 +181,16 @@ class AptCache(ContextDecorator):
                 resolve_virtual_packages=resolve_virtual_packages,
             )
 
-        package_version = None
-        if package_name in self.cache:
-            if self.cache[package_name].installed is not None:
-                package_version = self.cache[package_name].installed.version  # type: ignore
-        return package_version
+        return (
+            self.cache[package_name].installed.version
+            if package_name in self.cache
+            and self.cache[package_name].installed is not None
+            else None
+        )
 
     def fetch_archives(self, download_path: Path) -> List[Tuple[str, str, Path]]:
         """Fetches archives, list of (<package-name>, <package-version>, <dl-path>)."""
-        downloaded = list()
+        downloaded = []
         for package in self.cache.get_changes():
             try:
                 dl_path = package.candidate.fetch_binary(str(download_path))  # type: ignore
@@ -206,20 +204,19 @@ class AptCache(ContextDecorator):
         return downloaded
 
     def get_installed_packages(self) -> Dict[str, str]:
-        installed: Dict[str, str] = dict()
-        for package in self.cache:
-            if package.installed is not None:
-                installed[package.name] = str(package.installed.version)
+        installed: Dict[str, str] = {
+            package.name: str(package.installed.version)
+            for package in self.cache
+            if package.installed is not None
+        }
         return installed
 
     def get_packages_marked_for_installation(self) -> List[Tuple[str, str]]:
         changed_packages = self.cache.get_changes()
         marked_install_packages = [p for p in changed_packages if p.marked_install]
-        package_names_missing_installation_candidate = [
+        if package_names_missing_installation_candidate := [
             p.name for p in marked_install_packages if p.candidate is None
-        ]
-
-        if package_names_missing_installation_candidate:
+        ]:
             raise errors.PackagesNotFoundError(
                 package_names_missing_installation_candidate
             )

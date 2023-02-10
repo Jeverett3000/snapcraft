@@ -70,13 +70,10 @@ class LegacyPluginLoader(importlib.abc.Loader):
 class LegacyPluginPathFinder(importlib.machinery.PathFinder):
     @classmethod
     def find_spec(cls, fullname, path=None, target=None):
-        # Ensure plugins using their original import paths can be found and
-        # warn about their new import path.
-        if fullname in [f"snapcraft.plugins.{p}" for p in _VALID_V1_PLUGINS]:
-            warnings.warn("Plugin import path has changed to 'snapcraft.plugins.v1'")
-            return importlib.machinery.ModuleSpec(fullname, LegacyPluginLoader)
-        else:
+        if fullname not in [f"snapcraft.plugins.{p}" for p in _VALID_V1_PLUGINS]:
             return None
+        warnings.warn("Plugin import path has changed to 'snapcraft.plugins.v1'")
+        return importlib.machinery.ModuleSpec(fullname, LegacyPluginLoader)
 
 
 # https://docs.python.org/3/library/importlib.html#importlib.machinery.PathFinder

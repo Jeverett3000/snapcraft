@@ -32,7 +32,7 @@ class CloseCommandTestCase(FakeStoreCommandsBaseTestCase):
             fixtures.MockPatchObject(
                 storeapi._dashboard_api.DashboardAPI,
                 "close_channels",
-                return_value=(list(), dict()),
+                return_value=([], {}),
             )
         )
 
@@ -78,7 +78,7 @@ class CloseCommandTestCase(FakeStoreCommandsBaseTestCase):
         )
 
     def test_close_no_revisions(self):
-        self.channel_map.channel_map = list()
+        self.channel_map.channel_map = []
 
         result = self.run_command(["close", "snap-test", "2.1/candidate"])
 

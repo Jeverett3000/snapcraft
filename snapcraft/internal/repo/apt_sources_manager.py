@@ -44,11 +44,7 @@ def _construct_deb822_source(
 ) -> str:
     """Construct deb-822 formatted sources.list config string."""
     with io.StringIO() as deb822:
-        if formats:
-            type_text = " ".join(formats)
-        else:
-            type_text = "deb"
-
+        type_text = " ".join(formats) if formats else "deb"
         print(f"Types: {type_text}", file=deb822)
 
         print(f"URIs: {url}", file=deb822)
@@ -60,11 +56,7 @@ def _construct_deb822_source(
             components_text = " ".join(components)
             print(f"Components: {components_text}", file=deb822)
 
-        if architectures:
-            arch_text = " ".join(architectures)
-        else:
-            arch_text = _get_host_arch()
-
+        arch_text = " ".join(architectures) if architectures else _get_host_arch()
         print(f"Architectures: {arch_text}", file=deb822)
 
         return deb822.getvalue()
@@ -139,7 +131,7 @@ class AptSourcesManager:
         )
 
         if name not in ["default", "default-security"]:
-            name = "snapcraft-" + name
+            name = f"snapcraft-{name}"
 
         config_path = self._sources_list_d / f"{name}.sources"
         if config_path.exists() and config_path.read_text() == config:
@@ -187,11 +179,7 @@ class AptSourcesManager:
         else:
             raise RuntimeError("no suites or path")
 
-        if package_repo.name:
-            name = package_repo.name
-        else:
-            name = re.sub(r"\W+", "_", package_repo.url)
-
+        name = package_repo.name or re.sub(r"\W+", "_", package_repo.url)
         return self._install_sources(
             architectures=package_repo.architectures,
             components=package_repo.components,

@@ -104,11 +104,7 @@ class Base:
 class FileBase(Base):
     def pull(self):
         source_file = None
-        is_source_url = snapcraft.internal.common.isurl(self.source)
-
-        # First check if it is a url and download and if not
-        # it is probably locally referenced.
-        if is_source_url:
+        if is_source_url := snapcraft.internal.common.isurl(self.source):
             source_file = self.download()
         else:
             basename = os.path.basename(self.source)
@@ -138,8 +134,7 @@ class FileBase(Base):
         file_cache = FileCache()
         if self.source_checksum:
             algorithm, hash = split_checksum(self.source_checksum)
-            cache_file = file_cache.get(algorithm=algorithm, hash=hash)
-            if cache_file:
+            if cache_file := file_cache.get(algorithm=algorithm, hash=hash):
                 # We make this copy as the provisioning logic can delete
                 # this file and we don't want that.
                 shutil.copy2(cache_file, self.file)

@@ -65,7 +65,7 @@ class UploadMetadataCommandTestCase(CommandBaseTestCase):
             "summary": "Summary of the most simple snap",
         }
         if optional_text_metadata is not None:
-            text_metadata.update(optional_text_metadata)
+            text_metadata |= optional_text_metadata
 
         self.fake_metadata.mock.assert_called_once_with(
             snap_name="basic", metadata=text_metadata, force=force
@@ -145,7 +145,7 @@ class UploadMetadataCommandTestCase(CommandBaseTestCase):
             "get_account_information",
             return_value={
                 "account_id": "abcd",
-                "account_keys": list(),
+                "account_keys": [],
                 "snaps": {
                     "16": {
                         "snap-test": {

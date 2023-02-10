@@ -92,14 +92,14 @@ def get_plugin_for_base(plugin_name: str, *, build_base: str) -> PluginTypes:
     # Default for unknown, and core20
     plugin_version = "v2"
     # Others use v1
-    if build_base == "core18":
-        plugin_version = "v1"
-    elif build_base == "core":
-        raise errors.PluginBaseError(plugin_name=plugin_name, base=build_base)
-    elif build_base == "":
+    if not build_base:
         # This should never happen when using build_base from Project.
         raise RuntimeError("'build_base' cannot be unset.")
 
+    elif build_base == "core":
+        raise errors.PluginBaseError(plugin_name=plugin_name, base=build_base)
+    elif build_base == "core18":
+        plugin_version = "v1"
     try:
         plugin_classes = _PLUGINS[plugin_version]
         return plugin_classes[plugin_name]

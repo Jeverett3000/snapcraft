@@ -186,9 +186,11 @@ class OrderTestBase(LifecycleTestBase):
         cache = StatusCache(self.project_config)
         dirty_parts = []
         for part in self.project_config.parts.all_parts:
-            for step in steps.STEPS:
-                if cache.get_dirty_report(part, step):
-                    dirty_parts.append(dict(part=part.name, step=step))
+            dirty_parts.extend(
+                dict(part=part.name, step=step)
+                for step in steps.STEPS
+                if cache.get_dirty_report(part, step)
+            )
         self.assertThat(dirty_parts, HasLength(len(expected_parts)), hint)
         for expected in expected_parts:
             self.assertThat(dirty_parts, Contains(expected), hint)
@@ -198,11 +200,10 @@ class OrderTestBase(LifecycleTestBase):
         for earlier in earlier_parts:
             earlier_part = earlier["part"]
             earlier_step = earlier["step"]
-            found = False
-            for current in current_parts:
-                if earlier_part == current["part"] and earlier_step == current["step"]:
-                    found = True
-                    break
+            found = any(
+                earlier_part == current["part"] and earlier_step == current["step"]
+                for current in current_parts
+            )
             if not found:
                 cleaned_parts.append(dict(part=earlier_part, step=earlier_step))
 
@@ -218,7 +219,7 @@ class OrderTestBase(LifecycleTestBase):
             self.assertThat(
                 actual_tuple,
                 Equals(expected_tuple),
-                "expected {} {}".format(expected_tuple, hint),
+                f"expected {expected_tuple} {hint}",
             )
 
 

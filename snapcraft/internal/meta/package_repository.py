@@ -47,7 +47,7 @@ class PackageRepository(abc.ABC):
 
     @classmethod
     def unmarshal_package_repositories(cls, data: Any) -> List["PackageRepository"]:
-        repositories = list()
+        repositories = []
 
         if data is not None:
             if not isinstance(data, list):
@@ -118,7 +118,7 @@ class PackageRepositoryAptPpa(PackageRepository):
             )
 
         if data_copy:
-            keys = ", ".join([repr(k) for k in data_copy.keys()])
+            keys = ", ".join([repr(k) for k in data_copy])
             raise errors.PackageRepositoryValidationError(
                 url=ppa,
                 brief=f"Found unsupported package repository properties {keys}.",
@@ -149,12 +149,7 @@ class PackageRepositoryApt(PackageRepository):
         self.key_id = key_id
         self.key_server = key_server
 
-        if name is None:
-            # Default name is URL, stripping non-alphanumeric characters.
-            self.name: str = re.sub(r"\W+", "_", url)
-        else:
-            self.name = name
-
+        self.name = re.sub(r"\W+", "_", url) if name is None else name
         self.path = path
         self.suites = suites
         self.url = url
@@ -254,7 +249,7 @@ class PackageRepositoryApt(PackageRepository):
         if self.suites and not self.components:
             raise errors.PackageRepositoryValidationError(
                 url=self.url,
-                brief=f"No components specified.",
+                brief="No components specified.",
                 details="Components are required when using suites.",
                 resolution="Verify the repository configuration and ensure that 'components' is correctly specified.",
             )
@@ -262,7 +257,7 @@ class PackageRepositoryApt(PackageRepository):
         if self.components and not self.suites:
             raise errors.PackageRepositoryValidationError(
                 url=self.url,
-                brief=f"No suites specified.",
+                brief="No suites specified.",
                 details="Suites are required when using components.",
                 resolution="Verify the repository configuration and ensure that 'suites' is correctly specified.",
             )
@@ -385,7 +380,7 @@ class PackageRepositoryApt(PackageRepository):
             )
 
         if data_copy:
-            keys = ", ".join([repr(k) for k in data_copy.keys()])
+            keys = ", ".join([repr(k) for k in data_copy])
             raise errors.PackageRepositoryValidationError(
                 url=url,
                 brief=f"Found unsupported package repository properties {keys}.",

@@ -35,9 +35,8 @@ def get_version(version: str, version_script: str = None) -> str:
                 raise errors.CommandError("The version-script produced no output")
         except subprocess.CalledProcessError as e:
             raise errors.CommandError(
-                "The version-script failed to run (exit code {})".format(e.returncode)
+                f"The version-script failed to run (exit code {e.returncode})"
             )
-    # we want to whitelist what we support here.
     elif version == "git":
         logger.info("Determining the version from the project repo (version: git).")
         vcs_handler = sources.get_source_handler_from_type("git")

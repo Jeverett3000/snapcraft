@@ -125,7 +125,7 @@ class CondaPlugin(PluginV1):
 
         deploy_cmd = [conda_cmd, "create", "--prefix", self.installdir, "--yes"]
         if self.options.conda_python_version:
-            deploy_cmd.append("python={}".format(self.options.conda_python_version))
+            deploy_cmd.append(f"python={self.options.conda_python_version}")
 
         # conda needs to rewrite the prefixes in the python shebangs and binaries
         conda_target_prefix = os.path.join(

@@ -28,11 +28,10 @@ def _create_desktop_file(desktop_file_path, icon: str = None) -> None:
     dir_name = os.path.dirname(desktop_file_path)
     if not os.path.exists(dir_name):
         os.makedirs(dir_name)
-    f = open(desktop_file_path, "w")
-    print("[Desktop Entry]", file=f)
-    if icon:
-        print("Icon={}".format(icon), file=f)
-    f.close()
+    with open(desktop_file_path, "w") as f:
+        print("[Desktop Entry]", file=f)
+        if icon:
+            print(f"Icon={icon}", file=f)
 
 
 class TestAppstream:

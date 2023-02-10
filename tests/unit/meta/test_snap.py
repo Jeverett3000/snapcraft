@@ -182,7 +182,7 @@ class SnapTests(unit.TestCase):
         expected_dict.pop("adopt-info")
         expected_dict.pop("compression")
         expected_dict.pop("package-repositories")
-        expected_dict.update(expected_dict.pop("passthrough"))
+        expected_dict |= expected_dict.pop("passthrough")
 
         self.assertEqual(expected_dict, snap.to_snap_yaml_dict())
         self.assertEqual(True, snap.is_passthrough_enabled)
@@ -492,9 +492,10 @@ class SnapTests(unit.TestCase):
         snap_yaml_path = os.path.join(meta_path, "snap.yaml")
         open(snap_yaml_path, "w").write(meta_snap_yaml)
 
-        expected_content_dirs = set(
-            [os.path.join(self.path, "dir1"), os.path.join(self.path, "dir2")]
-        )
+        expected_content_dirs = {
+            os.path.join(self.path, "dir1"),
+            os.path.join(self.path, "dir2"),
+        }
 
         self.assertEqual(expected_content_dirs, snap.get_provider_content_directories())
 

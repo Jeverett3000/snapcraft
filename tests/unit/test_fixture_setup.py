@@ -49,7 +49,7 @@ class TestFakeRequestHandler(http.server.BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(json.dumps("{}").encode())
 
-    def log_message(*args):
+    def log_message(self):
         # Do not print anything during the tests.
         pass
 

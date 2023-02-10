@@ -114,7 +114,7 @@ class TestExtractedMetadataGetters:
     def test_getters(self, tmp_work_path, prop, value):
         metadata = ExtractedMetadata(**{prop: value})
         for p in self.properties:
-            gotten = getattr(metadata, "get_{}".format(p))()
+            gotten = getattr(metadata, f"get_{p}")()
             if p == prop:
                 assert gotten == value
             else:

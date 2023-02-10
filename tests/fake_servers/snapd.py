@@ -71,16 +71,17 @@ class FakeSnapdRequestHandler(fake_servers.BaseHTTPRequestHandler):
                 if snap["name"] == snap_name:
                     status_code = 200
                     type_ = "sync"
-                    params = {}
-                    for key in (
-                        "channel",
-                        "revision",
-                        "confinement",
-                        "id",
-                        "tracking-channel",
-                    ):
-                        if key in snap:
-                            params.update({key: snap[key]})
+                    params = {
+                        key: snap[key]
+                        for key in (
+                            "channel",
+                            "revision",
+                            "confinement",
+                            "id",
+                            "tracking-channel",
+                        )
+                        if key in snap
+                    }
                     break
 
         self.send_response(status_code)

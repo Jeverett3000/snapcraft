@@ -52,10 +52,7 @@ class Rpm(FileBase):
             raise errors.SnapcraftSourceInvalidOptionError("rpm", "source-branch")
 
     def provision(self, dst, clean_target=True, keep_rpm=False, src=None):
-        if src:
-            rpm_file = src
-        else:
-            rpm_file = os.path.join(self.source_dir, os.path.basename(self.source))
+        rpm_file = src or os.path.join(self.source_dir, os.path.basename(self.source))
         rpm_file = os.path.realpath(rpm_file)
 
         if clean_target:
@@ -65,7 +62,7 @@ class Rpm(FileBase):
             os.makedirs(dst)
             shutil.move(tmp_rpm, rpm_file)
 
-        extract_command = "rpm2cpio {} | cpio -idmv".format(shlex.quote(rpm_file))
+        extract_command = f"rpm2cpio {shlex.quote(rpm_file)} | cpio -idmv"
         self._run_output(extract_command, shell=True, cwd=dst)
 
         if not keep_rpm:

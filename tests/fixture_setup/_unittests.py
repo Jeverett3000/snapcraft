@@ -73,7 +73,7 @@ class FakeMetadataExtractor(fixtures.Fixture):
         super().__init__()
         self._extractor_name = extractor_name
         self._exported_name = exported_name
-        self._import_name = "snapcraft.extractors.{}".format(extractor_name)
+        self._import_name = f"snapcraft.extractors.{extractor_name}"
         self._extractor = extractor
 
     def _setUp(self) -> None:
@@ -114,19 +114,18 @@ class FakePlugin(fixtures.Fixture):
         )
 
     def get_plugin(self, plugin_name, *, build_base):
-        if plugin_name == self._plugin_name:
-            plugin_class = self._plugin_class
-        else:
-            plugin_class = get_plugin_for_base(self._plugin_name, build_base=build_base)
-
-        return plugin_class
+        return (
+            self._plugin_class
+            if plugin_name == self._plugin_name
+            else get_plugin_for_base(self._plugin_name, build_base=build_base)
+        )
 
 
 def _fake_elffile_extract_attributes(self):
     name = os.path.basename(self.path)
 
     self.arch = ("ELFCLASS64", "ELFDATA2LSB", "EM_X86_64")
-    self.build_id = "build-id-{}".format(name)
+    self.build_id = f"build-id-{name}"
 
     if name in [
         "fake_elf-2.26",
@@ -146,8 +145,6 @@ def _fake_elffile_extract_attributes(self):
         self.needed = {glibc.name: glibc}
         self.execstack_set = False
         self.is_dynamic = True
-        self.has_debug_info = False
-
     elif name == "fake_elf-2.23":
         glibc = elf.NeededLibrary(name="libc.so.6")
         glibc.add_version("GLIBC_2.2.5")
@@ -159,8 +156,6 @@ def _fake_elffile_extract_attributes(self):
         self.needed = {glibc.name: glibc}
         self.execstack_set = False
         self.is_dynamic = True
-        self.has_debug_info = False
-
     elif name == "fake_elf-1.1":
         glibc = elf.NeededLibrary(name="libc.so.6")
         glibc.add_version("GLIBC_1.1")
@@ -172,17 +167,13 @@ def _fake_elffile_extract_attributes(self):
         self.needed = {glibc.name: glibc}
         self.execstack_set = False
         self.is_dynamic = True
-        self.has_debug_info = False
-
     elif name == "fake_elf-static":
         self.interp = "/lib64/ld-linux-x86-64.so.2"
         self.soname = ""
         self.versions = set()
-        self.needed = dict()
+        self.needed = {}
         self.execstack_set = False
         self.is_dynamic = False
-        self.has_debug_info = False
-
     elif name == "fake_elf-shared-object":
         openssl = elf.NeededLibrary(name="libssl.so.1.0.0")
         openssl.add_version("OPENSSL_1.0.0")
@@ -193,8 +184,6 @@ def _fake_elffile_extract_attributes(self):
         self.needed = {openssl.name: openssl}
         self.execstack_set = False
         self.is_dynamic = True
-        self.has_debug_info = False
-
     elif name == "fake_elf-with-execstack":
         glibc = elf.NeededLibrary(name="libc.so.6")
         glibc.add_version("GLIBC_2.23")
@@ -205,8 +194,6 @@ def _fake_elffile_extract_attributes(self):
         self.needed = {glibc.name: glibc}
         self.execstack_set = True
         self.is_dynamic = True
-        self.has_debug_info = False
-
     elif name == "fake_elf-with-bad-execstack":
         glibc = elf.NeededLibrary(name="libc.so.6")
         glibc.add_version("GLIBC_2.23")
@@ -217,8 +204,6 @@ def _fake_elffile_extract_attributes(self):
         self.needed = {glibc.name: glibc}
         self.execstack_set = True
         self.is_dynamic = True
-        self.has_debug_info = False
-
     elif name == "libc.so.6":
         self.interp = ""
         self.soname = "libc.so.6"
@@ -226,8 +211,6 @@ def _fake_elffile_extract_attributes(self):
         self.needed = {}
         self.execstack_set = False
         self.is_dynamic = True
-        self.has_debug_info = False
-
     elif name == "libssl.so.1.0.0":
         self.interp = ""
         self.soname = "libssl.so.1.0.0"
@@ -235,8 +218,6 @@ def _fake_elffile_extract_attributes(self):
         self.needed = {}
         self.execstack_set = False
         self.is_dynamic = True
-        self.has_debug_info = False
-
     else:
         self.interp = ""
         self.soname = ""
@@ -244,7 +225,8 @@ def _fake_elffile_extract_attributes(self):
         self.needed = {}
         self.execstack_set = False
         self.is_dynamic = True
-        self.has_debug_info = False
+
+    self.has_debug_info = False
 
 
 class FakeElf(fixtures.Fixture):
@@ -267,7 +249,7 @@ class FakeElf(fixtures.Fixture):
 
         new_binaries_path = self.useFixture(fixtures.TempDir()).path
         current_path = os.environ.get("PATH")
-        new_path = "{}:{}".format(new_binaries_path, current_path)
+        new_path = f"{new_binaries_path}:{current_path}"
         self.useFixture(fixtures.EnvironmentVariable("PATH", new_path))
 
         # Copy strip
@@ -280,7 +262,7 @@ class FakeElf(fixtures.Fixture):
         # Some values in ldd need to be set with core_path
         with open(os.path.join(binaries_path, "ldd")) as rf:
             with open(os.path.join(new_binaries_path, "ldd"), "w") as wf:
-                for line in rf.readlines():
+                for line in rf:
                     wf.write(line.replace("{CORE_PATH}", self.core_base_path))
         os.chmod(os.path.join(new_binaries_path, "ldd"), 0o755)
 
@@ -288,7 +270,7 @@ class FakeElf(fixtures.Fixture):
         self.patchelf_path = os.path.join(new_binaries_path, "patchelf")
         with open(os.path.join(binaries_path, "patchelf")) as rf:
             with open(self.patchelf_path, "w") as wf:
-                for line in rf.readlines():
+                for line in rf:
                     wf.write(line.replace("{VERSION}", self._patchelf_version))
         os.chmod(os.path.join(new_binaries_path, "patchelf"), 0o755)
 
@@ -368,8 +350,8 @@ class FakeExtension(fixtures.Fixture):
 
     def __init__(self, extension_name, extension_class):
         super().__init__()
-        self._import_name = "snapcraft.internal.project_loader._extensions.{}".format(
-            extension_name
+        self._import_name = (
+            f"snapcraft.internal.project_loader._extensions.{extension_name}"
         )
         self._extension_class = extension_class
         self._extension_name = extension_name
@@ -465,7 +447,7 @@ class FakeSnapCommand(fixtures.Fixture):
         elif cmd == "refresh" and not self.refresh_success:
             raise subprocess.CalledProcessError(returncode=1, cmd=cmd)
         elif cmd == "whoami":
-            return "email: {}".format(self._email).encode()
+            return f"email: {self._email}".encode()
         elif (
             cmd == "download"
             and self.download_side_effect is not None
@@ -483,7 +465,7 @@ class FakeSnapcraftctl(fixtures.Fixture):
         snapcraft_path = get_snapcraft_path()
 
         tempdir = self.useFixture(fixtures.TempDir()).path
-        altered_path = "{}:{}".format(tempdir, os.environ.get("PATH"))
+        altered_path = f'{tempdir}:{os.environ.get("PATH")}'
         self.useFixture(fixtures.EnvironmentVariable("PATH", altered_path))
 
         snapcraftctl_path = os.path.join(tempdir, "snapcraftctl")
@@ -518,7 +500,7 @@ class FakeMultipass(fixtures.Fixture):
         super()._setUp()
 
         tempdir = self.useFixture(fixtures.TempDir()).path
-        altered_path = "{}:{}".format(tempdir, os.environ.get("PATH"))
+        altered_path = f'{tempdir}:{os.environ.get("PATH")}'
         self.useFixture(fixtures.EnvironmentVariable("PATH", altered_path))
 
         multipass = os.path.join(tempdir, "multipass")

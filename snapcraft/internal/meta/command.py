@@ -92,10 +92,7 @@ class _SnapCommandResolver:
 
         # Finally, check if it is part of the system.
         which_command = shutil.which(command)
-        if which_command is not None:
-            return pathlib.Path(which_command)
-
-        return None
+        return pathlib.Path(which_command) if which_command is not None else None
 
     def resolve_interpreter(self) -> Optional[str]:
         """Resolve the interpreter to a format suitable for use in a snap.yaml.
@@ -192,10 +189,7 @@ class _SnapCommandResolver:
         command_parts = shlex.split(self.command, posix=False)
 
         command_path = pathlib.Path(self._prime_path, command_parts[0])
-        if not command_path.exists():
-            return None
-
-        return _get_shebang_from_file(command_path)
+        return _get_shebang_from_file(command_path) if command_path.exists() else None
 
     def resolve(self) -> Optional[str]:
         """Resolve command to take into account interpreter and pathing,
@@ -256,12 +250,10 @@ class _SnapCommandResolver:
         :return: Resolved and normalized command string suitable for a snap.yaml
             if no wrapper is required.
         """
-        # If command is absolute, nothing to resolve.
         if command.startswith("/"):
             return command
-        else:
-            resolver = cls(command=command, prime_path=prime_path)
-            return resolver.resolve()
+        resolver = cls(command=command, prime_path=prime_path)
+        return resolver.resolve()
 
 
 class Command:
@@ -353,7 +345,7 @@ class Command:
 
         with open(command_wrapper, "w+") as command_file:
             print("#!/bin/sh", file=command_file)
-            print('exec {} "$@"'.format(command), file=command_file)
+            print(f'exec {command} "$@"', file=command_file)
 
         os.chmod(command_wrapper, 0o755)
         return command_wrapper

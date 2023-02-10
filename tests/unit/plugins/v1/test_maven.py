@@ -53,8 +53,7 @@ class MavenPluginPropertiesTest(unit.TestCase):
         self.assertThat(
             maven_options["type"],
             Equals("array"),
-            'Expected "maven-options" "type" to be "array", but '
-            'it was "{}"'.format(maven_options["type"]),
+            f'Expected "maven-options" "type" to be "array", but it was "{maven_options["type"]}"',
         )
 
         self.assertTrue(
@@ -64,8 +63,7 @@ class MavenPluginPropertiesTest(unit.TestCase):
         self.assertThat(
             maven_options["minitems"],
             Equals(1),
-            'Expected "maven-options" "minitems" to be 1, but '
-            'it was "{}"'.format(maven_options["minitems"]),
+            f'Expected "maven-options" "minitems" to be 1, but it was "{maven_options["minitems"]}"',
         )
 
         self.assertTrue(
@@ -85,8 +83,7 @@ class MavenPluginPropertiesTest(unit.TestCase):
         self.assertThat(
             maven_targets["type"],
             Equals("array"),
-            'Expected "maven-targets" "type" to be "array", but '
-            'it was "{}"'.format(maven_targets["type"]),
+            f'Expected "maven-targets" "type" to be "array", but it was "{maven_targets["type"]}"',
         )
 
         self.assertTrue(
@@ -96,8 +93,7 @@ class MavenPluginPropertiesTest(unit.TestCase):
         self.assertThat(
             maven_targets["minitems"],
             Equals(1),
-            'Expected "maven-targets" "minitems" to be 1, but '
-            'it was "{}"'.format(maven_targets["minitems"]),
+            f'Expected "maven-targets" "minitems" to be 1, but it was "{maven_targets["minitems"]}"',
         )
 
         self.assertTrue(
@@ -137,14 +133,13 @@ class MavenPluginPropertiesTest(unit.TestCase):
 
 
 def _get_expected_java_version(maven_plugin) -> str:
-    maven_openjdk_version = maven_plugin.options.maven_openjdk_version
-
-    if maven_openjdk_version:
-        expected_java_version = maven_openjdk_version
-    else:
-        expected_java_version = "11"
-
-    return expected_java_version
+    return (
+        maven_openjdk_version
+        if (
+            maven_openjdk_version := maven_plugin.options.maven_openjdk_version
+        )
+        else "11"
+    )
 
 
 _BASE_JAVA_COMBINATIONS = [
@@ -302,7 +297,7 @@ class TestBuildWithProxies(PluginsV1BaseTestCase):
         maven_tar_path = os.path.join(
             plugin.partdir,
             "maven",
-            "apache-maven-{}-bin.tar.gz".format(plugin.options.maven_version),
+            f"apache-maven-{plugin.options.maven_version}-bin.tar.gz",
         )
         os.makedirs(os.path.dirname(maven_tar_path))
         tarfile.TarFile(maven_tar_path, "w").close()
@@ -325,9 +320,7 @@ class TestBuildWithProxies(PluginsV1BaseTestCase):
             return f.getvalue() + "\n"
 
     def assertSettingsEqual(self, expected, actual_file):
-        with open(actual_file) as fr:
-            observed = fr.read()
-
+        observed = pathlib.Path(actual_file).read_text()
         print(repr(self._canonicalize_settings(expected)))
         print(repr(self._canonicalize_settings(observed)))
         self.assertThat(

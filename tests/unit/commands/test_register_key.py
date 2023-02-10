@@ -38,8 +38,7 @@ class RegisterKeyTestCase(FakeStoreCommandsBaseTestCase):
         self.assertThat(
             result.output,
             Contains(
-                'Done. The key "default" ({}) may be used to sign your '
-                "assertions.".format(get_sample_key("default")["sha3-384"])
+                f'Done. The key "default" ({get_sample_key("default")["sha3-384"]}) may be used to sign your assertions.'
             ),
         )
         self.fake_store_login.mock.assert_called_once_with(
@@ -170,8 +169,7 @@ class RegisterKeyTestCase(FakeStoreCommandsBaseTestCase):
         self.assertThat(
             self.fake_logger.output,
             Contains(
-                'Done. The key "another" ({}) may be used to sign your '
-                "assertions.\n".format(get_sample_key("another")["sha3-384"])
+                f'Done. The key "another" ({get_sample_key("another")["sha3-384"]}) may be used to sign your assertions.\n'
             ),
         )
 

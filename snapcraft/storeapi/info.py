@@ -229,11 +229,7 @@ class SnapInfo:
     def get_channel_mapping(
         self, *, risk: str, arch: Optional[str] = None, track: Optional[str] = None
     ) -> SnapChannelMapping:
-        if track is None:
-            track_filter = "latest"
-        else:
-            track_filter = track
-
+        track_filter = "latest" if track is None else track
         arch_match = (
             c
             for c in self.channel_map
@@ -243,7 +239,7 @@ class SnapInfo:
         risk_match = [c for c in track_match if c.channel_details.risk == risk]
 
         if not risk_match:
-            channel = "{}/{}".format(track, risk) if track else risk
+            channel = f"{track}/{risk}" if track else risk
             raise errors.SnapNotFoundError(snap_name=self.name, channel=channel)
 
         # We assume the API will not return duplicate mappings

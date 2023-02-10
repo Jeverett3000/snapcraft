@@ -70,7 +70,7 @@ class MesonPlugin(PluginV2):
         }
 
     def get_build_environment(self) -> Dict[str, str]:
-        return dict()
+        return {}
 
     @property
     def out_of_source_build(self):
@@ -89,7 +89,7 @@ class MesonPlugin(PluginV2):
 
         return [
             f"/usr/bin/python3 -m pip install -U {meson_package}",
-            "[ ! -f build.ninja ] && {}".format(" ".join(meson_cmd)),
+            f'[ ! -f build.ninja ] && {" ".join(meson_cmd)}',
             "ninja",
             'DESTDIR="${SNAPCRAFT_PART_INSTALL}" ninja install',
         ]

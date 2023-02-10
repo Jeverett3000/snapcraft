@@ -35,7 +35,7 @@ from tests.unit.part_loader import load_part
 
 class ContainsList(list):
     def __eq__(self, other):
-        return all([i[0] in i[1] for i in zip(self, other)])
+        return all(i[0] in i[1] for i in zip(self, other))
 
 
 class MockOptions:
@@ -68,11 +68,13 @@ class IsExecutable:
         return "IsExecutable()"
 
     def match(self, file_path):
-        if not os.stat(file_path).st_mode & stat.S_IEXEC:
-            return testtools.matchers.Mismatch(
+        return (
+            None
+            if os.stat(file_path).st_mode & stat.S_IEXEC
+            else testtools.matchers.Mismatch(
                 "Expected {!r} to be executable, but it was not".format(file_path)
             )
-        return None
+        )
 
 
 class LinkExists:
@@ -245,8 +247,7 @@ class TestCase(testscenarios.WithScenarios, testtools.TestCase):
 
     def verify_state(self, part_name, state_dir, expected_step_name):
         self.assertTrue(
-            os.path.isdir(state_dir),
-            "Expected state directory for {}".format(part_name),
+            os.path.isdir(state_dir), f"Expected state directory for {part_name}"
         )
 
         # Expect every step up to and including the specified one to be run

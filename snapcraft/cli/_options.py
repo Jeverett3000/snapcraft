@@ -119,7 +119,7 @@ _PROVIDER_OPTIONS: List[Dict[str, Any]] = [
         envvar="SNAPCRAFT_BUILD_ENVIRONMENT",
         show_envvar=False,
         help="Build provider to use.",
-        metavar="[{}]".format("|".join(_SUPPORTED_PROVIDERS)),
+        metavar=f'[{"|".join(_SUPPORTED_PROVIDERS)}]',
         type=click.Choice(_ALL_PROVIDERS),
         supported_providers=_ALL_PROVIDERS,
     ),
@@ -144,7 +144,11 @@ _PROVIDER_OPTIONS: List[Dict[str, Any]] = [
         envvar="SNAPCRAFT_ADD_CA_CERTIFICATES",
         supported_providers=["lxd", "multipass"],
         type=click.Path(
-            exists=True, file_okay=True, dir_okay=True, readable=True, resolve_path=True
+            exists=True,
+            file_okay=True,
+            dir_okay=True,
+            readable=True,
+            resolve_path=True,
         ),
     ),
     dict(
@@ -237,7 +241,7 @@ def _sanity_check_build_provider_flags(build_provider: str, **kwargs) -> None:
     # (2) Running inside of a container.
     if (
         build_provider == "host"
-        and not env_provider == "host"
+        and env_provider != "host"
         and not destructive_mode
         and not common.is_process_container()
     ):
@@ -247,9 +251,7 @@ def _sanity_check_build_provider_flags(build_provider: str, **kwargs) -> None:
 
     if env_provider and env_provider != build_provider:
         raise click.BadArgumentUsage(
-            "mismatch between --provider={} and SNAPCRAFT_BUILD_ENVIRONMENT={}".format(
-                build_provider, env_provider
-            )
+            f"mismatch between --provider={build_provider} and SNAPCRAFT_BUILD_ENVIRONMENT={env_provider}"
         )
 
     # Error if any sys.argv params are for unsupported providers.
@@ -311,7 +313,7 @@ def _param_decls_to_kwarg(key: str) -> str:
 def get_build_provider_flags(build_provider: str, **kwargs) -> Dict[str, str]:
     """Get configured options applicable to build_provider."""
 
-    build_provider_flags: Dict[str, str] = dict()
+    build_provider_flags: Dict[str, str] = {}
 
     # Should not happen - developer safety check.
     if build_provider not in _ALL_PROVIDERS:

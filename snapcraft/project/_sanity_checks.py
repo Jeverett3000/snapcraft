@@ -96,7 +96,4 @@ def _check_snap_dir(snap_dir_path: str) -> None:
 
 
 def _snap_dir_path_expected(path: str) -> bool:
-    for pattern in _EXPECTED_SNAP_DIR_PATTERNS:
-        if pattern.match(path):
-            return True
-    return False
+    return any(pattern.match(path) for pattern in _EXPECTED_SNAP_DIR_PATTERNS)

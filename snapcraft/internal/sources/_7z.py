@@ -52,12 +52,9 @@ class SevenZip(FileBase):
             raise errors.SnapcraftSourceInvalidOptionError("7z", "source-branch")
 
     def provision(self, dst, clean_target=True, keep_7z=False, src=None):
-        if src:
-            seven_zip_file = src
-        else:
-            seven_zip_file = os.path.join(
-                self.source_dir, os.path.basename(self.source)
-            )
+        seven_zip_file = src or os.path.join(
+            self.source_dir, os.path.basename(self.source)
+        )
         seven_zip_file = os.path.realpath(seven_zip_file)
 
         if clean_target:

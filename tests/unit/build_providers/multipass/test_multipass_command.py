@@ -74,10 +74,7 @@ class TestMultipassCommandEnsureMultipassErrors:
         self, monkeypatch, platform, prompt_installable, snap_which
     ):
         def which_effect(command: str):
-            if command == "snap" and snap_which:
-                return ["snap"]
-
-            return None
+            return ["snap"] if command == "snap" and snap_which else None
 
         monkeypatch.setattr(shutil, "which", which_effect)
 
@@ -356,7 +353,7 @@ class MultipassCommandDeleteTest(MultipassCommandPassthroughBaseTest):
 class MultipassCommandMountTest(MultipassCommandPassthroughBaseTest):
     def test_mount(self):
         source = "mountpath"
-        target = "{}/mountpoint".format(self.instance_name)
+        target = f"{self.instance_name}/mountpoint"
         self.multipass_command.mount(source=source, target=target)
 
         self.check_call_mock.assert_called_once_with(
@@ -366,7 +363,7 @@ class MultipassCommandMountTest(MultipassCommandPassthroughBaseTest):
 
     def test_mount_uid(self):
         source = "mountpath"
-        target = "{}/mountpoint".format(self.instance_name)
+        target = f"{self.instance_name}/mountpoint"
         self.multipass_command.mount(
             source=source,
             target=target,
@@ -390,7 +387,7 @@ class MultipassCommandMountTest(MultipassCommandPassthroughBaseTest):
 
     def test_mount_gid(self):
         source = "mountpath"
-        target = "{}/mountpoint".format(self.instance_name)
+        target = f"{self.instance_name}/mountpoint"
         self.multipass_command.mount(
             source=source,
             target=target,
@@ -414,7 +411,7 @@ class MultipassCommandMountTest(MultipassCommandPassthroughBaseTest):
 
     def test_mount_uid_and_gid(self):
         source = "mountpath"
-        target = "{}/mountpoint".format(self.instance_name)
+        target = f"{self.instance_name}/mountpoint"
         self.multipass_command.mount(
             source=source,
             target=target,
@@ -443,7 +440,7 @@ class MultipassCommandMountTest(MultipassCommandPassthroughBaseTest):
 
     def test_mount_fails(self):
         source = "mountpath"
-        target = "{}/mountpoint".format(self.instance_name)
+        target = f"{self.instance_name}/mountpoint"
         cmd = ["multipass", "mount", source, target]
         self.check_call_mock.side_effect = subprocess.CalledProcessError(1, cmd)
 
@@ -461,7 +458,7 @@ class MultipassCommandTransferTest(MultipassCommandPassthroughBaseTest):
     def test_push(self):
         source = mock.MagicMock(spec=io.BufferedIOBase)
         source.read.return_value = b"read data"
-        destination = "{}/destination-file".format(self.instance_name)
+        destination = f"{self.instance_name}/destination-file"
 
         self.popen_mock.return_value.stdout = None
         self.popen_mock.return_value.communicate.side_effect = (
@@ -488,7 +485,7 @@ class MultipassCommandTransferTest(MultipassCommandPassthroughBaseTest):
     def test_buffered_push(self):
         source = mock.MagicMock(spec=io.BufferedIOBase)
         source.read.side_effect = (b"read data", b"")
-        destination = "{}/destination-file".format(self.instance_name)
+        destination = f"{self.instance_name}/destination-file"
 
         self.popen_mock.return_value.stdout = None
         self.popen_mock.return_value.communicate.side_effect = (

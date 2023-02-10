@@ -62,7 +62,7 @@ class Bazaar(Base):
     def pull(self):
         tag_opts = []
         if self.source_tag:
-            tag_opts = ["-r", "tag:" + self.source_tag]
+            tag_opts = ["-r", f"tag:{self.source_tag}"]
         if self.source_commit:
             tag_opts = ["-r", self.source_commit]
         if os.path.exists(os.path.join(self.source_dir, ".bzr")):
@@ -80,9 +80,8 @@ class Bazaar(Base):
         tag = self.source_tag
         commit = self.source_commit
 
-        if not tag:
-            if os.path.exists(self.source_dir):
-                commit = self._run_output(["bzr", "revno", self.source_dir])
+        if not tag and os.path.exists(self.source_dir):
+            commit = self._run_output(["bzr", "revno", self.source_dir])
 
         branch = None
         source = self.source

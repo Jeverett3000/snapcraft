@@ -80,9 +80,7 @@ class AutotoolsPlugin(make.MakePlugin):
         elif options.install_via == "prefix":
             self.options.make_install_var = ""
         else:
-            raise RuntimeError(
-                'Unsupported installation method: "{}"'.format(options.install_via)
-            )
+            raise RuntimeError(f'Unsupported installation method: "{options.install_via}"')
 
     def enable_cross_compilation(self):
         pass
@@ -93,14 +91,9 @@ class AutotoolsPlugin(make.MakePlugin):
             potential_scripts = [
                 Path(self.builddir) / s for s in ["autogen.sh", "bootstrap"]
             ]
-            existing_scripts = [
+            if existing_scripts := [
                 s for s in potential_scripts if s.exists() and s.is_file()
-            ]
-
-            # If there are not alternative configure scripts, run autoreconf.
-            if not existing_scripts:
-                self.run(["autoreconf", "-i"])
-            else:
+            ]:
                 # Pick the first one.
                 script = existing_scripts[0]
                 # Make sure it's executable.
@@ -108,15 +101,17 @@ class AutotoolsPlugin(make.MakePlugin):
                     script.chmod(0o755)
                 self.run(["env", "NOCONFIGURE=1", script])
 
+            else:
+                self.run(["autoreconf", "-i"])
         configure_command = ["./configure"]
 
         if self.options.make_install_var:
             # Use an empty prefix since we'll install via DESTDIR
             configure_command.append("--prefix=")
         else:
-            configure_command.append("--prefix=" + self.installdir)
+            configure_command.append(f"--prefix={self.installdir}")
         if self.project.is_cross_compiling:
-            configure_command.append("--host={}".format(self.project.arch_triplet))
+            configure_command.append(f"--host={self.project.arch_triplet}")
 
         self.run(configure_command + self.options.configflags)
         self.make()

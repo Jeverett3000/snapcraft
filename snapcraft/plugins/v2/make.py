@@ -62,7 +62,7 @@ class MakePlugin(PluginV2):
         return {"gcc", "make"}
 
     def get_build_environment(self) -> Dict[str, str]:
-        return dict()
+        return {}
 
     def _get_make_command(self, target: str = "") -> str:
         cmd = ["make", '-j"${SNAPCRAFT_PARALLEL_BUILD_COUNT}"']

@@ -149,7 +149,7 @@ class Rosdep:
         except subprocess.CalledProcessError as e:
             output = e.output.decode(sys.getfilesystemencoding()).strip()
             raise RosdepInitializationError(
-                "Error initializing rosdep database:\n{}".format(output)
+                f"Error initializing rosdep database:\n{output}"
             )
 
         logger.info("Updating rosdep database...")
@@ -157,9 +157,7 @@ class Rosdep:
             self._run(["update", "--include-eol-distros"])
         except subprocess.CalledProcessError as e:
             output = e.output.decode(sys.getfilesystemencoding()).strip()
-            raise RosdepInitializationError(
-                "Error updating rosdep database:\n{}".format(output)
-            )
+            raise RosdepInitializationError(f"Error updating rosdep database:\n{output}")
 
     def get_dependencies(self, package_name=None):
         """Obtain dependencies for a given package, or entire workspace.
@@ -172,17 +170,9 @@ class Rosdep:
         if package_name:
             command.append(package_name)
         else:
-            # Adding a few flags that will make rosdep search the entire
-            # workspace:
-            #
-            # -a: select all packages in workspace
-            # -i: ignore any resolved keys that are satisfied by other packages
-            #     in the workspace
-            command.append("-a")
-            command.append("-i")
+            command.extend(("-a", "-i"))
         try:
-            output = self._run(command).strip()
-            if output:
+            if output := self._run(command).strip():
                 return set(output.split("\n"))
             else:
                 return set()
@@ -204,7 +194,7 @@ class Rosdep:
                     "--rosdistro",
                     self._ros_distro,
                     "--os",
-                    "ubuntu:{}".format(self._ubuntu_distro),
+                    f"ubuntu:{self._ubuntu_distro}",
                 ]
             )
         except subprocess.CalledProcessError:
@@ -221,11 +211,7 @@ class Rosdep:
             self._rosdep_install_path, "usr", "lib", "python2.7", "dist-packages"
         )
 
-        if self._ros_version == "2":
-            env["ROS_PYTHON_VERSION"] = "3"
-        else:
-            env["ROS_PYTHON_VERSION"] = "2"
-
+        env["ROS_PYTHON_VERSION"] = "3" if self._ros_version == "2" else "2"
         # By default, rosdep uses /etc/ros/rosdep to hold its sources list. We
         # don't want that here since we don't want to touch the host machine
         # (not to mention it would require sudo), so we can redirect it via

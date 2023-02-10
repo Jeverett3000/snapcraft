@@ -75,11 +75,10 @@ class PartsConfig:
         for part in self.all_parts:
             dep_names = self.after_requests.get(part.name, [])
             for dep_name in dep_names:
-                dep = self.get_part(dep_name)
-                if not dep:
+                if dep := self.get_part(dep_name):
+                    part.deps.append(dep)
+                else:
                     raise errors.SnapcraftAfterPartMissingError(part.name, dep_name)
-
-                part.deps.append(dep)
 
     def _sort_parts(self):
         """Performs an inneficient but easy to follow sorting of parts."""
@@ -94,11 +93,7 @@ class PartsConfig:
         while self.all_parts:
             top_part = None
             for part in self.all_parts:
-                mentioned = False
-                for other in self.all_parts:
-                    if part in other.deps:
-                        mentioned = True
-                        break
+                mentioned = any(part in other.deps for other in self.all_parts)
                 if not mentioned:
                     top_part = part
                     break
@@ -134,11 +129,11 @@ class PartsConfig:
     ) -> Set[pluginhandler.PluginHandler]:
         """Returns a set of all the parts that depend upon part_name."""
 
-        reverse_dependency_names = set()
-        for part, dependencies in self.after_requests.items():
-            if part_name in dependencies:
-                reverse_dependency_names.add(part)
-
+        reverse_dependency_names = {
+            part
+            for part, dependencies in self.after_requests.items()
+            if part_name in dependencies
+        }
         reverse_dependencies = {
             p for p in self.all_parts if p.name in reverse_dependency_names
         }
@@ -154,11 +149,7 @@ class PartsConfig:
         return reverse_dependencies
 
     def get_part(self, part_name):
-        for part in self.all_parts:
-            if part.name == part_name:
-                return part
-
-        return None
+        return next((part for part in self.all_parts if part.name == part_name), None)
 
     def clean_part(self, part_name, staged_state, primed_state, step):
         part = self.get_part(part_name)
@@ -238,7 +229,7 @@ class PartsConfig:
             part_env = get_snapcraft_part_directory_environment(part)
 
             for variable, value in ChainMap(part_env, global_env).items():
-                env.append('{}="{}"'.format(variable, value))
+                env.append(f'{variable}="{value}"')
 
             # Finally, add the declared environment from the part.
             # This is done only for the "root" part.
@@ -255,7 +246,7 @@ class PartsConfig:
         # LP: #1767625
         # Remove duplicates from using the same plugin in dependent parts.
         seen = set()  # type: Set[str]
-        deduped_env = list()  # type: List[str]
+        deduped_env = []
         for e in env:
             if e not in seen:
                 deduped_env.append(e)

@@ -73,7 +73,7 @@ class CrystalPlugin(PluginV1):
     def __init__(self, name, options, project):
         super().__init__(name, options, project)
 
-        self.build_snaps.append("crystal/{}".format(self.options.crystal_channel))
+        self.build_snaps.append(f"crystal/{self.options.crystal_channel}")
 
         # See https://github.com/crystal-lang/distribution-scripts/blob/8bc01e26291dc518390129e15df8f757d687871c/docker/ubuntu.Dockerfile#L9
         self.build_packages.extend(

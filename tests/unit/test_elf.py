@@ -134,7 +134,7 @@ class TestMissingLibraries(TestElfBase):
 
         self.assertThat(
             libs,
-            Equals(set([self.fake_elf.root_libraries["foo.so.1"], "missing.so.2"])),
+            Equals({self.fake_elf.root_libraries["foo.so.1"], "missing.so.2"}),
         )
 
 
@@ -156,7 +156,7 @@ class TestGetLibraries(TestElfBase):
         self.assertThat(
             libs,
             Equals(
-                set([self.fake_elf.root_libraries["foo.so.1"], "/usr/lib/bar.so.2"])
+                {self.fake_elf.root_libraries["foo.so.1"], "/usr/lib/bar.so.2"}
             ),
         )
 
@@ -178,7 +178,7 @@ class TestGetLibraries(TestElfBase):
         # With no cache this would have returned '/usr/lib/bar.so.2'
         self.assertThat(
             libs,
-            Equals(set([self.fake_elf.root_libraries["foo.so.1"], "/lib/bar.so.2"])),
+            Equals({self.fake_elf.root_libraries["foo.so.1"], "/lib/bar.so.2"}),
         )
 
     def test_primed_libraries_are_preferred(self):
@@ -227,7 +227,7 @@ class TestGetLibraries(TestElfBase):
         self.assertThat(
             libs,
             Equals(
-                set([self.fake_elf.root_libraries["foo.so.1"], "/usr/lib/bar.so.2"])
+                {self.fake_elf.root_libraries["foo.so.1"], "/usr/lib/bar.so.2"}
             ),
         )
 

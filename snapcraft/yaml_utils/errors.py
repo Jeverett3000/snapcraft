@@ -50,8 +50,7 @@ class YamlValidationError(SnapcraftError):
 
         # If we have a preamble we are not at the root
         if supplement and preamble:
-            messages.append(error.message)
-            messages.append("({})".format(supplement))
+            messages.extend((error.message, f"({supplement})"))
         elif supplement:
             messages.append(supplement)
         elif cause:
@@ -67,12 +66,9 @@ class YamlValidationError(SnapcraftError):
 
 def _determine_preamble(error):
     messages = []
-    path = _determine_property_path(error)
-    if path:
+    if path := _determine_property_path(error):
         messages.append(
-            "The '{}' property does not match the required schema:".format(
-                "/".join(path)
-            )
+            f"""The '{"/".join(path)}' property does not match the required schema:"""
         )
     return " ".join(messages)
 
@@ -104,15 +100,14 @@ def _determine_cause(error):
             key = contextual_error.schema_path.popleft()
             if key not in contextual_messages:
                 contextual_messages[key] = []
-            message = contextual_error.message
-            if message:
+            if message := contextual_error.message:
                 # Sure it starts lower-case (not all messages do)
                 contextual_messages[key].append(message[0].lower() + message[1:])
 
-        oneOf_messages: List[str] = []
-        for key, value in contextual_messages.items():
-            oneOf_messages.append(formatting_utils.humanize_list(value, "and", "{}"))
-
+        oneOf_messages: List[str] = [
+            formatting_utils.humanize_list(value, "and", "{}")
+            for value in contextual_messages.values()
+        ]
         messages.append(formatting_utils.humanize_list(oneOf_messages, "or", "{}"))
 
     return " ".join(messages)
@@ -138,7 +133,7 @@ def _determine_property_path(error):
         element = error.absolute_path.popleft()
         # assume numbers are indices and use 'xxx[123]' notation.
         if isinstance(element, int):
-            path[-1] = "{}[{}]".format(path[-1], element)
+            path[-1] = f"{path[-1]}[{element}]"
         else:
             path.append(str(element))
 
@@ -155,8 +150,7 @@ def _interpret_anyOf(error):
 
     usages = []
     try:
-        for validator in error.validator_value:
-            usages.append(validator["usage"])
+        usages.extend(validator["usage"] for validator in error.validator_value)
     except (TypeError, KeyError):
         return ""
 

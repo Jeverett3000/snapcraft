@@ -43,7 +43,7 @@ class StoreError(SnapcraftError):
 
     def __init__(self, **kwargs):
         with contextlib.suppress(KeyError, AttributeError):
-            logger.debug("Store error response: {}".format(kwargs["response"].__dict__))
+            logger.debug(f'Store error response: {kwargs["response"].__dict__}')
         super().__init__(**kwargs)
 
 
@@ -63,26 +63,25 @@ class GeneralStoreError(StoreError):
                 extra_error_message = response_json["message"]
 
             if extra_error_message:
-                message += ": {}".format(extra_error_message)
+                message += f": {extra_error_message}"
 
         super().__init__(response=response, message=message)
 
 
 class StoreErrorList:
     def __str__(self) -> str:
-        error_list: List[str] = list()
-        for error in self._error_list:
-            error_list.append("- {}: {}".format(error["code"], error["message"]))
+        error_list: List[str] = [
+            f'- {error["code"]}: {error["message"]}' for error in self._error_list
+        ]
         return "\n".join(error_list).strip()
 
     def __repr__(self) -> str:
         code_list = []
         for error in self._error_list:
-            code = error.get("code")
-            if code:
+            if code := error.get("code"):
                 code_list.append(code)
 
-        return "<StoreErrorList: {}>".format(" ".join(code_list))
+        return f'<StoreErrorList: {" ".join(code_list)}>'
 
     def __contains__(self, error_code: str) -> bool:
         return any((error.get("code") == error_code for error in self._error_list))
@@ -111,7 +110,7 @@ class SnapNotFoundError(SnapcraftException):
 
         # Defaulting snap_name to "" to support the one case we have that
         # makes use of snap_id.
-        if snap_name == "" and snap_id is None:
+        if not snap_name and snap_id is None:
             raise RuntimeError("Both 'snap_name' and 'snap_id' cannot be None.")
 
         self._snap_name = snap_name
@@ -122,27 +121,19 @@ class SnapNotFoundError(SnapcraftException):
     def get_brief(self) -> str:
         if self._snap_id:
             # This is legacy.
-            brief = f"Cannot find snap with snap_id {self._snap_id!r}."
+            return f"Cannot find snap with snap_id {self._snap_id!r}."
         elif self._channel and self._arch:
-            brief = f"Snap {self._snap_name!r} for architecture {self._arch!r} was not found on channel {self._channel!r}."
+            return f"Snap {self._snap_name!r} for architecture {self._arch!r} was not found on channel {self._channel!r}."
         elif self._channel:
-            brief = (
-                f"Snap {self._snap_name!r} was not found on channel {self._channel!r}."
-            )
+            return f"Snap {self._snap_name!r} was not found on channel {self._channel!r}."
         elif self._arch:
-            brief = f"Snap {self._snap_name!r} for architecture {self._arch!r} was not found."
+            return f"Snap {self._snap_name!r} for architecture {self._arch!r} was not found."
         else:
-            brief = f"Snap {self._snap_name!r} was not found."
-
-        return brief
+            return f"Snap {self._snap_name!r} was not found."
 
     def get_resolution(self) -> str:
         # All new APIs use snap_name.
-        if self._snap_id:
-            snap_identifier = self._snap_id
-        else:
-            snap_identifier = self._snap_name
-
+        snap_identifier = self._snap_id or self._snap_name
         resolution = f"Ensure you have proper access rights for {snap_identifier!r}."
 
         if self._channel and self._arch:
@@ -219,9 +210,9 @@ class StoreAccountInformationError(StoreError):
     fmt = "Error fetching account information from store: {error}"
 
     def __init__(self, response):
-        error = "{} {}".format(response.status_code, response.reason)
+        error = f"{response.status_code} {response.reason}"
         extra = []
-        try:
+        with contextlib.suppress(JSONDecodeError):
             response_json = response.json()
             if "error_list" in response_json:
                 error = " ".join(
@@ -232,8 +223,6 @@ class StoreAccountInformationError(StoreError):
                     for error in response_json["error_list"]
                     if "extra" in error
                 ]
-        except JSONDecodeError:
-            pass
         super().__init__(response=response, error=error, extra=extra)
 
 
@@ -242,15 +231,13 @@ class StoreKeyRegistrationError(StoreError):
     fmt = "Key registration failed: {error}"
 
     def __init__(self, response):
-        error = "{} {}".format(response.status_code, response.reason)
-        try:
+        error = f"{response.status_code} {response.reason}"
+        with contextlib.suppress(JSONDecodeError):
             response_json = response.json()
             if "error_list" in response_json:
                 error = " ".join(
                     error["message"] for error in response_json["error_list"]
                 )
-        except JSONDecodeError:
-            pass
         super().__init__(response=response, error=error)
 
 
@@ -367,7 +354,7 @@ class StoreUploadError(StoreError):
         try:
             response_json = response.json()
         except (AttributeError, JSONDecodeError):
-            response_json = {"error_list": list()}
+            response_json = {"error_list": []}
 
         self.error_list = StoreErrorList(error_list=response_json.pop("error_list"))
 
@@ -414,11 +401,9 @@ class StoreReviewError(StoreError):
     def __init__(self, result):
         self.fmt = self.__messages[result["code"]]
         additional = []
-        errors = result.get("errors")
-        if errors:
+        if errors := result.get("errors"):
             for error in errors:
-                message = error.get("message")
-                if message:
+                if message := error.get("message"):
                     additional.append("  - {message}".format(message=message))
         if additional:
             self.additional = "\n".join(additional)
@@ -504,7 +489,7 @@ class StoreReleaseError(StoreError):
             fmt = "{errors}".format(**response_json)
 
         except AttributeError:
-            fmt = "{}".format(response)
+            fmt = f"{response}"
 
         return fmt
 
@@ -583,17 +568,14 @@ class StoreValidationSetsError(StoreError):
     fmt = "Issues encountered with validation set: {error}"
 
     def __init__(self, response):
-        error = "{} {}".format(response.status_code, response.reason)
-        try:
+        error = f"{response.status_code} {response.reason}"
+        with contextlib.suppress(JSONDecodeError):
             response_json = response.json()
 
             if "error-list" in response_json:
                 error = " ".join(
                     error["message"] for error in response_json["error-list"]
                 )
-        except JSONDecodeError:
-            pass
-
         super().__init__(response=response, error=error)
 
 
@@ -602,16 +584,13 @@ class StoreSnapBuildError(StoreError):
     fmt = "Could not assert build: {error}"
 
     def __init__(self, response):
-        error = "{} {}".format(response.status_code, response.reason)
-        try:
+        error = f"{response.status_code} {response.reason}"
+        with contextlib.suppress(JSONDecodeError):
             response_json = response.json()
             if "error_list" in response_json:
                 error = " ".join(
                     error["message"] for error in response_json["error_list"]
                 )
-        except JSONDecodeError:
-            pass
-
         super().__init__(response=response, error=error)
 
 
@@ -623,16 +602,13 @@ class StoreSnapRevisionsError(StoreError):
     )
 
     def __init__(self, response, snap_id, series, arch):
-        error = "{} {}".format(response.status_code, response.reason)
-        try:
+        error = f"{response.status_code} {response.reason}"
+        with contextlib.suppress(JSONDecodeError):
             response_json = response.json()
             if "error_list" in response_json:
                 error = " ".join(
                     error["message"] for error in response_json["error_list"]
                 )
-        except JSONDecodeError:
-            pass
-
         super().__init__(
             response=response,
             snap_id=snap_id,
@@ -671,7 +647,7 @@ def _format_error_list_details(error_list: List[Dict[str, Any]]) -> str:
         message = error.get("message")
         extra = error.get("extra")
 
-        lines.append(f"Errors:")
+        lines.append("Errors:")
         if code:
             lines.append(f"- Code: {code}")
 
@@ -685,14 +661,10 @@ def _format_error_list_details(error_list: List[Dict[str, Any]]) -> str:
 
 
 def _format_query_list_details(filters: List[metrics.MetricsFilter]) -> str:
-    details = ["Queries:"]
-
-    details.extend(
-        [
-            f"- {f.metric_name} with range {f.start}..{f.end}"
-            for i, f in enumerate(filters)
-        ]
-    )
+    details = [
+        "Queries:",
+        *[f"- {f.metric_name} with range {f.start}..{f.end}" for f in filters],
+    ]
 
     return "\n".join(details)
 
@@ -754,9 +726,9 @@ class StoreChannelClosingError(StoreError):
     def __init__(self, response):
         try:
             e = response.json()["error_list"][0]
-            error = "{}".format(e["message"])
+            error = f'{e["message"]}'
         except (JSONDecodeError, KeyError, IndexError):
-            error = "{} {}".format(response.status_code, response.reason)
+            error = f"{response.status_code} {response.reason}"
 
         super().__init__(response=response, error=error)
 
@@ -852,10 +824,10 @@ def _error_list_to_message(response_json):
     The error format is given here:
     https://dashboard.snapcraft.io/docs/api/snap.html#format
     """
-    messages = []
-    for error_list_item in response_json["error_list"]:
-        messages.append(_error_list_item_to_message(error_list_item, response_json))
-
+    messages = [
+        _error_list_item_to_message(error_list_item, response_json)
+        for error_list_item in response_json["error_list"]
+    ]
     return ", and ".join(messages)
 
 
@@ -870,19 +842,17 @@ def _error_list_item_to_message(error_list_item, response_json):
     if code == "macaroon-permission-required":
         message = _handle_macaroon_permission_required(response_json)
 
-    if message:
-        return message
-    else:
-        return error_list_item["message"]
+    return message or error_list_item["message"]
 
 
 def _handle_macaroon_permission_required(response_json):
-    if "permission" in response_json and "channels" in response_json:
-        if response_json["permission"] == "channel":
-            channels = response_json["channels"]
-            return "Lacking permission to release to channel(s) {}".format(
-                formatting_utils.humanize_list(channels, "and")
-            )
+    if (
+        "permission" in response_json
+        and "channels" in response_json
+        and response_json["permission"] == "channel"
+    ):
+        channels = response_json["channels"]
+        return f'Lacking permission to release to channel(s) {formatting_utils.humanize_list(channels, "and")}'
 
     return ""
 

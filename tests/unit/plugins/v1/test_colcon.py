@@ -508,11 +508,11 @@ class ColconPluginTest(ColconPluginTestBase):
         # Make sure $@ is zeroed, then setup.sh sourced, then $@ is restored
         lines_of_interest = [
             "set --",
-            'if [ -f "{}" ]; then'.format(underlay_setup),
-            '. "{}"'.format(underlay_setup),
+            f'if [ -f "{underlay_setup}" ]; then',
+            f'. "{underlay_setup}"',
             "fi",
-            'if [ -f "{}" ]; then'.format(overlay_setup),
-            '. "{}"'.format(overlay_setup),
+            f'if [ -f "{overlay_setup}" ]; then',
+            f'. "{overlay_setup}"',
             "fi",
             'eval "set -- $BACKUP_ARGS"',
         ]
@@ -553,7 +553,7 @@ class PrepareBuildTest(ColconPluginTestBase):
             {
                 "path": "fooConfig.cmake",
                 "contents": '"/usr/lib/foo"',
-                "expected": '"{}/usr/lib/foo"'.format(self.plugin.installdir),
+                "expected": f'"{self.plugin.installdir}/usr/lib/foo"',
             },
             {
                 "path": "bar.cmake",
@@ -570,8 +570,8 @@ class PrepareBuildTest(ColconPluginTestBase):
             {"path": "test/quxConfig.cmake", "contents": "qux", "expected": "qux"},
             {
                 "path": "test/installedConfig.cmake",
-                "contents": '"{}/foo"'.format(self.plugin.installdir),
-                "expected": '"{}/foo"'.format(self.plugin.installdir),
+                "contents": f'"{self.plugin.installdir}/foo"',
+                "expected": f'"{self.plugin.installdir}/foo"',
             },
         ]
 
@@ -594,9 +594,13 @@ class PrepareBuildTest(ColconPluginTestBase):
             {
                 "path": "fooConfig.cmake",
                 "contents": '"/usr/lib/foo"',
-                "expected": '"{}/usr/lib/foo"'.format(self.plugin.installdir),
+                "expected": f'"{self.plugin.installdir}/usr/lib/foo"',
             },
-            {"path": "bar", "contents": '"/usr/lib/bar"', "expected": '"/usr/lib/bar"'},
+            {
+                "path": "bar",
+                "contents": '"/usr/lib/bar"',
+                "expected": '"/usr/lib/bar"',
+            },
             {
                 "path": "test/bazConfig.cmake",
                 "contents": '"/test/baz;/usr/lib/baz"',
@@ -607,8 +611,8 @@ class PrepareBuildTest(ColconPluginTestBase):
             {"path": "test/quxConfig.cmake", "contents": "qux", "expected": "qux"},
             {
                 "path": "test/installedConfig.cmake",
-                "contents": '"{}/foo"'.format(self.plugin.installdir),
-                "expected": '"{}/foo"'.format(self.plugin.installdir),
+                "contents": f'"{self.plugin.installdir}/foo"',
+                "expected": f'"{self.plugin.installdir}/foo"',
             },
             {
                 "path": "test/poco.cmake",
@@ -691,7 +695,7 @@ class FinishBuildTest(ColconPluginTestBase):
         files = [
             {
                 "path": "fooConfig.cmake",
-                "contents": '"{}/usr/lib/foo"'.format(self.plugin.installdir),
+                "contents": f'"{self.plugin.installdir}/usr/lib/foo"',
                 "expected": '"$ENV{SNAPCRAFT_STAGE}/usr/lib/foo"',
             },
             {
@@ -783,16 +787,12 @@ class FinishBuildTest(ColconPluginTestBase):
             },
             {
                 "path": "test/local_setup.sh",
-                "contents": '_colcon_package_sh_COLCON_CURRENT_PREFIX="{}/baz"'.format(
-                    self.plugin.installdir
-                ),
+                "contents": f'_colcon_package_sh_COLCON_CURRENT_PREFIX="{self.plugin.installdir}/baz"',
                 "expected": '_colcon_package_sh_COLCON_CURRENT_PREFIX="$SNAP_COLCON_ROOT/baz"',
             },
             {
                 "path": "test/another_local_setup.sh",
-                "contents": 'COLCON_CURRENT_PREFIX="{}/qux"'.format(
-                    self.plugin.installdir
-                ),
+                "contents": f'COLCON_CURRENT_PREFIX="{self.plugin.installdir}/qux"',
                 "expected": 'COLCON_CURRENT_PREFIX="$SNAP_COLCON_ROOT/qux"',
             },
             {
@@ -836,9 +836,7 @@ class FinishBuildTest(ColconPluginTestBase):
             },
             {
                 "path": "test/local_setup.sh",
-                "contents": '_colcon_python_executable="{}/baz/python3"'.format(
-                    self.plugin.installdir
-                ),
+                "contents": f'_colcon_python_executable="{self.plugin.installdir}/baz/python3"',
                 "expected": '_colcon_python_executable="$SNAP_COLCON_ROOT/baz/python3"',
             },
             {
@@ -1113,11 +1111,7 @@ class TestBuildArgs:
 
         prepare_build_mock.assert_called_once_with()
 
-        if "debug" in build_attributes:
-            build_type = "Debug"
-        else:
-            build_type = "Release"
-
+        build_type = "Debug" if "debug" in build_attributes else "Release"
         expected_command = ["colcon", "build", "--merge-install"]
         if colcon_packages:
             expected_command += ["--packages-select"] + colcon_packages
@@ -1130,7 +1124,7 @@ class TestBuildArgs:
             f"{plugin.sourcedir}/src",
             "--install-base",
             f"{plugin.installdir}/opt/ros/snap",
-            "--parallel-workers={}".format(1 if disable_parallel else 2),
+            f"--parallel-workers={1 if disable_parallel else 2}",
             "--cmake-args",
             f"-DCMAKE_BUILD_TYPE={build_type}",
         ]

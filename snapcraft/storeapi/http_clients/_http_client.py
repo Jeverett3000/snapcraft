@@ -69,11 +69,7 @@ class Client:
             debug_headers["Authorization"] = "<macaroon>"
         if debug_headers.get("Macaroons"):
             debug_headers["Macaroons"] = "<macaroon>"
-        logger.debug(
-            "Calling {} with params {} and headers {}".format(
-                url, params, debug_headers
-            )
-        )
+        logger.debug(f"Calling {url} with params {params} and headers {debug_headers}")
         try:
             response = self.session.request(
                 method, url, headers=headers, params=params, **kwargs

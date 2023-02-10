@@ -111,17 +111,16 @@ def _execute(  # noqa: C901
         try:
             build_provider_class.ensure_provider()
         except build_providers.errors.ProviderNotFound as provider_error:
-            if provider_error.prompt_installable:
-                if echo.is_tty_connected() and echo.confirm(
-                    "Support for {!r} needs to be set up. "
-                    "Would you like to do it now?".format(provider_error.provider)
-                ):
-                    build_provider_class.setup_provider(echoer=echo)
-                else:
-                    raise provider_error
-            else:
+            if not provider_error.prompt_installable:
                 raise provider_error
 
+            if echo.is_tty_connected() and echo.confirm(
+                "Support for {!r} needs to be set up. "
+                "Would you like to do it now?".format(provider_error.provider)
+            ):
+                build_provider_class.setup_provider(echoer=echo)
+            else:
+                raise provider_error
         with build_provider_class(
             project=project, echoer=echo, build_provider_flags=build_provider_flags
         ) as instance:
@@ -280,7 +279,7 @@ def lifecyclecli(ctx, **kwargs):
 def init():
     """Initialize a snapcraft project."""
     snapcraft_yaml_path = lifecycle.init()
-    echo.info("Created {}.".format(snapcraft_yaml_path))
+    echo.info(f"Created {snapcraft_yaml_path}.")
     echo.wrapped(
         "Go to https://docs.snapcraft.io/the-snapcraft-format/8337 for more "
         "information about the snapcraft.yaml format."
@@ -362,7 +361,7 @@ def try_command(**kwargs):
     """
     project = _execute(steps.PRIME, [], setup_prime_try=True, **kwargs)
     # project.prime_dir here points to the on-host prime directory.
-    echo.info("You can now run `snap try {}`.".format(project.prime_dir))
+    echo.info(f"You can now run `snap try {project.prime_dir}`.")
 
 
 @lifecyclecli.command()

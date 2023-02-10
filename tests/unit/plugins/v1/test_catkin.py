@@ -618,7 +618,7 @@ class CatkinPluginTestCase(CatkinPluginBaseTest):
 
         self.assertThat(
             environment,
-            Contains("ROS_MASTER_URI={}".format(self.properties.catkin_ros_master_uri)),
+            Contains(f"ROS_MASTER_URI={self.properties.catkin_ros_master_uri}"),
         )
 
         self.assertThat(environment, Contains("ROS_HOME=${SNAP_USER_DATA:-/tmp}/ros"))
@@ -659,11 +659,7 @@ class CatkinPluginTestCase(CatkinPluginBaseTest):
         environment = self._verify_run_environment(plugin)
 
         setup_path = os.path.join(plugin.rosdir, "snapcraft-setup.sh")
-        lines_of_interest = [
-            "if [ -f {} ]; then".format(setup_path),
-            ". {}".format(setup_path),
-            "fi",
-        ]
+        lines_of_interest = [f"if [ -f {setup_path} ]; then", f". {setup_path}", "fi"]
         actual_lines = []
 
         for line in environment:
@@ -703,7 +699,7 @@ class CatkinPluginTestCase(CatkinPluginBaseTest):
         # version back in, thus obtaining the real environment
         with tempfile.NamedTemporaryFile(mode="w+") as f:
             f.write(predefinition)
-            f.write("\n".join(["export " + e for e in plugin.env(plugin.installdir)]))
+            f.write("\n".join([f"export {e}" for e in plugin.env(plugin.installdir)]))
             f.write('python3 -c "import os; print(dict(os.environ))"')
             f.flush()
             return ast.literal_eval(
@@ -727,9 +723,7 @@ class CatkinPluginTestCase(CatkinPluginBaseTest):
         segments = self._pythonpath_segments(environment)
         self.assertFalse(
             self._list_contains_empty_items(segments),
-            "PYTHONPATH unexpectedly contains empty segments: {}".format(
-                environment["PYTHONPATH"]
-            ),
+            f'PYTHONPATH unexpectedly contains empty segments: {environment["PYTHONPATH"]}',
         )
 
     def test_pythonpath_if_null(self):
@@ -744,9 +738,7 @@ class CatkinPluginTestCase(CatkinPluginBaseTest):
         segments = self._pythonpath_segments(environment)
         self.assertFalse(
             self._list_contains_empty_items(segments),
-            "PYTHONPATH unexpectedly contains empty segments: {}".format(
-                environment["PYTHONPATH"]
-            ),
+            f'PYTHONPATH unexpectedly contains empty segments: {environment["PYTHONPATH"]}',
         )
 
     def test_pythonpath_if_not_empty(self):
@@ -761,9 +753,7 @@ class CatkinPluginTestCase(CatkinPluginBaseTest):
         segments = self._pythonpath_segments(environment)
         self.assertFalse(
             self._list_contains_empty_items(segments),
-            "PYTHONPATH unexpectedly contains empty segments: {}".format(
-                environment["PYTHONPATH"]
-            ),
+            f'PYTHONPATH unexpectedly contains empty segments: {environment["PYTHONPATH"]}',
         )
         self.assertThat(segments, Contains("foo"))
 
@@ -786,9 +776,9 @@ class CatkinPluginTestCase(CatkinPluginBaseTest):
         setup_path = os.path.join(rosdir, "setup.sh")
         lines_of_interest = [
             "set --",
-            "if [ -f {} ]; then".format(setup_path),
+            f"if [ -f {setup_path} ]; then",
             "set -- --local",
-            "_CATKIN_SETUP_DIR={} . {}".format(rosdir, setup_path),
+            f"_CATKIN_SETUP_DIR={rosdir} . {setup_path}",
             "fi",
             'eval "set -- $BACKUP_ARGS"',
         ]
@@ -819,12 +809,12 @@ class CatkinPluginTestCase(CatkinPluginBaseTest):
         setup_path = os.path.join(rosdir, "setup.sh")
         lines_of_interest = [
             "set --",
-            "if [ -f {} ]; then".format(underlay_setup_path),
+            f"if [ -f {underlay_setup_path} ]; then",
             "set -- --local",
-            "_CATKIN_SETUP_DIR={} . {}".format("test-underlay", underlay_setup_path),
-            "if [ -f {} ]; then".format(setup_path),
+            f"_CATKIN_SETUP_DIR=test-underlay . {underlay_setup_path}",
+            f"if [ -f {setup_path} ]; then",
             "set -- --local --extend",
-            "_CATKIN_SETUP_DIR={} . {}".format(rosdir, setup_path),
+            f"_CATKIN_SETUP_DIR={rosdir} . {setup_path}",
             "fi",
             "fi",
             'eval "set -- $BACKUP_ARGS"',
@@ -855,9 +845,7 @@ class CatkinPluginTestCase(CatkinPluginBaseTest):
 
         environment = plugin.env(plugin.installdir)
 
-        self.assertFalse(
-            "PYTHONPATH={}".format(python_path) in environment, environment
-        )
+        self.assertFalse(f"PYTHONPATH={python_path}" in environment, environment)
 
     @mock.patch.object(catkin.CatkinPlugin, "_use_in_snap_python")
     def test_prepare_build(self, use_python_mock):
@@ -870,12 +858,12 @@ class CatkinPluginTestCase(CatkinPluginBaseTest):
             {
                 "path": "fooConfig.cmake",
                 "contents": '"/usr/lib/foo"',
-                "expected": '"{}/usr/lib/foo"'.format(plugin.installdir),
+                "expected": f'"{plugin.installdir}/usr/lib/foo"',
             },
             {
                 "path": "anotherConfig.cmake",
                 "contents": '"$ENV{SNAPCRAFT_STAGE}/usr/lib/another"',
-                "expected": '"{}/usr/lib/another"'.format(plugin.installdir),
+                "expected": f'"{plugin.installdir}/usr/lib/another"',
             },
             {
                 "path": "bar.cmake",
@@ -885,13 +873,15 @@ class CatkinPluginTestCase(CatkinPluginBaseTest):
             {
                 "path": "test/bazConfig.cmake",
                 "contents": '"/test/baz;/usr/lib/baz"',
-                "expected": '"{0}/test/baz;{0}/usr/lib/baz"'.format(plugin.installdir),
+                "expected": '"{0}/test/baz;{0}/usr/lib/baz"'.format(
+                    plugin.installdir
+                ),
             },
             {"path": "test/quxConfig.cmake", "contents": "qux", "expected": "qux"},
             {
                 "path": "test/installedConfig.cmake",
-                "contents": '"{}/foo"'.format(plugin.installdir),
-                "expected": '"{}/foo"'.format(plugin.installdir),
+                "contents": f'"{plugin.installdir}/foo"',
+                "expected": f'"{plugin.installdir}/foo"',
             },
         ]
 
@@ -1522,11 +1512,7 @@ class TestBuildArgs:
 
         prepare_build_mock.assert_called_once_with()
 
-        if "debug" in build_attributes:
-            build_type = "Debug"
-        else:
-            build_type = "Release"
-
+        build_type = "Debug" if "debug" in build_attributes else "Release"
         expected_command = [
             "catkin_make_isolated",
             "--install",
@@ -1538,7 +1524,7 @@ class TestBuildArgs:
             f"{plugin.builddir}/src",
             "--install-space",
             f"{plugin.installdir}/opt/ros/melodic",
-            "-j{}".format(1 if disable_parallel else 2),
+            f"-j{1 if disable_parallel else 2}",
             "--cmake-args",
             f"-DCMAKE_BUILD_TYPE={build_type}",
         ]
@@ -1576,11 +1562,7 @@ class TestBuildArgs:
 
         prepare_build_mock.assert_called_once_with()
 
-        if "debug" in build_attributes:
-            build_type = "Debug"
-        else:
-            build_type = "Release"
-
+        build_type = "Debug" if "debug" in build_attributes else "Release"
         expected_command = [
             "catkin_make_isolated",
             "--install",
@@ -1590,7 +1572,7 @@ class TestBuildArgs:
             f"{plugin.builddir}/src",
             "--install-space",
             f"{plugin.installdir}/opt/ros/melodic",
-            "-j{}".format(1 if disable_parallel else 2),
+            f"-j{1 if disable_parallel else 2}",
             "--cmake-args",
             f"-DCMAKE_BUILD_TYPE={build_type}",
         ]
@@ -1622,7 +1604,7 @@ class FinishBuildNoUnderlayTestCase(CatkinPluginBaseTest):
         files = [
             {
                 "path": "fooConfig.cmake",
-                "contents": '"{}/usr/lib/foo"'.format(self.plugin.installdir),
+                "contents": f'"{self.plugin.installdir}/usr/lib/foo"',
                 "expected": '"$ENV{SNAPCRAFT_STAGE}/usr/lib/foo"',
             },
             {
@@ -1778,7 +1760,7 @@ class FinishBuildUnderlayTestCase(CatkinPluginBaseTest):
         files = [
             {
                 "path": "fooConfig.cmake",
-                "contents": '"{}/usr/lib/foo"'.format(self.plugin.installdir),
+                "contents": f'"{self.plugin.installdir}/usr/lib/foo"',
                 "expected": '"$ENV{SNAPCRAFT_STAGE}/usr/lib/foo"',
             },
             {

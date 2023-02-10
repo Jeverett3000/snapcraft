@@ -158,8 +158,7 @@ class KernelPluginTestCase(PluginsV1BaseTestCase):
                     shell=True,
                 ),
                 mock.call(
-                    "find . | cpio --create --format=newc | "
-                    "gzip > {}".format(os.path.join(installdir, "initrd-4.4.2.img")),
+                    f'find . | cpio --create --format=newc | gzip > {os.path.join(installdir, "initrd-4.4.2.img")}',
                     cwd=os.path.join(builddir, "initrd-staging"),
                     shell=True,
                 ),
@@ -175,8 +174,7 @@ class KernelPluginTestCase(PluginsV1BaseTestCase):
             "System.map-4.4.2",
         ]:
             self.assertTrue(
-                os.path.exists(os.path.join(installdir, asset)),
-                "Missing {}".format(asset),
+                os.path.exists(os.path.join(installdir, asset)), f"Missing {asset}"
             )
 
     def _simulate_build(
@@ -336,9 +334,7 @@ class KernelPluginTestCase(PluginsV1BaseTestCase):
         open(os.path.join(plugin.installdir, "initrd-4.4.img"), "w").close()
         open(os.path.join(plugin.installdir, "serport.ko"), "w").close()
 
-        self.run_output_mock.return_value = "insmod {}/serport.ko".format(
-            plugin.installdir
-        )
+        self.run_output_mock.return_value = f"insmod {plugin.installdir}/serport.ko"
 
         with mock.patch.object(plugin, "_unpack_generic_initrd") as m_unpack:
             m_unpack.return_value = "staging"
@@ -384,13 +380,11 @@ class KernelPluginTestCase(PluginsV1BaseTestCase):
                     [
                         "make",
                         "-j2",
-                        "CONFIG_PREFIX={}".format(plugin.installdir),
+                        f"CONFIG_PREFIX={plugin.installdir}",
                         "modules_install",
-                        "INSTALL_MOD_PATH={}".format(plugin.installdir),
+                        f"INSTALL_MOD_PATH={plugin.installdir}",
                         "firmware_install",
-                        "INSTALL_FW_PATH={}".format(
-                            os.path.join(plugin.installdir, "lib", "firmware")
-                        ),
+                        f'INSTALL_FW_PATH={os.path.join(plugin.installdir, "lib", "firmware")}',
                     ]
                 ),
             ]
@@ -424,10 +418,13 @@ class KernelPluginTestCase(PluginsV1BaseTestCase):
         self.check_call_mock.assert_has_calls(
             [
                 mock.call(
-                    'yes "" | make -j2 V=1 oldconfig', shell=True, cwd=plugin.builddir
+                    'yes "" | make -j2 V=1 oldconfig',
+                    shell=True,
+                    cwd=plugin.builddir,
                 ),
                 mock.call(
-                    ["unsquashfs", plugin.os_snap, "boot"], cwd="temporary-directory"
+                    ["unsquashfs", plugin.os_snap, "boot"],
+                    cwd="temporary-directory",
                 ),
                 mock.call(
                     "cat temporary-directory/squashfs-root/boot/"
@@ -436,10 +433,7 @@ class KernelPluginTestCase(PluginsV1BaseTestCase):
                     shell=True,
                 ),
                 mock.call(
-                    "find . | cpio --create --format=newc | "
-                    "gzip > {}".format(
-                        os.path.join(plugin.installdir, "initrd-4.4.2.img")
-                    ),
+                    f'find . | cpio --create --format=newc | gzip > {os.path.join(plugin.installdir, "initrd-4.4.2.img")}',
                     cwd=os.path.join(plugin.builddir, "initrd-staging"),
                     shell=True,
                 ),
@@ -455,13 +449,11 @@ class KernelPluginTestCase(PluginsV1BaseTestCase):
                         "make",
                         "-j2",
                         "V=1",
-                        "CONFIG_PREFIX={}".format(plugin.installdir),
+                        f"CONFIG_PREFIX={plugin.installdir}",
                         "modules_install",
-                        "INSTALL_MOD_PATH={}".format(plugin.installdir),
+                        f"INSTALL_MOD_PATH={plugin.installdir}",
                         "firmware_install",
-                        "INSTALL_FW_PATH={}".format(
-                            os.path.join(plugin.installdir, "lib", "firmware")
-                        ),
+                        f'INSTALL_FW_PATH={os.path.join(plugin.installdir, "lib", "firmware")}',
                     ]
                 ),
             ]
@@ -499,7 +491,7 @@ class KernelPluginTestCase(PluginsV1BaseTestCase):
             + kernel.required_systemd
         )
         for warn in required_opts:
-            self.assertIn("CONFIG_{}".format(warn), fake_logger.output)
+            self.assertIn(f"CONFIG_{warn}", fake_logger.output)
 
     @mock.patch.object(snapcraft.ProjectOptions, "kernel_arch", new="not_arm")
     def test_check_initrd(self):
@@ -519,7 +511,7 @@ class KernelPluginTestCase(PluginsV1BaseTestCase):
         plugin._do_check_initrd(builtin, modules)
 
         for module in kernel.required_boot:
-            self.assertIn("CONFIG_{}".format(module.upper()), fake_logger.output)
+            self.assertIn(f"CONFIG_{module.upper()}", fake_logger.output)
 
     @mock.patch.object(snapcraft.ProjectOptions, "kernel_arch", new="not_arm")
     def test_build_with_kconfigfile_and_kconfigs(self):
@@ -547,13 +539,11 @@ class KernelPluginTestCase(PluginsV1BaseTestCase):
                     [
                         "make",
                         "-j2",
-                        "CONFIG_PREFIX={}".format(plugin.installdir),
+                        f"CONFIG_PREFIX={plugin.installdir}",
                         "modules_install",
-                        "INSTALL_MOD_PATH={}".format(plugin.installdir),
+                        f"INSTALL_MOD_PATH={plugin.installdir}",
                         "firmware_install",
-                        "INSTALL_FW_PATH={}".format(
-                            os.path.join(plugin.installdir, "lib", "firmware")
-                        ),
+                        f'INSTALL_FW_PATH={os.path.join(plugin.installdir, "lib", "firmware")}',
                     ]
                 ),
             ]
@@ -713,13 +703,11 @@ ACCEPT=n
                     [
                         "make",
                         "-j2",
-                        "CONFIG_PREFIX={}".format(plugin.installdir),
+                        f"CONFIG_PREFIX={plugin.installdir}",
                         "modules_install",
-                        "INSTALL_MOD_PATH={}".format(plugin.installdir),
+                        f"INSTALL_MOD_PATH={plugin.installdir}",
                         "firmware_install",
-                        "INSTALL_FW_PATH={}".format(
-                            os.path.join(plugin.installdir, "lib", "firmware")
-                        ),
+                        f'INSTALL_FW_PATH={os.path.join(plugin.installdir, "lib", "firmware")}',
                     ]
                 ),
             ]
@@ -947,9 +935,9 @@ ACCEPT=n
                     [
                         "make",
                         "-j2",
-                        "CONFIG_PREFIX={}".format(plugin.installdir),
+                        f"CONFIG_PREFIX={plugin.installdir}",
                         "modules_install",
-                        "INSTALL_MOD_PATH={}".format(plugin.installdir),
+                        f"INSTALL_MOD_PATH={plugin.installdir}",
                     ]
                 ),
             ]
@@ -971,18 +959,16 @@ ACCEPT=n
         debiandir = os.path.join(plugin.sourcedir, "debian")
         os.mkdir(debiandir)
         with open(os.path.join(debiandir, "debian.env"), "w") as f:
-            f.write("DEBIAN=debian.{}".format(branch))
-        os.mkdir(os.path.join(plugin.sourcedir, "debian.{}".format(branch)))
-        basedir = os.path.join(plugin.sourcedir, "debian.{}".format(branch), "config")
-        archdir = os.path.join(
-            plugin.sourcedir, "debian.{}".format(branch), "config", arch
-        )
+            f.write(f"DEBIAN=debian.{branch}")
+        os.mkdir(os.path.join(plugin.sourcedir, f"debian.{branch}"))
+        basedir = os.path.join(plugin.sourcedir, f"debian.{branch}", "config")
+        archdir = os.path.join(plugin.sourcedir, f"debian.{branch}", "config", arch)
         os.mkdir(basedir)
         os.mkdir(archdir)
         commoncfg = os.path.join(basedir, "config.common.ports")
         ubuntucfg = os.path.join(basedir, "config.common.ubuntu")
-        archcfg = os.path.join(archdir, "config.common.{}".format(arch))
-        flavourcfg = os.path.join(archdir, "config.flavour.{}".format(flavour))
+        archcfg = os.path.join(archdir, f"config.common.{arch}")
+        flavourcfg = os.path.join(archdir, f"config.flavour.{flavour}")
 
         with open(commoncfg, "w") as f:
             f.write("ACCEPT=y\n")
@@ -1007,13 +993,11 @@ ACCEPT=n
                     [
                         "make",
                         "-j2",
-                        "CONFIG_PREFIX={}".format(plugin.installdir),
+                        f"CONFIG_PREFIX={plugin.installdir}",
                         "modules_install",
-                        "INSTALL_MOD_PATH={}".format(plugin.installdir),
+                        f"INSTALL_MOD_PATH={plugin.installdir}",
                         "firmware_install",
-                        "INSTALL_FW_PATH={}".format(
-                            os.path.join(plugin.installdir, "lib", "firmware")
-                        ),
+                        f'INSTALL_FW_PATH={os.path.join(plugin.installdir, "lib", "firmware")}',
                     ]
                 ),
             ]
@@ -1123,9 +1107,7 @@ ACCEPT=n
                     "-j2",
                     "ARCH=arm64",
                     "CROSS_COMPILE=aarch64-linux-gnu-",
-                    "PATH={}:/usr/{}/bin".format(
-                        os.environ.copy().get("PATH", ""), "aarch64-linux-gnu"
-                    ),
+                    f'PATH={os.environ.copy().get("PATH", "")}:/usr/aarch64-linux-gnu/bin',
                 ]
             ),
         )
@@ -1148,9 +1130,7 @@ ACCEPT=n
                     "-j2",
                     "ARCH=arm64",
                     "CROSS_COMPILE=foo-bar-toolchain-",
-                    "PATH={}:/usr/{}/bin".format(
-                        os.environ.copy().get("PATH", ""), "aarch64-linux-gnu"
-                    ),
+                    f'PATH={os.environ.copy().get("PATH", "")}:/usr/aarch64-linux-gnu/bin',
                 ]
             ),
         )
@@ -1171,9 +1151,7 @@ ACCEPT=n
                     "-j2",
                     "ARCH=arm64",
                     "CROSS_COMPILE=aarch64-linux-gnu-",
-                    "PATH={}:/usr/{}/bin".format(
-                        os.environ.copy().get("PATH", ""), "aarch64-linux-gnu"
-                    ),
+                    f'PATH={os.environ.copy().get("PATH", "")}:/usr/aarch64-linux-gnu/bin',
                 ]
             ),
         )

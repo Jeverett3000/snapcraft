@@ -38,11 +38,7 @@ class Slot:
     ) -> None:
         self._slot_name = slot_name
 
-        if slot_dict is None:
-            self._slot_dict: Dict[str, Any] = dict()
-        else:
-            self._slot_dict = slot_dict
-
+        self._slot_dict = {} if slot_dict is None else slot_dict
         self.use_string_representation = use_string_representation
 
     @property
@@ -88,10 +84,7 @@ class Slot:
             return self._slot_dict["interface"]
 
         # To output shortest-form: "slot-name-is-interface: <empty>"
-        if not self._slot_dict:
-            return None
-
-        return OrderedDict(deepcopy(self._slot_dict))
+        return OrderedDict(deepcopy(self._slot_dict)) if self._slot_dict else None
 
     def __repr__(self) -> str:
         return repr(self.__dict__)
@@ -114,26 +107,14 @@ class ContentSlot(Slot):
     ) -> None:
         super().__init__(slot_name=slot_name)
 
-        if read is None:
-            self.read: List[str] = list()
-        else:
-            self.read = read
-
-        if write is None:
-            self.write: List[str] = list()
-        else:
-            self.write = write
-
+        self.read = [] if read is None else read
+        self.write = [] if write is None else write
         self.use_source_key = use_source_key
         self._content = content
 
     @property
     def content(self) -> str:
-        if self._content:
-            return self._content
-
-        # Defaults to slot_name if unspecified.
-        return self.slot_name
+        return self._content or self.slot_name
 
     @content.setter
     def content(self, content) -> None:
@@ -194,7 +175,7 @@ class ContentSlot(Slot):
             props.append(("content", self.content))
 
         if self.use_source_key:
-            source = dict()
+            source = {}
             if self.read:
                 source["read"] = self.read
             if self.write:

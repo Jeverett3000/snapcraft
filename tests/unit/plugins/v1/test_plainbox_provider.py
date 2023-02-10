@@ -127,7 +127,7 @@ class PlainboxProviderPluginTest(PluginsV1BaseTestCase):
                     "install",
                     "--layout=relocatable",
                     "--prefix=/providers/test-part",
-                    "--root={}".format(plugin.installdir),
+                    f"--root={plugin.installdir}",
                 ]
             ),
         ]
@@ -196,7 +196,7 @@ class PlainboxProviderPluginTest(PluginsV1BaseTestCase):
                     "install",
                     "--layout=relocatable",
                     "--prefix=/providers/test-part",
-                    "--root={}".format(plugin.installdir),
+                    f"--root={plugin.installdir}",
                 ]
             ),
         ]

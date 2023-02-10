@@ -332,7 +332,7 @@ class ChannelMap:
         raise ValueError(f"No revision information for {revision_number!r}")
 
     def get_existing_architectures(self) -> Set[str]:
-        architectures: List[str] = list()
+        architectures: List[str] = []
         for revision_item in self.revisions:
             architectures.extend(revision_item.architectures)
 

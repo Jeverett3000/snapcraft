@@ -105,21 +105,21 @@ class KBuildPlugin(PluginV1):
 
         self.make_targets = []
         self.make_install_targets = ["install"]
-        self.make_cmd = ["make", "-j{}".format(self.parallel_build_count)]
+        self.make_cmd = ["make", f"-j{self.parallel_build_count}"]
         if logger.isEnabledFor(logging.DEBUG):
             self.make_cmd.append("V=1")
 
     def enable_cross_compilation(self):
-        self.make_cmd.append("ARCH={}".format(self.project.kernel_arch))
+        self.make_cmd.append(f"ARCH={self.project.kernel_arch}")
         if os.environ.get("CROSS_COMPILE"):
             toolchain = os.environ["CROSS_COMPILE"]
         else:
             toolchain = self.project.cross_compiler_prefix
-        self.make_cmd.append("CROSS_COMPILE={}".format(toolchain))
+        self.make_cmd.append(f"CROSS_COMPILE={toolchain}")
 
         env = os.environ.copy()
         self.make_cmd.append(
-            "PATH={}:/usr/{}/bin".format(env.get("PATH", ""), self.project.arch_triplet)
+            f'PATH={env.get("PATH", "")}:/usr/{self.project.arch_triplet}/bin'
         )
 
     def assemble_ubuntu_config(self, config_path):
@@ -127,7 +127,7 @@ class KBuildPlugin(PluginV1):
             with open(os.path.join(self.sourcedir, "debian", "debian.env"), "r") as f:
                 env = f.read()
         except OSError as e:
-            raise RuntimeError("Unable to access {}: {}".format(e.filename, e.strerror))
+            raise RuntimeError(f"Unable to access {e.filename}: {e.strerror}")
         arch = self.project.deb_arch
         try:
             branch = env.split(".")[1].strip()
@@ -135,21 +135,15 @@ class KBuildPlugin(PluginV1):
             raise RuntimeError("Malformed debian.env, cannot extract branch name")
         flavour = self.options.kconfigflavour
 
-        configfiles = []
-        baseconfigdir = os.path.join(
-            self.sourcedir, "debian.{}".format(branch), "config"
-        )
+        baseconfigdir = os.path.join(self.sourcedir, f"debian.{branch}", "config")
         archconfigdir = os.path.join(
-            self.sourcedir, "debian.{}".format(branch), "config", arch
+            self.sourcedir, f"debian.{branch}", "config", arch
         )
         commonconfig = os.path.join(baseconfigdir, "config.common.ports")
         ubuntuconfig = os.path.join(baseconfigdir, "config.common.ubuntu")
-        archconfig = os.path.join(archconfigdir, "config.common.{}".format(arch))
-        flavourconfig = os.path.join(archconfigdir, "config.flavour.{}".format(flavour))
-        configfiles.append(commonconfig)
-        configfiles.append(ubuntuconfig)
-        configfiles.append(archconfig)
-        configfiles.append(flavourconfig)
+        archconfig = os.path.join(archconfigdir, f"config.common.{arch}")
+        flavourconfig = os.path.join(archconfigdir, f"config.flavour.{flavour}")
+        configfiles = [commonconfig, ubuntuconfig, archconfig, flavourconfig]
         # assemble .config
         try:
             with open(config_path, "w") as config_file:
@@ -211,7 +205,7 @@ class KBuildPlugin(PluginV1):
 
     def do_remake_config(self):
         # update config to include kconfig amendments using oldconfig
-        cmd = 'yes "" | {} oldconfig'.format(" ".join(self.make_cmd))
+        cmd = f'yes "" | {" ".join(self.make_cmd)} oldconfig'
         subprocess.check_call(cmd, shell=True, cwd=self.builddir)
 
     def do_configure(self):
@@ -235,9 +229,10 @@ class KBuildPlugin(PluginV1):
     def do_install(self):
         # install to installdir
         self.run(
-            self.make_cmd
-            + ["CONFIG_PREFIX={}".format(self.installdir)]
-            + self.make_install_targets
+            (
+                (self.make_cmd + [f"CONFIG_PREFIX={self.installdir}"])
+                + self.make_install_targets
+            )
         )
 
     def build(self):

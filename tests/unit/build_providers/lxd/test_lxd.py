@@ -66,7 +66,7 @@ class FakeContainer:
     def __init__(self, config: Dict[str, Any], wait: bool) -> None:
         self._status = "STOPPED"
         self.config = config
-        self.devices = dict()  # type: Dict[str, Any]
+        self.devices = {}
 
         self.delete_mock = mock.Mock()
         self.files_delete_mock = mock.Mock()
@@ -138,7 +138,7 @@ class FakeContainer:
 
 class FakeContainers:
     def __init__(self):
-        self._containers = dict()  # type: Dict[str, FakeContainer]
+        self._containers = {}
         self.create_mock = mock.Mock()
         self.get_mock = mock.Mock()
 
@@ -192,11 +192,7 @@ class LXDBaseTest(BaseProviderBaseTest):
                     output="degraded\n".encode(),
                 )
 
-            if "getent" in command:
-                output = "2001:67c:1562::20 snapcraft.io"
-            else:
-                output = ""
-
+            output = "2001:67c:1562::20 snapcraft.io" if "getent" in command else ""
             return output.encode()
 
         patcher = mock.patch(
@@ -237,7 +233,7 @@ class LXDInitTest(LXDBaseTest):
         for args, kwargs in (
             self.check_output_mock.call_args_list + self.check_call_mock.call_args_list
         ):
-            assert args[0][0 : len(LXD_RUN_COMMAND_PREFIX)] == LXD_RUN_COMMAND_PREFIX
+            assert args[0][:len(LXD_RUN_COMMAND_PREFIX)] == LXD_RUN_COMMAND_PREFIX
 
         check_output_calls = [
             args[0][len(LXD_RUN_COMMAND_PREFIX) :]

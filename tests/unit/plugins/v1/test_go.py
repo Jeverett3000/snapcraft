@@ -36,14 +36,15 @@ class GoPluginBaseTest(PluginsV1BaseTestCase):
         super().setUp()
 
         def fake_go_build(command, cwd, *args, **kwargs):
-            if command[0] == "go" and command[1] == "build" and "-o" in command:
-                output = command[command.index("-o") + 1]
-                if os.path.basename(output) != "module":
-                    output = os.path.join(output, "binary")
-                open(output, "w").close()
-            elif command[0] == "go" and command[1] == "build" and "-o" not in command:
-                # the package is -1
-                open(os.path.join(cwd, os.path.basename(command[-1])), "w").close()
+            if command[0] == "go" and command[1] == "build":
+                if "-o" in command:
+                    output = command[command.index("-o") + 1]
+                    if os.path.basename(output) != "module":
+                        output = os.path.join(output, "binary")
+                    open(output, "w").close()
+                elif "-o" not in command:
+                    # the package is -1
+                    open(os.path.join(cwd, os.path.basename(command[-1])), "w").close()
 
         fake_run = self.useFixture(
             fixtures.MockPatch(
@@ -81,16 +82,14 @@ class GoPluginPropertiesTest(unit.TestCase):
         self.assertThat(
             go_channel_type,
             Equals("string"),
-            'Expected "go-channel" "type" to be "string", but '
-            'it was "{}"'.format(go_channel_type),
+            f'Expected "go-channel" "type" to be "string", but it was "{go_channel_type}"',
         )
 
         go_channel_default = go_channel["default"]
         self.assertThat(
             go_channel_default,
             Equals("latest/stable"),
-            'Expected "go-channel" "default" to be '
-            '"latest/stable", but it was "{}"'.format(go_channel_default),
+            f'Expected "go-channel" "default" to be "latest/stable", but it was "{go_channel_default}"',
         )
 
         # Check go-packages
@@ -105,24 +104,21 @@ class GoPluginPropertiesTest(unit.TestCase):
         self.assertThat(
             go_packages_type,
             Equals("array"),
-            'Expected "go-packages" "type" to be "array", but '
-            'it was "{}"'.format(go_packages_type),
+            f'Expected "go-packages" "type" to be "array", but it was "{go_packages_type}"',
         )
 
         go_packages_default = go_packages["default"]
         self.assertThat(
             go_packages_default,
             Equals([]),
-            'Expected "go-packages" "default" to be '
-            '"d[]", but it was "{}"'.format(go_packages_default),
+            f'Expected "go-packages" "default" to be "d[]", but it was "{go_packages_default}"',
         )
 
         go_packages_minitems = go_packages["minitems"]
         self.assertThat(
             go_packages_minitems,
             Equals(1),
-            'Expected "go-packages" "minitems" to be 1, but '
-            "it was {}".format(go_packages_minitems),
+            f'Expected "go-packages" "minitems" to be 1, but it was {go_packages_minitems}',
         )
 
         self.assertTrue(go_packages["uniqueItems"])
@@ -137,8 +133,7 @@ class GoPluginPropertiesTest(unit.TestCase):
         self.assertThat(
             go_packages_items_type,
             Equals("string"),
-            'Expected "go-packages" "item" "type" to be '
-            '"string", but it was "{}"'.format(go_packages_items_type),
+            f'Expected "go-packages" "item" "type" to be "string", but it was "{go_packages_items_type}"',
         )
 
         # Check go-importpath
@@ -153,17 +148,14 @@ class GoPluginPropertiesTest(unit.TestCase):
         self.assertThat(
             go_importpath_type,
             Equals("string"),
-            'Expected "go-importpath" "type" to be "string", but '
-            'it was "{}"'.format(go_importpath_type),
+            f'Expected "go-importpath" "type" to be "string", but it was "{go_importpath_type}"',
         )
 
         go_importpath_default = go_importpath["default"]
         self.assertThat(
             go_importpath_default,
             Equals(""),
-            'Expected "go-default" "default" to be "'
-            '", but '
-            'it was "{}"'.format(go_importpath_default),
+            f'Expected "go-default" "default" to be "", but it was "{go_importpath_default}"',
         )
 
         # Check go-buildtags
@@ -178,24 +170,21 @@ class GoPluginPropertiesTest(unit.TestCase):
         self.assertThat(
             go_buildtags_type,
             Equals("array"),
-            'Expected "go-buildtags" "type" to be "array", but '
-            'it was "{}"'.format(go_buildtags_type),
+            f'Expected "go-buildtags" "type" to be "array", but it was "{go_buildtags_type}"',
         )
 
         go_buildtags_default = go_buildtags["default"]
         self.assertThat(
             go_buildtags_default,
             Equals([]),
-            'Expected "go-buildtags" "default" to be "[]", but '
-            'it was "{}"'.format(go_buildtags_type),
+            f'Expected "go-buildtags" "default" to be "[]", but it was "{go_buildtags_type}"',
         )
 
         go_buildtags_minitems = go_buildtags["minitems"]
         self.assertThat(
             go_buildtags_minitems,
             Equals(1),
-            'Expected "go-buildtags" "minitems" to be 1, but '
-            "it was {}".format(go_buildtags_minitems),
+            f'Expected "go-buildtags" "minitems" to be 1, but it was {go_buildtags_minitems}',
         )
 
         self.assertTrue(go_buildtags["uniqueItems"])
@@ -210,8 +199,7 @@ class GoPluginPropertiesTest(unit.TestCase):
         self.assertThat(
             go_buildtags_items_type,
             Equals("string"),
-            'Expected "go-buildtags" "item" "type" to be '
-            '"string", but it was "{}"'.format(go_packages_items_type),
+            f'Expected "go-buildtags" "item" "type" to be "string", but it was "{go_packages_items_type}"',
         )
 
         # Check required properties
@@ -576,6 +564,7 @@ class GoPluginTest(GoPluginBaseTest):
         self.assert_go_paths(plugin)
 
     def test_build_environment(self):
+
         class Options:
             source = "dir"
             go_channel = "latest/stable"
@@ -603,10 +592,10 @@ class GoPluginTest(GoPluginBaseTest):
                 "CGO_LDFLAGS" in env, "Expected environment to include CGO_LDFLAGS"
             )
             expected_flags = [
-                "-L{}/lib".format(plugin.installdir),
-                "-L{}/usr/lib".format(plugin.installdir),
-                "-L{}/lib".format(plugin.project.stage_dir),
-                "-L{}/usr/lib".format(plugin.project.stage_dir),
+                f"-L{plugin.installdir}/lib",
+                f"-L{plugin.installdir}/usr/lib",
+                f"-L{plugin.project.stage_dir}/lib",
+                f"-L{plugin.project.stage_dir}/usr/lib",
             ]
             for flag in expected_flags:
                 self.assertTrue(

@@ -72,9 +72,7 @@ def multipass_cmd():
     """Fake MultipassCommand implementation."""
 
     def execute_effect(*, command, instance_name, hide_output):
-        if hide_output:
-            return None
-        return b""
+        return None if hide_output else b""
 
     patcher = mock.patch(
         "snapcraft.internal.build_providers._multipass." "_multipass.MultipassCommand",
@@ -284,7 +282,7 @@ class MultipassTest(BaseProviderBaseTest):
         multipass._push_file(source="src.txt", destination="dest.txt")
 
         self.multipass_cmd_mock().push_file.assert_called_once_with(
-            destination="{}:dest.txt".format(self.instance_name),
+            destination=f"{self.instance_name}:dest.txt",
             source=self.open_mock.return_value.__enter__(),
         )
 
@@ -316,7 +314,7 @@ class MultipassTest(BaseProviderBaseTest):
 
         self.multipass_cmd_mock().pull_file.assert_called_once_with(
             destination=self.open_mock.return_value.__enter__(),
-            source="{}:src.txt".format(self.instance_name),
+            source=f"{self.instance_name}:src.txt",
         )
 
         self.open_mock.assert_called_once_with("dest.txt", "wb")
@@ -332,7 +330,7 @@ class MultipassTest(BaseProviderBaseTest):
 
         self.multipass_cmd_mock().pull_file.assert_called_once_with(
             destination=self.open_mock.return_value.__enter__(),
-            source="{}:src.txt".format(self.instance_name),
+            source=f"{self.instance_name}:src.txt",
         )
 
         self.multipass_cmd_mock().execute.assert_has_calls(
@@ -456,7 +454,7 @@ class TestMultipassWithBases:
         multipass_cmd().execute.assert_called()
 
         for args, kwargs in multipass_cmd().execute.call_args_list:
-            assert kwargs["command"][0:3] == [
+            assert kwargs["command"][:3] == [
                 "sudo",
                 "-H",
                 "-i",

@@ -276,7 +276,7 @@ class CatkinPlugin(PluginV1):
         return ["catkin-cmake-args"]
 
     @classmethod
-    def get_required_package_repositories(self) -> List[PackageRepository]:
+    def get_required_package_repositories(cls) -> List[PackageRepository]:
         codename = os_release.OsRelease().version_codename()
 
         return [
@@ -312,7 +312,7 @@ class CatkinPlugin(PluginV1):
 
         # roslib is the base requiremet to actually create a workspace with
         # setup.sh and the necessary hooks.
-        self.stage_packages.append("ros-{}-roslib".format(self._rosdistro))
+        self.stage_packages.append(f"ros-{self._rosdistro}-roslib")
 
         # Get a unique set of packages
         self.catkin_packages = None
@@ -351,22 +351,10 @@ class CatkinPlugin(PluginV1):
         )
 
         env = [
-            # This environment variable tells ROS nodes where to find ROS
-            # master. It does not affect ROS master, however-- this is just the
-            # URI.
-            "ROS_MASTER_URI={}".format(self.options.catkin_ros_master_uri),
-            # Various ROS tools (e.g. roscore) keep a cache or a log,
-            # and use $ROS_HOME to determine where to put them.
+            f"ROS_MASTER_URI={self.options.catkin_ros_master_uri}",
             "ROS_HOME=${SNAP_USER_DATA:-/tmp}/ros",
-            # FIXME: LP: #1576411 breaks ROS snaps on the desktop, so we'll
-            # temporarily work around that bug by forcing the locale to
-            # C.UTF-8.
             "LC_ALL=C.UTF-8",
-            # The Snapcraft Core will ensure that we get a good LD_LIBRARY_PATH
-            # overall, but it defines it after this function runs. Some ROS
-            # tools will cause binaries to be run when we source the setup.sh,
-            # below, so we need to have a sensible LD_LIBRARY_PATH before then.
-            "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:{}".format(ld_library_path),
+            f"LD_LIBRARY_PATH=$LD_LIBRARY_PATH:{ld_library_path}",
         ]
 
         # There's a chicken and egg problem here, everything run gets an
@@ -391,7 +379,7 @@ class CatkinPlugin(PluginV1):
 
         # The setup.sh we source below requires the in-snap python. Here we
         # make sure it's in the PATH before it's run.
-        env.append("PATH=$PATH:{}/usr/bin".format(root))
+        env.append(f"PATH=$PATH:{root}/usr/bin")
 
         if self.options.underlay:
             script = textwrap.dedent(
@@ -447,13 +435,10 @@ class CatkinPlugin(PluginV1):
             if self.options.recursive_rosinstall:
                 _recursively_handle_rosinstall_files(wstool, source_path)
             else:
-                # The rosinstall files in the YAML are relative to the part's
-                # source. However, _handle_rosinstall_files requires absolute
-                # paths.
-                rosinstall_files = set()
-                for rosinstall_file in self.options.rosinstall_files:
-                    rosinstall_files.add(os.path.join(source_path, rosinstall_file))
-
+                rosinstall_files = {
+                    os.path.join(source_path, rosinstall_file)
+                    for rosinstall_file in self.options.rosinstall_files
+                }
                 _handle_rosinstall_files(wstool, rosinstall_files)
 
         # Make sure the package path exists before continuing. We only care
@@ -516,18 +501,14 @@ class CatkinPlugin(PluginV1):
             self.catkin_packages, rosdep, catkin
         )
 
-        # If the package requires roscore, resolve it into a system dependency
-        # as well.
         if self.options.include_roscore:
-            roscore = rosdep.resolve_dependency("ros_core")
-            if roscore:
-                for dependency_type, dependencies in roscore.items():
-                    if dependency_type not in system_dependencies:
-                        system_dependencies[dependency_type] = set()
-                    system_dependencies[dependency_type] |= dependencies
-            else:
+            if not (roscore := rosdep.resolve_dependency("ros_core")):
                 raise CatkinCannotResolveRoscoreError()
 
+            for dependency_type, dependencies in roscore.items():
+                if dependency_type not in system_dependencies:
+                    system_dependencies[dependency_type] = set()
+                system_dependencies[dependency_type] |= dependencies
         # Pull down and install any apt dependencies that were discovered
         self._setup_apt_dependencies(system_dependencies.get("apt"))
 
@@ -677,10 +658,7 @@ class CatkinPlugin(PluginV1):
         # /usr/lib, /usr/include, etc.). They need to be rewritten to point to
         # the install directory.
         def _new_path(path):
-            if not path.startswith(self.installdir):
-                # Not using os.path.join here as `path` is absolute.
-                return self.installdir + path
-            return path
+            return path if path.startswith(self.installdir) else self.installdir + path
 
         self._rewrite_cmake_paths(_new_path)
 
@@ -773,7 +751,7 @@ class CatkinPlugin(PluginV1):
         )
 
     def _parse_cmake_args(self):
-        args: List[str] = list()
+        args: List[str] = []
         for arg in self.options.catkin_cmake_args:
             cmake_arg = " ".join(shlex.split(arg))
             args.append(cmake_arg)
@@ -784,39 +762,27 @@ class CatkinPlugin(PluginV1):
         if self.catkin_packages is not None and len(self.catkin_packages) == 0:
             return
 
-        catkincmd = ["catkin_make_isolated"]
-
-        # Install the package
-        catkincmd.append("--install")
+        catkincmd = ["catkin_make_isolated", "--install"]
 
         if self.catkin_packages:
             # Specify the packages to be built
             catkincmd.append("--pkg")
             catkincmd.extend(self.catkin_packages)
 
-        # Don't clutter the real ROS workspace-- use the Snapcraft build
-        # directory
-        catkincmd.extend(["--directory", self.builddir])
-
-        # Account for a non-default source space by always specifying it
         catkincmd.extend(
-            ["--source-space", os.path.join(self.builddir, self.options.source_space)]
+            [
+                "--directory",
+                self.builddir,
+                "--source-space",
+                os.path.join(self.builddir, self.options.source_space),
+                "--install-space",
+                self.rosdir,
+                f"-j{self.parallel_build_count}",
+                "--cmake-args",
+            ]
         )
-
-        # Specify that the package should be installed along with the rest of
-        # the ROS distro.
-        catkincmd.extend(["--install-space", self.rosdir])
-
-        # Specify the number of workers
-        catkincmd.append("-j{}".format(self.parallel_build_count))
-
-        # All the arguments that follow are meant for CMake
-        catkincmd.append("--cmake-args")
-
-        build_type = "Release"
-        if "debug" in self.options.build_attributes:
-            build_type = "Debug"
-        catkincmd.append("-DCMAKE_BUILD_TYPE={}".format(build_type))
+        build_type = "Debug" if "debug" in self.options.build_attributes else "Release"
+        catkincmd.append(f"-DCMAKE_BUILD_TYPE={build_type}")
 
         # Finally, add any cmake-args requested from the plugin options
         catkincmd.extend(self._parse_cmake_args())
@@ -832,7 +798,7 @@ class CatkinPlugin(PluginV1):
 
         fileset = super().snap_fileset()
         fileset.append(
-            "-{}".format(os.path.join("opt", "ros", self._rosdistro, ".rosinstall"))
+            f'-{os.path.join("opt", "ros", self._rosdistro, ".rosinstall")}'
         )
         return fileset
 
@@ -923,7 +889,7 @@ def _handle_rosinstall_files(wstool, rosinstall_files):
     """Merge given rosinstall files into our workspace."""
 
     for rosinstall_file in rosinstall_files:
-        logger.info("Merging {}".format(rosinstall_file))
+        logger.info(f"Merging {rosinstall_file}")
         wstool.merge(rosinstall_file)
 
     logger.info("Updating workspace...")
@@ -985,7 +951,7 @@ class _Catkin:
         # is. Let's just fetch/unpack our own, and use it.
         logger.info("Installing catkin...")
         repo.Ubuntu.fetch_stage_packages(
-            package_names=["ros-{}-catkin".format(self._ros_distro)],
+            package_names=[f"ros-{self._ros_distro}-catkin"],
             stage_packages_path=self._catkin_stage_packages_path,
             base=self._project._get_build_base(),
             target_arch=self._project._get_stage_packages_target_arch(),
@@ -1038,18 +1004,13 @@ class _Catkin:
             # Source our own workspace so we have all of Catkin's dependencies,
             # then source the workspace we're actually supposed to be crawling.
             lines.append(
-                "_CATKIN_SETUP_DIR={} source {} --local".format(
-                    ros_path, os.path.join(ros_path, "setup.sh")
-                )
+                f'_CATKIN_SETUP_DIR={ros_path} source {os.path.join(ros_path, "setup.sh")} --local'
             )
 
-            for workspace in self._workspaces:
-                lines.append(
-                    "_CATKIN_SETUP_DIR={} source {} --local --extend".format(
-                        workspace, os.path.join(workspace, "setup.sh")
-                    )
-                )
-
+            lines.extend(
+                f'_CATKIN_SETUP_DIR={workspace} source {os.path.join(workspace, "setup.sh")} --local --extend'
+                for workspace in self._workspaces
+            )
             lines.append('exec "$@"')
             f.write("\n".join(lines))
             f.flush()
@@ -1064,8 +1025,7 @@ class _Catkin:
 
 
 def _get_highest_version_path(path):
-    paths = sorted(glob.glob(os.path.join(path, "*")))
-    if not paths:
+    if paths := sorted(glob.glob(os.path.join(path, "*"))):
+        return paths[-1]
+    else:
         raise CatkinNoHighestVersionPathError(path)
-
-    return paths[-1]

@@ -186,10 +186,7 @@ class StepOutdatedError(SnapcraftException):
 
     def get_details(self) -> Optional[str]:
         # If non-empty string, return report (otherwise None).
-        if self.report:
-            return self.report
-
-        return None
+        return self.report or None
 
 
 class SnapcraftEnvironmentError(SnapcraftException):
@@ -244,7 +241,7 @@ class IncompatibleBaseError(SnapcraftError):
     def __init__(
         self, *, base: str, linker_version: str, file_list: Dict[str, str]
     ) -> None:
-        spaced_file_list = ("    {} ({})".format(k, v) for k, v in file_list.items())
+        spaced_file_list = (f"    {k} ({v})" for k, v in file_list.items())
         super().__init__(
             base=base,
             linker_version=linker_version,
@@ -312,7 +309,7 @@ class SnapcraftPartConflictError(SnapcraftError):
     )
 
     def __init__(self, *, part_name, other_part_name, conflict_files):
-        spaced_conflict_files = ("    {}".format(i) for i in conflict_files)
+        spaced_conflict_files = (f"    {i}" for i in conflict_files)
         super().__init__(
             part_name=part_name,
             other_part_name=other_part_name,
@@ -480,9 +477,7 @@ class PatcherGenericError(PatcherError):
     )
 
     def __init__(self, *, elf_file, process_exception):
-        message = "{} failed with exit code {}".format(
-            " ".join(process_exception.cmd), process_exception.returncode
-        )
+        message = f'{" ".join(process_exception.cmd)} failed with exit code {process_exception.returncode}'
         super().__init__(elf_file=elf_file, message=message)
 
 
@@ -500,9 +495,7 @@ class PatcherNewerPatchelfError(PatcherError):
     )
 
     def __init__(self, *, elf_file, process_exception, patchelf_version):
-        message = "{} failed with exit code {}".format(
-            " ".join(process_exception.cmd), process_exception.returncode
-        )
+        message = f'{" ".join(process_exception.cmd)} failed with exit code {process_exception.returncode}'
         super().__init__(
             elf_file=elf_file, message=message, patchelf_version=patchelf_version
         )
@@ -838,4 +831,4 @@ class BuildAttributePatchelfConflictError(SnapcraftException):
         return f"part {self._part_name} has both 'no-patchelf' and 'enable-patchelf' build-attributes, which are mutually exclusive and cannot be used together."
 
     def get_resolution(self) -> str:
-        return f"Use either 'no-patchelf' or 'enable-patchelf', not both."
+        return "Use either 'no-patchelf' or 'enable-patchelf', not both."
