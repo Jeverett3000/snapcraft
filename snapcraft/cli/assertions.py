@@ -158,20 +158,18 @@ def list_validation_sets(name, sequence):
         echo.warning("No validation sets found for this account.")
     else:
         headers = ["Account-ID", "Name", "Sequence", "Revision", "When"]
-        assertions = list()
-        for assertion in asserted_validation_sets.assertions:
-            assertions.append(
-                [
-                    assertion.account_id,
-                    assertion.name,
-                    assertion.sequence,
-                    assertion.revision,
-                    datetime.strptime(
-                        assertion.timestamp, "%Y-%m-%dT%H:%M:%SZ"
-                    ).strftime("%Y-%m-%d"),
-                ]
-            )
-
+        assertions = [
+            [
+                assertion.account_id,
+                assertion.name,
+                assertion.sequence,
+                assertion.revision,
+                datetime.strptime(
+                    assertion.timestamp, "%Y-%m-%dT%H:%M:%SZ"
+                ).strftime("%Y-%m-%d"),
+            ]
+            for assertion in asserted_validation_sets.assertions
+        ]
         click.echo(
             tabulate(assertions, numalign="left", headers=headers, tablefmt="plain")
         )

@@ -181,14 +181,15 @@ class DotNetPlugin(PluginV1):
 
     def _get_version_metadata(self, version):
         json_data = self._get_dotnet_release_metadata()
-        package_data = list(
-            filter(lambda x: x.get("release-version") == version, json_data["releases"])
-        )
-
-        if not package_data:
+        if package_data := list(
+            filter(
+                lambda x: x.get("release-version") == version,
+                json_data["releases"],
+            )
+        ):
+            return package_data[0]
+        else:
             raise DotNetBadReleaseDataError(version)
-
-        return package_data[0]
 
     def _get_dotnet_release_metadata(self):
         package_metadata = []
@@ -198,25 +199,21 @@ class DotNetPlugin(PluginV1):
         )
         req = urllib.request.Request(metadata_url)
         r = urllib.request.urlopen(req).read()
-        package_metadata = json.loads(r.decode("utf-8"))
-
-        return package_metadata
+        return json.loads(r.decode("utf-8"))
 
     def _get_sdk_info(self, version):
         metadata = self._get_version_metadata(version)
 
-        sdk_files = list(
+        if sdk_files := list(
             filter(lambda x: x.get("rid") == "linux-x64", metadata["sdk"]["files"])
-        )
-
-        if not sdk_files:
+        ):
+            return sdk_files[0]
+        else:
             raise DotNetBadReleaseDataError(version)
-
-        return sdk_files[0]
 
     def env(self, root):
         # Update the PATH only during the Build and Install step
         if root == self.installdir:
-            return ["PATH={}:$PATH".format(self._dotnet_sdk_dir)]
+            return [f"PATH={self._dotnet_sdk_dir}:$PATH"]
         else:
             return []

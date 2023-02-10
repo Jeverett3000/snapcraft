@@ -267,7 +267,7 @@ class BaseRepo:
             file_utils.search_and_replace_contents(
                 xml2_config_path,
                 re.compile(r"prefix=/usr"),
-                "prefix={}/usr".format(unpackdir),
+                f"prefix={unpackdir}/usr",
             )
 
         xslt_config_path = os.path.join(unpackdir, "usr", "bin", "xslt-config")
@@ -275,7 +275,7 @@ class BaseRepo:
             file_utils.search_and_replace_contents(
                 xslt_config_path,
                 re.compile(r"prefix=/usr"),
-                "prefix={}/usr".format(unpackdir),
+                f"prefix={unpackdir}/usr",
             )
 
     @classmethod
@@ -336,7 +336,7 @@ def fix_pkg_config(
     """Opens a pkg_config_file and prefixes the prefix with root."""
     pattern_trim = None
     if prefix_trim:
-        pattern_trim = re.compile("^prefix={}(?P<prefix>.*)".format(prefix_trim))
+        pattern_trim = re.compile(f"^prefix={prefix_trim}(?P<prefix>.*)")
     pattern = re.compile("^prefix=(?P<prefix>.*)")
 
     with fileinput.input(pkg_config_file, inplace=True) as input_file:
@@ -345,9 +345,9 @@ def fix_pkg_config(
             if prefix_trim is not None and pattern_trim is not None:
                 match_trim = pattern_trim.search(line)
             if prefix_trim is not None and match_trim is not None:
-                print("prefix={}{}".format(root, match_trim.group("prefix")))
+                print(f'prefix={root}{match_trim.group("prefix")}')
             elif match:
-                print("prefix={}{}".format(root, match.group("prefix")))
+                print(f'prefix={root}{match["prefix"]}')
             else:
                 print(line, end="")
 
@@ -355,7 +355,7 @@ def fix_pkg_config(
 def _fix_filemode(path: str) -> None:
     mode = stat.S_IMODE(os.stat(path, follow_symlinks=False).st_mode)
     if mode & 0o4000 or mode & 0o2000:
-        logger.warning("Removing suid/guid from {}".format(path))
+        logger.warning(f"Removing suid/guid from {path}")
         os.chmod(path, mode & 0o1777)
 
 

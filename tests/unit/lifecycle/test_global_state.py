@@ -61,28 +61,26 @@ class TestGlobalState(TestCase):
             fixtures.MockPatch("snapcraft.internal.repo.snaps.install_snaps")
         )
 
-        # Avoid unnecessary calls to info.
-        channel_map = []
-        for arch in ("amd64", "i386", "s390x", "arm64", "armhf", "ppc64el"):
-            channel_map.append(
-                {
-                    "channel": {
-                        "architecture": arch,
-                        "name": "stable",
-                        "released-at": "2019-10-15T13:54:06.800280+00:00",
-                        "risk": "stable",
-                        "track": "latest",
-                    },
-                    "confinement": "strict",
-                    "download": {
-                        "deltas": [],
-                        "sha3-384": "64d232d6bfa65be14d7f8d84e952d4e372e12021e2c3dbaf70cf2af5e78bf51c4baf9c9107dd6db815064636b781bda6",
-                        "size": 57151488,
-                        "url": "https://api.snapcraft.io/api/v1/snaps/download/CSO04Jhav2yK0uz97cr0ipQRyqg0qQL6_1223.snap",
-                    },
-                    "revision": 1223,
-                }
-            )
+        channel_map = [
+            {
+                "channel": {
+                    "architecture": arch,
+                    "name": "stable",
+                    "released-at": "2019-10-15T13:54:06.800280+00:00",
+                    "risk": "stable",
+                    "track": "latest",
+                },
+                "confinement": "strict",
+                "download": {
+                    "deltas": [],
+                    "sha3-384": "64d232d6bfa65be14d7f8d84e952d4e372e12021e2c3dbaf70cf2af5e78bf51c4baf9c9107dd6db815064636b781bda6",
+                    "size": 57151488,
+                    "url": "https://api.snapcraft.io/api/v1/snaps/download/CSO04Jhav2yK0uz97cr0ipQRyqg0qQL6_1223.snap",
+                },
+                "revision": 1223,
+            }
+            for arch in ("amd64", "i386", "s390x", "arm64", "armhf", "ppc64el")
+        ]
         info = {
             "channel-map": channel_map,
             "default-track": None,

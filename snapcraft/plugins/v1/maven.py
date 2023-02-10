@@ -189,8 +189,8 @@ class MavenPlugin(PluginV1):
                 version=version, base=base, valid_versions=valid_versions
             )
 
-        self.stage_packages.append("openjdk-{}-jre-headless".format(version))
-        self.build_packages.append("openjdk-{}-jdk-headless".format(version))
+        self.stage_packages.append(f"openjdk-{version}-jre-headless")
+        self.build_packages.append(f"openjdk-{version}-jdk-headless")
         self._java_version = version
 
     def _setup_maven(self):
@@ -268,7 +268,7 @@ class MavenPlugin(PluginV1):
                 "usr",
                 "lib",
                 "jvm",
-                "java-{}-openjdk-*".format(self._java_version),
+                f"java-{self._java_version}-openjdk-*",
                 "bin",
                 "java",
             )
@@ -285,11 +285,7 @@ class MavenPlugin(PluginV1):
         env = os.environ.copy()
         maven_bin = os.path.join(self._maven_dir, "bin")
 
-        if env.get("PATH"):
-            new_path = "{}:{}".format(maven_bin, env.get("PATH"))
-        else:
-            new_path = maven_bin
-
+        new_path = f'{maven_bin}:{env.get("PATH")}' if env.get("PATH") else maven_bin
         env["PATH"] = new_path
         return env
 
@@ -311,7 +307,7 @@ def _create_settings(settings_path):
     settings.append(element)
     proxies = ElementTree.Element("proxies")
     for protocol in ("http", "https"):
-        env_name = "{}_proxy".format(protocol)
+        env_name = f"{protocol}_proxy"
         if env_name not in os.environ:
             continue
         proxy_url = urlparse(os.environ[env_name])

@@ -85,18 +85,18 @@ class PartGrammarProcessor:
         self._project = project
         self._repo = repo
 
-        self.__build_environment: List[Dict[str, str]] = list()
+        self.__build_environment: List[Dict[str, str]] = []
         self.__build_snaps = set()  # type: Set[str]
         self.__stage_snaps = set()  # type: Set[str]
         self.__build_packages = set()  # type: Set[str]
         self.__stage_packages = set()  # type: Set[str]
 
         source_grammar = properties.get("source", [""])
-        if not isinstance(source_grammar, list):
-            self._source_grammar = [source_grammar]
-        else:
-            self._source_grammar = source_grammar
-
+        self._source_grammar = (
+            source_grammar
+            if isinstance(source_grammar, list)
+            else [source_grammar]
+        )
         self.__source = ""
 
     def get_source(self) -> str:

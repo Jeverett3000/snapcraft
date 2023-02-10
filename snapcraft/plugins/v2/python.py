@@ -140,25 +140,17 @@ class PythonPlugin(PluginV2):
             requirements_cmd = f"pip install {constraints} -U {requirements}"
             build_commands.append(requirements_cmd)
 
-        build_commands.append(f"[ -f setup.py ] && pip install {constraints} -U .")
-
-        # Now fix shebangs.
-        # TODO: replace with snapcraftctl once the two scripts are consolidated
-        # and use mangling.rewrite_python_shebangs.
-        build_commands.append(
-            dedent(
-                """\
+        build_commands.extend(
+            (
+                f"[ -f setup.py ] && pip install {constraints} -U .",
+                dedent(
+                    """\
             find "${SNAPCRAFT_PART_INSTALL}" -type f -executable -print0 | xargs -0 \
                 sed -i "1 s|^#\\!${SNAPCRAFT_PYTHON_VENV_INTERP_PATH}.*$|#\\!/usr/bin/env ${SNAPCRAFT_PYTHON_INTERPRETER}|"
             """
-            )
-        )
-
-        # Lastly, fix the symlink to the "real" python3 interpreter.
-        # TODO: replace with snapcraftctl (create_relative_symlinks).
-        build_commands.append(
-            dedent(
-                """\
+                ),
+                dedent(
+                    """\
             determine_link_target() {
                 opts_state="$(set +o +x | grep xtrace)"
                 interp_dir="$(dirname "${SNAPCRAFT_PYTHON_VENV_INTERP_PATH}")"
@@ -183,7 +175,7 @@ class PythonPlugin(PluginV2):
             python_path="$(determine_link_target)"
             ln -sf "${python_path}" "${SNAPCRAFT_PYTHON_VENV_INTERP_PATH}"
             """
+                ),
             )
         )
-
         return build_commands

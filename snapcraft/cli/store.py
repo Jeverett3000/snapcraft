@@ -82,8 +82,10 @@ def _human_readable_acls(store_client: storeapi.StoreClient) -> str:
 
     if snap_ids is not None:
         try:
-            for snap_id in snap_ids:
-                snap_names.append(store_client.get_snap_name_for_id(snap_id))
+            snap_names.extend(
+                store_client.get_snap_name_for_id(snap_id)
+                for snap_id in snap_ids
+            )
         except TypeError:
             raise RuntimeError(f"invalid snap_ids: {snap_ids!r}")
         acl["snap_names"] = snap_names
@@ -169,9 +171,7 @@ def upload(snap_file, release):
     if release:
         channel_list = release.split(",")
         click.echo(
-            "After uploading, the resulting snap revision will be released to "
-            "{} when it passes the Snap Store review."
-            "".format(formatting_utils.humanize_list(channel_list, "and"))
+            f'After uploading, the resulting snap revision will be released to {formatting_utils.humanize_list(channel_list, "and")} when it passes the Snap Store review.'
         )
     else:
         channel_list = None
@@ -456,11 +456,9 @@ def close(snap_name, channels):
     # Returned closed_channels cannot be trusted as it returns risks.
     store.close_channels(snap_id=snap_id, channel_names=channels)
     if len(channels) == 1:
-        msg = "The {} channel is now closed.".format(channels[0])
+        msg = f"The {channels[0]} channel is now closed."
     else:
-        msg = "The {} and {} channels are now closed.".format(
-            ", ".join(channels[:-1]), channels[-1]
-        )
+        msg = f'The {", ".join(channels[:-1])} and {channels[-1]} channels are now closed.'
 
     snap_channel_map = store.get_snap_channel_map(snap_name=snap_name)
     if snap_channel_map.channel_map:
@@ -581,7 +579,7 @@ def list_revisions(snap_name, arch):
         # seen_channel: applies to channels regardless of revision.
         # The first channel that shows up for each architecture is to
         # be marked as the active channel, all others are historic.
-        seen_channel: Dict[str, Set[str]] = dict()
+        seen_channel: Dict[str, Set[str]] = {}
 
         for release in releases.releases:
             if release.architecture not in seen_channel:
@@ -590,32 +588,25 @@ def list_revisions(snap_name, arch):
             # If the revision is in this release entry and was not seen
             # before it means that this channel is active and needs to
             # be represented with a *.
-            if (
-                release.revision == revision
-                and release.channel not in seen_channel[release.architecture]
-            ):
-                channels.add(f"{release.channel}*")
-            # All other releases found for a revision are inactive.
-            elif (
-                release.revision == revision
-                and release.channel not in channels
-                and f"{release.channel}*" not in channels
-            ):
-                channels.add(release.channel)
+            if release.revision == revision:
+                if release.channel not in seen_channel[release.architecture]:
+                    channels.add(f"{release.channel}*")
+                elif (
+                    release.channel not in channels
+                    and f"{release.channel}*" not in channels
+                ):
+                    channels.add(release.channel)
 
             seen_channel[release.architecture].add(release.channel)
 
         return sorted(list(channels))
 
-    parsed_revisions = list()
+    parsed_revisions = []
     for rev in releases.revisions:
         if arch and arch not in rev.architectures:
             continue
         channels_for_revision = get_channels_for_revision(rev.revision)
-        if channels_for_revision:
-            channels = ",".join(channels_for_revision)
-        else:
-            channels = "-"
+        channels = ",".join(channels_for_revision) if channels_for_revision else "-"
         parsed_revisions.append(
             (
                 rev.revision,
@@ -708,20 +699,13 @@ def export_login(
     """
 
     snap_list = None
-    channel_list = None
-    acl_list = None
-
     if snaps:
-        snap_list = []
-        for package in snaps.split(","):
-            snap_list.append({"name": package, "series": DEFAULT_SERIES})
-
-    if channels:
-        channel_list = channels.split(",")
-
-    if acls:
-        acl_list = acls.split(",")
-
+        snap_list = [
+            {"name": package, "series": DEFAULT_SERIES}
+            for package in snaps.split(",")
+        ]
+    channel_list = channels.split(",") if channels else None
+    acl_list = acls.split(",") if acls else None
     store_client = storeapi.StoreClient(use_candid=experimental_login)
     if store_client.use_candid:
         store_client.login(
@@ -913,8 +897,8 @@ def list_tracks(snap_name: str) -> None:
         [
             track.name,
             track.status,
-            track.creation_date if track.creation_date else "-",
-            track.version_pattern if track.version_pattern else "-",
+            track.creation_date or "-",
+            track.version_pattern or "-",
         ]
         for track in snap_channel_map.snap.tracks
     ]

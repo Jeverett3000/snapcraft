@@ -90,11 +90,9 @@ class PullStateTestCase(StateBaseTestCase):
 
         self.assertTrue(type(state) is states.PullState)
         self.assertThat(
-            state.assets.get("build-packages"), Equals(set(["package1", "package3"]))
+            state.assets.get("build-packages"), Equals({"package1", "package3"})
         )
-        self.assertThat(
-            state.assets.get("build-snaps"), Equals(set(["snap1", "snap3"]))
-        )
+        self.assertThat(state.assets.get("build-snaps"), Equals({"snap1", "snap3"}))
 
 
 class StateTestCase(StateBaseTestCase):
@@ -764,9 +762,9 @@ class StateTestCase(StateBaseTestCase):
     ):
         mock_load_dependencies.return_value = {
             "/foo/bar/baz",
-            "{}/lib1/installed".format(self.handler.part_install_dir),
-            "{}/lib2/staged".format(self.handler._project.stage_dir),
-            "{}/lib3/primed".format(self.handler._project.prime_dir),
+            f"{self.handler.part_install_dir}/lib1/installed",
+            f"{self.handler._project.stage_dir}/lib2/staged",
+            f"{self.handler._project.prime_dir}/lib3/primed",
         }
         self.get_elf_files_mock.return_value = frozenset(
             [
@@ -844,14 +842,12 @@ class StateTestCase(StateBaseTestCase):
         )
         # Pretend we found a system dependency, as well as a part and stage
         # dependency.
-        mock_load_dependencies.return_value = set(
-            [
-                "/foo/bar/baz",
-                "{}/lib1/installed".format(self.handler.part_install_dir),
-                "{}/lib2/staged".format(self.handler._project.stage_dir),
-                "{}/lib3/primed".format(self.handler._project.prime_dir),
-            ]
-        )
+        mock_load_dependencies.return_value = {
+            "/foo/bar/baz",
+            f"{self.handler.part_install_dir}/lib1/installed",
+            f"{self.handler._project.stage_dir}/lib2/staged",
+            f"{self.handler._project.prime_dir}/lib3/primed",
+        }
 
         self.assertRaises(errors.NoLatestStepError, self.handler.latest_step)
         self.assertThat(self.handler.next_step(), Equals(steps.PULL))

@@ -55,9 +55,9 @@ class PluginV1:
         return []
 
     @classmethod
-    def get_required_package_repositories(self) -> List[PackageRepository]:
+    def get_required_package_repositories(cls) -> List[PackageRepository]:
         """Define additional deb source lines using templates variables."""
-        return list()
+        return []
 
     @property
     def stage_packages(self):
@@ -101,8 +101,7 @@ class PluginV1:
         self.statedir = os.path.join(self.partdir, "state")
 
         self.build_basedir = os.path.join(self.partdir, "build")
-        source_subdir = getattr(self.options, "source_subdir", None)
-        if source_subdir:
+        if source_subdir := getattr(self.options, "source_subdir", None):
             self.builddir = os.path.join(self.build_basedir, source_subdir)
         else:
             self.builddir = self.build_basedir

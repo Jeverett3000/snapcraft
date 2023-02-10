@@ -113,9 +113,7 @@ class MakePlugin(PluginV1):
         else:
             install_command = command + ["install"] + self.options.make_parameters
             if self.options.make_install_var:
-                install_command.append(
-                    "{}={}".format(self.options.make_install_var, self.installdir)
-                )
+                install_command.append(f"{self.options.make_install_var}={self.installdir}")
 
             self.run(install_command, env=env)
 

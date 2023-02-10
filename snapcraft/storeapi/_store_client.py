@@ -100,13 +100,11 @@ class StoreClient:
     def acl(self) -> Dict[str, Any]:
         """Return permissions for the logged-in user."""
 
-        acl_data = {}
-
         acl_info = self.dashboard.verify_acl()
-        for key in ("snap_ids", "channels", "permissions", "expires"):
-            acl_data[key] = acl_info.get(key)
-
-        return acl_data
+        return {
+            key: acl_info.get(key)
+            for key in ("snap_ids", "channels", "permissions", "expires")
+        }
 
     def get_snap_name_for_id(self, snap_id: str) -> str:
         declaration_assertion = self.snap.get_assertion("snap-declaration", snap_id)
@@ -180,12 +178,10 @@ class StoreClient:
         if snap_id is None:
             raise errors.NoSnapIdError(snap_name)
 
-        response = self.dashboard.snap_status(snap_id, DEFAULT_SERIES, arch)
-
-        if not response:
+        if response := self.dashboard.snap_status(snap_id, DEFAULT_SERIES, arch):
+            return response
+        else:
             raise errors.SnapNotFoundError(snap_name=snap_name, arch=arch)
-
-        return response
 
     def get_snap_channel_map(self, *, snap_name: str) -> channel_map.ChannelMap:
         return self.dashboard.get_snap_channel_map(snap_name=snap_name)
@@ -261,13 +257,12 @@ class StoreClient:
             headers = {}
             if resume_possible and os.path.exists(download_path):
                 total_read = os.path.getsize(download_path)
-                headers["Range"] = "bytes={}-".format(total_read)
+                headers["Range"] = f"bytes={total_read}-"
             request = self.client.request(
                 "GET", download_url, headers=headers, stream=True
             )
             request.raise_for_status()
-            redirections = [h.headers["Location"] for h in request.history]
-            if redirections:
+            if redirections := [h.headers["Location"] for h in request.history]:
                 logger.debug(
                     "Redirections for {!r}: {}".format(
                         download_url, ", ".join(redirections)

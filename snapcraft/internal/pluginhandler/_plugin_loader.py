@@ -138,8 +138,7 @@ def _get_local_plugin_class(*, plugin_name: str, local_plugins_dir: str):
             if attr.__module__.startswith("snapcraft.plugins"):
                 continue
             return attr
-        else:
-            raise errors.PluginError(f"unknown plugin: {plugin_name!r}")
+        raise errors.PluginError(f"unknown plugin: {plugin_name!r}")
 
 
 def _validate_pull_and_build_properties(
@@ -150,30 +149,23 @@ def _validate_pull_and_build_properties(
     )
     merged_properties = merged_schema["properties"]
 
-    # First, validate pull properties
-    invalid_properties = _validate_step_properties(
+    if invalid_properties := _validate_step_properties(
         plugin.get_pull_properties(), merged_properties
-    )
-
-    if invalid_properties:
+    ):
         raise errors.InvalidPullPropertiesError(plugin_name, list(invalid_properties))
 
-    # Now, validate build properties
-    invalid_properties = _validate_step_properties(
+    if invalid_properties := _validate_step_properties(
         plugin.get_build_properties(), merged_properties
-    )
-
-    if invalid_properties:
+    ):
         raise errors.InvalidBuildPropertiesError(plugin_name, list(invalid_properties))
 
 
 def _validate_step_properties(step_properties, schema_properties):
-    invalid_properties = set()
-    for step_property in step_properties:
-        if step_property not in schema_properties:
-            invalid_properties.add(step_property)
-
-    return invalid_properties
+    return {
+        step_property
+        for step_property in step_properties
+        if step_property not in schema_properties
+    }
 
 
 def _make_options(
@@ -192,7 +184,7 @@ def _make_options(
     except jsonschema.ValidationError as e:
         error = snapcraft.yaml_utils.errors.YamlValidationError.from_validation_error(e)
         raise errors.PluginError(
-            "properties failed to load for {}: {}".format(part_name, error.message)
+            f"properties failed to load for {part_name}: {error.message}"
         )
 
     return _populate_options(properties, plugin_schema)

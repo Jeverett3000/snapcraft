@@ -473,10 +473,10 @@ class Pip:
             version_regex = re.compile(r"\((.+)\)")
             for line in output.splitlines():
                 line = line.split()
-                m = version_regex.search(line[1])
-                if not m:
+                if m := version_regex.search(line[1]):
+                    json_output.append({"name": line[0], "version": m[1]})
+                else:
                     raise errors.PipListInvalidLegacyFormatError(output)
-                json_output.append({"name": line[0], "version": m.group(1)})
         except json.decoder.JSONDecodeError as e:
             raise errors.PipListInvalidJsonError(output) from e
 
@@ -508,18 +508,17 @@ class Pip:
         env["PYTHONUSERBASE"] = self._install_dir
         env["PYTHONHOME"] = self._python_home
 
-        env["PATH"] = "{}:{}".format(
-            os.path.join(self._install_dir, "usr", "bin"), os.path.expandvars("$PATH")
-        )
+        env[
+            "PATH"
+        ] = f'{os.path.join(self._install_dir, "usr", "bin")}:{os.path.expandvars("$PATH")}'
 
-        headers = get_python_headers(
+        if headers := get_python_headers(
             self._python_major_version, stage_dir=self._stage_dir
-        )
-        if headers:
+        ):
             current_cppflags = env.get("CPPFLAGS", "")
-            env["CPPFLAGS"] = "-I{}".format(headers)
+            env["CPPFLAGS"] = f"-I{headers}"
             if current_cppflags:
-                env["CPPFLAGS"] = "{} {}".format(env["CPPFLAGS"], current_cppflags)
+                env["CPPFLAGS"] = f'{env["CPPFLAGS"]} {current_cppflags}'
 
         return env
 

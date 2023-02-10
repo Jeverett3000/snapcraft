@@ -86,13 +86,11 @@ def get_snapcraft_part_directory_environment(
     }
 
     if step is None or step == steps.BUILD:
-        env.update(
-            {
-                "SNAPCRAFT_PART_BUILD": part.part_build_dir,
-                "SNAPCRAFT_PART_BUILD_WORK": part.part_build_work_dir,
-                "SNAPCRAFT_PART_INSTALL": part.part_install_dir,
-            }
-        )
+        env |= {
+            "SNAPCRAFT_PART_BUILD": part.part_build_dir,
+            "SNAPCRAFT_PART_BUILD_WORK": part.part_build_work_dir,
+            "SNAPCRAFT_PART_INSTALL": part.part_install_dir,
+        }
 
     return env
 
@@ -108,7 +106,7 @@ def get_snapcraft_part_environment(
 
     paths = [part.part_install_dir, part._project.stage_dir]
 
-    bin_paths = list()
+    bin_paths = []
     for path in paths:
         bin_paths.extend(common.get_bin_paths(root=path, existing_only=True))
 
@@ -118,7 +116,7 @@ def get_snapcraft_part_environment(
             paths=bin_paths, prepend="", separator=":"
         )
 
-    include_paths = list()
+    include_paths = []
     for path in paths:
         include_paths.extend(common.get_include_paths(path, part._project.arch_triplet))
 
@@ -128,7 +126,7 @@ def get_snapcraft_part_environment(
                 paths=include_paths, prepend="-isystem", separator=" "
             )
 
-    library_paths = list()
+    library_paths = []
     for path in paths:
         library_paths.extend(common.get_library_paths(path, part._project.arch_triplet))
 
@@ -137,8 +135,9 @@ def get_snapcraft_part_environment(
             paths=library_paths, prepend="-L", separator=" "
         )
 
-    pkg_config_paths = common.get_pkg_config_paths(path, part._project.arch_triplet)
-    if pkg_config_paths:
+    if pkg_config_paths := common.get_pkg_config_paths(
+        path, part._project.arch_triplet
+    ):
         part_environment["PKG_CONFIG_PATH"] = formatting_utils.combine_paths(
             pkg_config_paths, prepend="", separator=":"
         )

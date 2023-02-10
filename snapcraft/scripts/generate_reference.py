@@ -36,9 +36,7 @@ def _run_snapcraft(cmd, lines=False):
         cmd, cwd=os.path.join(os.path.dirname(__file__), "../../bin")
     )
     output = output.decode("utf-8")
-    if lines:
-        return output.split("\n")[:-1]  # drop last empty line
-    return output
+    return output.split("\n")[:-1] if lines else output
 
 
 class Reference:
@@ -49,7 +47,7 @@ class Reference:
         self.output_file = output_file
         assert os.path.isdir(
             os.path.dirname(self.output_file)
-        ), "Directory {} does not exist.".format(os.path.dirname(self.output_file))
+        ), f"Directory {os.path.dirname(self.output_file)} does not exist."
         self._read()
         self._write()
 
@@ -107,7 +105,7 @@ def main():
     parser.add_argument(
         "-O",
         "--output-file",
-        help="specify output file, default: {}".format(DEFAULT_REFERENCE_FILE),
+        help=f"specify output file, default: {DEFAULT_REFERENCE_FILE}",
         default=DEFAULT_REFERENCE_FILE,
     )
     args = parser.parse_args()

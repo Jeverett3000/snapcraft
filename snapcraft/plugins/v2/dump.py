@@ -48,7 +48,7 @@ class DumpPlugin(PluginV2):
         return set()
 
     def get_build_environment(self) -> Dict[str, str]:
-        return dict()
+        return {}
 
     def get_build_commands(self) -> List[str]:
         return ['cp --archive --link --no-dereference . "${SNAPCRAFT_PART_INSTALL}"']

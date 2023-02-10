@@ -42,8 +42,7 @@ class GlobalState(State):
             return yaml_utils.load(state_file)
 
     def save(self, *, filepath: str) -> None:
-        dirpath = os.path.dirname(filepath)
-        if dirpath:
+        if dirpath := os.path.dirname(filepath):
             os.makedirs(dirpath, exist_ok=True)
         with open(filepath, "w") as state_file:
             yaml_utils.dump(self, stream=state_file)

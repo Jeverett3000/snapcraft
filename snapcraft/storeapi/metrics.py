@@ -82,7 +82,7 @@ class Series:
 
         values = payload.get("values")
         if not isinstance(values, list) or not all(
-            isinstance(b, str) or isinstance(b, int) or b is None for b in values
+            isinstance(b, (str, int)) or b is None for b in values
         ):
             raise ValueError(f"Invalid metric values: {values!r}")
 
@@ -130,7 +130,7 @@ class MetricResults:
 
         buckets = payload.get("buckets")
         if not isinstance(buckets, list) or any(
-            [not isinstance(b, str) for b in buckets]
+            not isinstance(b, str) for b in buckets
         ):
             raise ValueError(f"Invalid metric buckets: {buckets!r}")
 

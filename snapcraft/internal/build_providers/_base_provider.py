@@ -60,16 +60,12 @@ class Provider(abc.ABC):
         self.echoer = echoer
         self._is_ephemeral = is_ephemeral
 
-        self.instance_name = "snapcraft-{}".format(project._snap_meta.name)
+        self.instance_name = f"snapcraft-{project._snap_meta.name}"
 
         if project._snap_meta.version:
-            self.snap_filename = "{}_{}_{}.snap".format(
-                project._snap_meta.name, project._snap_meta.version, project.deb_arch
-            )
+            self.snap_filename = f"{project._snap_meta.name}_{project._snap_meta.version}_{project.deb_arch}.snap"
         else:
-            self.snap_filename = "{}_{}.snap".format(
-                project._snap_meta.name, project.deb_arch
-            )
+            self.snap_filename = f"{project._snap_meta.name}_{project.deb_arch}.snap"
 
         self.provider_project_dir = os.path.join(
             BaseDirectory.save_data_path("snapcraft"),
@@ -79,7 +75,7 @@ class Provider(abc.ABC):
         )
 
         if build_provider_flags is None:
-            build_provider_flags = dict()
+            build_provider_flags = {}
         self.build_provider_flags = build_provider_flags.copy()
 
     def __enter__(self):
@@ -266,9 +262,9 @@ class Provider(abc.ABC):
         # settings.
         self._setup_snapd_proxy()
 
-        # Install any CA certificates requested by the user.
-        certs_path = self.build_provider_flags.get("SNAPCRAFT_ADD_CA_CERTIFICATES")
-        if certs_path:
+        if certs_path := self.build_provider_flags.get(
+            "SNAPCRAFT_ADD_CA_CERTIFICATES"
+        ):
             self._add_ca_certificates(pathlib.Path(certs_path))
 
     def _add_ca_certificates(self, certs_path: pathlib.Path) -> None:
@@ -287,7 +283,7 @@ class Provider(abc.ABC):
 
         for certificate_file in sorted(certificate_files):
             logger.info(f"Installing CA certificate: {certificate_file}")
-            dst_path = "/usr/local/share/ca-certificates/" + certificate_file.name
+            dst_path = f"/usr/local/share/ca-certificates/{certificate_file.name}"
             self._push_file(source=str(certificate_file), destination=dst_path)
 
         if certificate_files:
@@ -341,7 +337,7 @@ class Provider(abc.ABC):
         # Push to a location that can be written to by all backends
         # with unique files depending on path.
         # The path should be a valid path for the target.
-        remote_file = "/var/tmp/{}".format(base64.b64encode(path.encode()).decode())
+        remote_file = f"/var/tmp/{base64.b64encode(path.encode()).decode()}"
 
         # Windows cannot open the same file twice, so write to a temporary file that
         # would later be deleted manually.
@@ -509,14 +505,12 @@ class Provider(abc.ABC):
 
     def _setup_snapd_proxy(self) -> None:
         """Configure snapd proxy settings from http(s)_proxy."""
-        http_proxy = self.build_provider_flags.get("http_proxy")
-        if http_proxy:
+        if http_proxy := self.build_provider_flags.get("http_proxy"):
             self._run(["snap", "set", "system", f"proxy.http={http_proxy}"])
         else:
             self._run(["snap", "unset", "system", "proxy.http"])
 
-        https_proxy = self.build_provider_flags.get("https_proxy")
-        if https_proxy:
+        if https_proxy := self.build_provider_flags.get("https_proxy"):
             self._run(["snap", "set", "system", f"proxy.https={https_proxy}"])
         else:
             self._run(["snap", "unset", "system", "proxy.https"])
@@ -524,13 +518,11 @@ class Provider(abc.ABC):
     def _get_env_command(self) -> Sequence[str]:
         """Get command sequence for `env` with configured flags."""
 
-        env_list = ["env"]
-
-        # Tell Snapcraft it can take ownership of the host.
-        env_list.append("SNAPCRAFT_BUILD_ENVIRONMENT=managed-host")
-
-        # Set the HOME directory.
-        env_list.append(f"HOME={self._get_home_directory().as_posix()}")
+        env_list = [
+            "env",
+            "SNAPCRAFT_BUILD_ENVIRONMENT=managed-host",
+            f"HOME={self._get_home_directory().as_posix()}",
+        ]
 
         # Configure SNAPCRAFT_HAS_TTY.
         has_tty = str(sys.stdout.isatty())
@@ -558,7 +550,7 @@ class Provider(abc.ABC):
     def _load_info(self) -> Dict[str, Any]:
         filepath = os.path.join(self.provider_project_dir, "project-info.yaml")
         if not os.path.exists(filepath):
-            return dict()
+            return {}
 
         with open(filepath) as info_file:
             return yaml_utils.load(info_file)
@@ -570,8 +562,7 @@ class Provider(abc.ABC):
     def _save_info(self, *, data: Dict[str, Any]) -> None:
         filepath = os.path.join(self.provider_project_dir, "project-info.yaml")
 
-        dirpath = os.path.dirname(filepath)
-        if dirpath:
+        if dirpath := os.path.dirname(filepath):
             os.makedirs(dirpath, exist_ok=True)
 
         with open(filepath, "w") as info_file:

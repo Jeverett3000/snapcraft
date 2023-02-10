@@ -25,6 +25,5 @@ def snap_injector():
     patcher = mock.patch(
         "snapcraft.internal.build_providers._base_provider.SnapInjector"
     )
-    snap_injector_mock = patcher.start()
-    yield snap_injector_mock
+    yield patcher.start()
     patcher.stop()

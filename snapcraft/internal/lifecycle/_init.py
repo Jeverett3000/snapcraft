@@ -48,7 +48,7 @@ def init():
 
     if os.path.exists(snapcraft_yaml_path):
         raise errors.SnapcraftEnvironmentError(
-            "{} already exists!".format(snapcraft_yaml_path)
+            f"{snapcraft_yaml_path} already exists!"
         )
     elif os.path.exists("snapcraft.yaml"):
         raise errors.SnapcraftEnvironmentError("snapcraft.yaml already exists!")

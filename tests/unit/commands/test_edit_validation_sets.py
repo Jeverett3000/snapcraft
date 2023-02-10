@@ -90,7 +90,7 @@ def fake_dashboard_get_validation_sets(validation_sets_payload):
 @pytest.fixture(autouse=True)
 def fake_snap_sign():
     def sign(assertion: Dict[str, Any], *, key_name: str) -> bytes:
-        return (json.dumps(assertion) + f"\n\nSIGNED{key_name}").encode()
+        return f"{json.dumps(assertion)}\n\nSIGNED{key_name}".encode()
 
     patched_snap_sign = mock.patch(
         "snapcraft.cli.assertions._sign_assertion", side_effect=sign

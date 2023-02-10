@@ -73,6 +73,7 @@ cases you want to refer to the help text for the specific plugin.
   snapcraft help <plugin>
 
 """
+
 import logging
 import os
 import os.path
@@ -81,20 +82,20 @@ import sys
 
 from . import errors
 
+from ._7z import SevenZip  # noqa
+from ._bazaar import Bazaar  # noqa
+from ._git import Git  # noqa
+from ._local import Local  # noqa
+from ._mercurial import Mercurial  # noqa
+from ._subversion import Subversion  # noqa
+from ._tar import Tar  # noqa
+from ._zip import Zip  # noqa
+
 if sys.platform == "linux":
-    from ._7z import SevenZip  # noqa
-    from ._bazaar import Bazaar  # noqa
     from ._deb import Deb  # noqa
-    from ._git import Git  # noqa
-    from ._local import Local  # noqa
-    from ._mercurial import Mercurial  # noqa
     from ._rpm import Rpm  # noqa
     from ._script import Script  # noqa
     from ._snap import Snap  # noqa: F401
-    from ._subversion import Subversion  # noqa
-    from ._tar import Tar  # noqa
-    from ._zip import Zip  # noqa
-
     _source_handler = {
         "bzr": Bazaar,
         "git": Git,
@@ -112,15 +113,6 @@ if sys.platform == "linux":
         "": Local,
     }
 else:
-    from ._7z import SevenZip  # noqa
-    from ._bazaar import Bazaar  # noqa
-    from ._git import Git  # noqa
-    from ._local import Local  # noqa
-    from ._mercurial import Mercurial  # noqa
-    from ._subversion import Subversion  # noqa
-    from ._tar import Tar  # noqa
-    from ._zip import Zip  # noqa
-
     _source_handler = {
         "7z": SevenZip,
         "bzr": Bazaar,
@@ -192,7 +184,7 @@ _tar_type_regex = re.compile(r".*\.((tar(\.(xz|gz|bz2))?)|tgz)$")
 
 def _get_source_type_from_uri(source, ignore_errors=False):  # noqa: C901
     for extension in ["zip", "deb", "rpm", "7z", "snap"]:
-        if source.endswith(".{}".format(extension)):
+        if source.endswith(f".{extension}"):
             return extension
     source_type = ""
     if source.startswith("bzr:") or source.startswith("lp:"):

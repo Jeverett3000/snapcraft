@@ -63,7 +63,7 @@ class AutotoolsPlugin(PluginV2):
         return {"autoconf", "automake", "autopoint", "gcc", "libtool"}
 
     def get_build_environment(self) -> Dict[str, str]:
-        return dict()
+        return {}
 
     def _get_configure_command(self) -> str:
         cmd = ["./configure"] + self.options.autotools_configure_parameters

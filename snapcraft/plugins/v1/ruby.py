@@ -85,9 +85,7 @@ class RubyPlugin(PluginV1):
         self._ruby_part_dir = os.path.join(self.partdir, "ruby")
         feature_pattern = re.compile(r"^(\d+\.\d+)\..*$")
         feature_version = feature_pattern.sub(r"\1", self._ruby_version)
-        self._ruby_download_url = "https://cache.ruby-lang.org/pub/ruby/{}/ruby-{}.tar.gz".format(
-            feature_version, self._ruby_version
-        )
+        self._ruby_download_url = f"https://cache.ruby-lang.org/pub/ruby/{feature_version}/ruby-{self._ruby_version}.tar.gz"
         self._ruby_tar = Tar(self._ruby_download_url, self._ruby_part_dir)
         self._gems = options.gems or []
         self.build_packages.extend(
@@ -104,7 +102,7 @@ class RubyPlugin(PluginV1):
         super().pull()
         os.makedirs(self._ruby_part_dir, exist_ok=True)
 
-        logger.info("Fetching ruby {}...".format(self._ruby_version))
+        logger.info(f"Fetching ruby {self._ruby_version}...")
         self._ruby_tar.download()
 
         logger.info("Building/installing ruby...")
@@ -118,12 +116,12 @@ class RubyPlugin(PluginV1):
         env = super().env(root)
 
         for key, value in self._env_dict(root).items():
-            env.append('{}="{}"'.format(key, value))
+            env.append(f'{key}="{value}"')
 
         return env
 
     def _env_dict(self, root):
-        env = dict()
+        env = {}
         rubydir = os.path.join(root, "lib", "ruby")
 
         # Patch versions of ruby continue to use the minor version's RUBYLIB,
@@ -146,15 +144,15 @@ class RubyPlugin(PluginV1):
             paths = glob.glob(os.path.join(rubylib, "*", "rbconfig.rb"))
             if len(paths) != 1:
                 raise errors.SnapcraftEnvironmentError(
-                    "Expected a single rbconfig.rb, but found {}".format(len(paths))
+                    f"Expected a single rbconfig.rb, but found {len(paths)}"
                 )
 
-            env["RUBYLIB"] = "{}:{}".format(rubylib, os.path.dirname(paths[0]))
+            env["RUBYLIB"] = f"{rubylib}:{os.path.dirname(paths[0])}"
             env["GEM_HOME"] = os.path.join(rubydir, "gems", ruby_version)
             env["GEM_PATH"] = os.path.join(rubydir, "gems", ruby_version)
         elif len(versions) > 1:
             raise errors.SnapcraftEnvironmentError(
-                "Expected a single Ruby version, but found {}".format(len(versions))
+                f"Expected a single Ruby version, but found {len(versions)}"
             )
 
         return env
@@ -173,10 +171,8 @@ class RubyPlugin(PluginV1):
     def _ruby_install(self, builddir):
         self._ruby_tar.provision(builddir, clean_target=False, keep_tarball=True)
         self._run(["./configure", "--disable-install-rdoc", "--prefix=/"], cwd=builddir)
-        self._run(["make", "-j{}".format(self.parallel_build_count)], cwd=builddir)
-        self._run(
-            ["make", "install", "DESTDIR={}".format(self.installdir)], cwd=builddir
-        )
+        self._run(["make", f"-j{self.parallel_build_count}"], cwd=builddir)
+        self._run(["make", "install", f"DESTDIR={self.installdir}"], cwd=builddir)
         # Fix all shebangs to use the in-snap ruby
         file_utils.replace_in_file(
             self.installdir,

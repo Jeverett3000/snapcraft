@@ -34,13 +34,11 @@ logger = logging.getLogger(__name__)
 
 
 class BaseHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
-    def log_message(*args):
-        logger.debug(args)
+    def log_message(self):
+        logger.debug(self)
 
     def raise_not_implemented(self, path):
-        logger.error(
-            "Not implemented {} in server: {}".format(path, self.__class__.__name__)
-        )
+        logger.error(f"Not implemented {path} in server: {self.__class__.__name__}")
         raise NotImplementedError(path)
 
 
@@ -263,7 +261,7 @@ class FakeSSORequestHandler(BaseHTTPRequestHandler):
             "utf8"
         )
         data = json.loads(string_data)
-        logger.debug("Handling tokens discharge request with content {}".format(data))
+        logger.debug(f"Handling tokens discharge request with content {data}")
         if data["password"] == "test correct password" and (
             "otp" not in data or data["otp"] == "test correct one-time password"
         ):

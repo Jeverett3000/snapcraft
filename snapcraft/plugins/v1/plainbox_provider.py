@@ -76,8 +76,8 @@ class PlainboxProviderPlugin(PluginV1):
                 "manage.py",
                 "install",
                 "--layout=relocatable",
-                "--prefix=/providers/{}".format(self.name),
-                "--root={}".format(self.installdir),
+                f"--prefix=/providers/{self.name}",
+                f"--root={self.installdir}",
             ]
         )
 

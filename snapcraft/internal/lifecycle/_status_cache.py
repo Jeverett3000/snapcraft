@@ -34,7 +34,7 @@ class StatusCache:
         :param _config.Config config: Project config.
         """
         self.config = config
-        self._steps_run: Dict[str, Set[steps.Step]] = dict()
+        self._steps_run: Dict[str, Set[steps.Step]] = {}
         self._outdated_reports: _OutdatedReport = collections.defaultdict(dict)
         self._dirty_reports: _DirtyReport = collections.defaultdict(dict)
 
@@ -62,8 +62,7 @@ class StatusCache:
         ):
             return True
 
-        previous_step = step.previous_step()
-        if previous_step:
+        if previous_step := step.previous_step():
             return self.should_step_run(part, previous_step)
 
         return False
@@ -190,12 +189,7 @@ class StatusCache:
 
 
 def _get_steps_run(part: pluginhandler.PluginHandler) -> Set[steps.Step]:
-    steps_run = set()  # type: Set[steps.Step]
-    for step in steps.STEPS:
-        if not part.should_step_run(step):
-            steps_run.add(step)
-
-    return steps_run
+    return {step for step in steps.STEPS if not part.should_step_run(step)}
 
 
 def _del_key(c: Dict[Any, Any], key: Any) -> None:

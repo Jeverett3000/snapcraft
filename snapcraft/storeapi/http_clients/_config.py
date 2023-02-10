@@ -65,10 +65,9 @@ class Config(abc.ABC):
         if section_name is None:
             section_name = self._get_section_name()
 
-        if self.parser.has_section(section_name):
-            if self.parser.options(section_name):
-                return False
-        return True
+        return not self.parser.has_section(
+            section_name
+        ) or not self.parser.options(section_name)
 
     def _load_potentially_base64_config(self, config_content: str) -> None:
         try:

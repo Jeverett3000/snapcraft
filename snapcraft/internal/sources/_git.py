@@ -26,7 +26,7 @@ from ._base import Base
 
 class Git(Base):
     @classmethod
-    def version(self):
+    def version(cls):
         """Get git version information."""
         return (
             subprocess.check_output(["git", "version"], stderr=subprocess.DEVNULL)
@@ -81,7 +81,7 @@ class Git(Base):
                 # This most likely means the project we are in is not driven
                 # by git.
                 raise errors.VCSError(message=stderr.decode(encoding).strip())
-            return "0+git.{}".format(stdout.decode(encoding).strip())
+            return f"0+git.{stdout.decode(encoding).strip()}"
 
         m = re.search(
             r"^(?P<tag>[a-zA-Z0-9.+~-]+)-"
@@ -94,11 +94,11 @@ class Git(Base):
             # This means we have a pure tag
             return output
 
-        tag = m.group("tag")
-        revs_ahead = m.group("revs_ahead")
-        commit = m.group("commit")
+        tag = m["tag"]
+        revs_ahead = m["revs_ahead"]
+        commit = m["commit"]
 
-        return "{}+git{}.{}".format(tag, revs_ahead, commit)
+        return f"{tag}+git{revs_ahead}.{commit}"
 
     def __init__(
         self,
@@ -166,9 +166,9 @@ class Git(Base):
     def _pull_existing(self):
         refspec = "HEAD"
         if self.source_branch:
-            refspec = "refs/heads/" + self.source_branch
+            refspec = f"refs/heads/{self.source_branch}"
         elif self.source_tag:
-            refspec = "refs/tags/" + self.source_tag
+            refspec = f"refs/tags/{self.source_tag}"
         elif self.source_commit:
             refspec = self.source_commit
             self._fetch_origin_commit()

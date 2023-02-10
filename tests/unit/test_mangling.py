@@ -166,18 +166,18 @@ class TestClearExecstack(unit.TestCase):
 
         mangling.clear_execstack(elf_files=elf_files)
 
-        self.assertThat("{}.execstack".format(elf_files[0].path), FileExists())
+        self.assertThat(f"{elf_files[0].path}.execstack", FileExists())
 
     def test_bad_execstack_does_not_blow_up(self):
         elf_files = [self.fake_elf["fake_elf-with-bad-execstack"]]
 
         mangling.clear_execstack(elf_files=elf_files)
 
-        self.assertThat("{}.execstack".format(elf_files[0].path), Not(FileExists()))
+        self.assertThat(f"{elf_files[0].path}.execstack", Not(FileExists()))
 
     def test_no_execstack_does_nothing(self):
         elf_files = [self.fake_elf["fake_elf-2.23"]]
 
         mangling.clear_execstack(elf_files=elf_files)
 
-        self.assertThat("{}.execstack".format(elf_files[0].path), Not(FileExists()))
+        self.assertThat(f"{elf_files[0].path}.execstack", Not(FileExists()))

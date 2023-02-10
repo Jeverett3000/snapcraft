@@ -77,10 +77,7 @@ class Snap(FileBase):
         raises errors.InvalidSnapError: when trying to provision an invalid
                                         snap.
         """
-        if src:
-            snap_file = src
-        else:
-            snap_file = os.path.join(self.source_dir, os.path.basename(self.source))
+        snap_file = src or os.path.join(self.source_dir, os.path.basename(self.source))
         snap_file = os.path.realpath(snap_file)
 
         if clean_target:
@@ -102,7 +99,7 @@ class Snap(FileBase):
             rename_paths = (os.path.join(temp_dir, d) for d in ["meta", "snap"])
             rename_paths = (d for d in rename_paths if os.path.exists(d))
             for rename in rename_paths:
-                shutil.move(rename, "{}.{}".format(rename, snap_name))
+                shutil.move(rename, f"{rename}.{snap_name}")
             file_utils.link_or_copy_tree(source_tree=temp_dir, destination_tree=dst)
 
         if not keep_snap:

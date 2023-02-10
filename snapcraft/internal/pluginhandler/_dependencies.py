@@ -39,7 +39,7 @@ _MSG_UNHANDLED_DEPENDENCIES = (
 
 
 def _get_formatted_list(items: Set[str]) -> str:
-    return "".join(["- {}\n".format(s) for s in sorted(items)]).strip()
+    return "".join([f"- {s}\n" for s in sorted(items)]).strip()
 
 
 class MissingDependencyResolver:

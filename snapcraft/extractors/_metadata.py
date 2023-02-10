@@ -78,8 +78,7 @@ class ExtractedMetadata(yaml_utils.SnapcraftYAMLObject):
         :param ExtractedMetadata other: Metadata from which to update
         """
         self._data.update(other.to_dict())
-        common_id = self.get_common_id()
-        if common_id:
+        if common_id := self.get_common_id():
             self.common_id_list.append(common_id)
 
     def get_common_id(self) -> Optional[str]:
@@ -174,10 +173,7 @@ class ExtractedMetadata(yaml_utils.SnapcraftYAMLObject):
         return str(self._data)
 
     def __eq__(self, other: Any) -> bool:
-        if type(other) is type(self):
-            return self._data == other._data
-
-        return False
+        return self._data == other._data if type(other) is type(self) else False
 
     def __len__(self) -> int:
         return self._data.__len__()

@@ -26,13 +26,10 @@ class State(yaml_utils.SnapcraftYAMLObject):
         strings = (": ".join((key, repr(value))) for key, value in items)
         representation = ", ".join(strings)
 
-        return "{}({})".format(self.__class__.__name__, representation)
+        return f"{self.__class__.__name__}({representation})"
 
     def __eq__(self, other):
-        if type(other) is type(self):
-            return self.__dict__ == other.__dict__
-
-        return False
+        return self.__dict__ == other.__dict__ if type(other) is type(self) else False
 
 
 class PartState(State):

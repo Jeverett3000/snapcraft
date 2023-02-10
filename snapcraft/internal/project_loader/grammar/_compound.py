@@ -54,11 +54,7 @@ class CompoundStatement(Statement):
                  False if elses should be processed.
         :rtype: bool
         """
-        for statement in self.statements:
-            if not statement._check():
-                return False
-
-        return True
+        return all(statement._check() for statement in self.statements)
 
     def __eq__(self, other) -> bool:
         if type(other) is type(self):
@@ -67,8 +63,7 @@ class CompoundStatement(Statement):
         return False
 
     def __str__(self) -> str:
-        representation = ""
-        for statement in self.statements:
-            representation += "{!s} ".format(statement)
-
+        representation = "".join(
+            "{!s} ".format(statement) for statement in self.statements
+        )
         return representation.strip()

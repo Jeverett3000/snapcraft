@@ -99,15 +99,6 @@ class CatkinToolsPlugin(_ros.RosPlugin):
         ]
 
     def _get_build_commands(self) -> List[str]:
-        # It's possible that this workspace wasn't initialized to be used with
-        # catkin-tools, so initialize it first. Note that this is a noop if it
-        # was already initialized
-        commands = ["catkin init"]
-
-        # Overwrite the default catkin profile to ensure builds
-        # aren't affected by profile changes
-        commands.append("catkin profile add -f default")
-
         # Use catkin config to set configurations for the snap build
         catkin_config_command = [
             "catkin",
@@ -128,8 +119,6 @@ class CatkinToolsPlugin(_ros.RosPlugin):
                 ["--cmake-args", *self.options.catkin_tools_cmake_args]
             )
 
-        commands.append(" ".join(catkin_config_command))
-
         # Now actually build the package
         catkin_command = [
             "catkin",
@@ -144,6 +133,9 @@ class CatkinToolsPlugin(_ros.RosPlugin):
         if self.options.catkin_tools_packages:
             catkin_command.extend(self.options.catkin_tools_packages)
 
-        commands.append(" ".join(catkin_command))
-
-        return commands
+        return [
+            "catkin init",
+            "catkin profile add -f default",
+            " ".join(catkin_config_command),
+            " ".join(catkin_command),
+        ]

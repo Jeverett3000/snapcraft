@@ -78,9 +78,7 @@ class DirtyReport:
                 self.dirty_properties, "property appears", "properties appear"
             )
             messages.append(
-                "The {} part {} to have changed.\n".format(
-                    humanized_properties, pluralized_connection
-                )
+                f"The {humanized_properties} part {pluralized_connection} to have changed.\n"
             )
 
         if self.dirty_project_options:
@@ -91,9 +89,7 @@ class DirtyReport:
                 self.dirty_project_options, "option appears", "options appear"
             )
             messages.append(
-                "The {} project {} to have changed.\n".format(
-                    humanized_options, pluralized_connection
-                )
+                f"The {humanized_options} project {pluralized_connection} to have changed.\n"
             )
 
         if self.changed_dependencies:

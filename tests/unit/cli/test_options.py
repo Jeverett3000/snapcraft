@@ -253,7 +253,7 @@ class TestInvalidBuildProviderFlags(unit.TestCase):
 
         flags = options.get_build_provider_flags("lxd", **kwargs)
 
-        self.assertThat(flags, Equals(dict()))
+        self.assertThat(flags, Equals({}))
 
     def test_host_missing_destructive_mode(self):
         kwargs = dict(http_proxy="192.168.1.1")

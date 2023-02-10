@@ -53,7 +53,7 @@ logger = logging.getLogger(__name__)
 
 
 def assemble_env():
-    return "\n".join(["export " + e for e in env])
+    return "\n".join([f"export {e}" for e in env])
 
 
 run_number: int = 0
@@ -65,40 +65,39 @@ def _run(cmd: List[str], runner: Callable, **kwargs):
 
     assert isinstance(cmd, list), "run command must be a list"
 
-    lines: List[str] = list()
+    lines: List[str] = ["#!/bin/sh"]
 
-    # Set shell.
-    lines.append("#!/bin/sh")
-
-    # Account for `env` parameter by populating exports.
-    # Ordering matters: assembled_env overrides `env` parameter.
-    cmd_env = kwargs.pop("env", None)
-    if cmd_env:
-        lines.append("#############################")
-        lines.append("# Exported via `env` parameter:")
+    if cmd_env := kwargs.pop("env", None):
+        lines.extend(
+            (
+                "#############################",
+                "# Exported via `env` parameter:",
+            )
+        )
         for key in sorted(cmd_env.keys()):
             value = cmd_env.get(key)
             lines.append(f"export {key}={value!r}")
 
-    # Account for assembled_env.
-    lines.append("#############################")
-    lines.append("# Exported via assembled env:")
-    lines.extend(["export " + e for e in env])
+    lines.extend(
+        ("#############################", "# Exported via assembled env:")
+    )
+    lines.extend([f"export {e}" for e in env])
 
     # Account for `cwd` by changing directory.
     cmd_workdir = kwargs.pop("cwd", None)
+    lines.append("#############################")
     if cmd_workdir:
-        lines.append("#############################")
         lines.append("# Configured via `cwd` parameter:")
     else:
         cmd_workdir = os.getcwd()
-        lines.append("#############################")
         lines.append("# Implicit working directory:")
-    lines.append(f"cd {cmd_workdir!r}")
-
-    # Finally, execute desired command.
-    lines.append("#############################")
-    lines.append("# Execute command:")
+    lines.extend(
+        (
+            f"cd {cmd_workdir!r}",
+            "#############################",
+            "# Execute command:",
+        )
+    )
     cmd_string = " ".join([shlex.quote(c) for c in cmd])
     lines.append(f"exec {cmd_string}")
 
@@ -183,7 +182,7 @@ def is_snap() -> bool:
 
 def is_process_container() -> bool:
     logger.debug("snapcraft is running in a docker or podman (OCI) container")
-    return any([os.path.exists(p) for p in (_DOCKERENV_FILE, _PODMAN_FILE)])
+    return any(os.path.exists(p) for p in (_DOCKERENV_FILE, _PODMAN_FILE))
 
 
 def set_plugindir(plugindir):
@@ -280,7 +279,7 @@ def format_output_in_columns(
     num_col_spaces is the number of spaces set between 2 columns"""
 
     # First, try to get the starting point in term of number of lines
-    total_num_chars = sum([len(elem) for elem in elements_list])
+    total_num_chars = sum(len(elem) for elem in elements_list)
     num_lines = math.ceil(
         (total_num_chars + (len(elements_list) - 1) * num_col_spaces) / max_width
     )
@@ -309,11 +308,10 @@ def format_output_in_columns(
             num_lines += 1
             candidate_output = []
 
-    result_output = []
-    for i, line in enumerate(candidate_output):
-        result_output.append(sep.join(candidate_output[i]))
-
-    return result_output
+    return [
+        sep.join(candidate_output[i])
+        for i, line in enumerate(candidate_output)
+    ]
 
 
 def get_bin_paths(*, root: Union[str, pathlib.Path], existing_only=True) -> List[str]:

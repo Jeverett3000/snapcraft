@@ -37,7 +37,7 @@ def extract(relpath: str, *, workdir: str) -> ExtractedMetadata:
     )
     setuppy = importlib.util.module_from_spec(spec)
 
-    params = dict()  # type: Dict[str, str]
+    params = {}
 
     def _fake_setup(*args, **kwargs):
         nonlocal params

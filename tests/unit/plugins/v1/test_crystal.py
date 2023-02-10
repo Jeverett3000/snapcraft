@@ -58,16 +58,14 @@ class CrystalPluginPropertiesTest(unit.TestCase):
         self.assertThat(
             crystal_channel_type,
             Equals("string"),
-            'Expected "crystal-channel" "type" to be "string", but '
-            'it was "{}"'.format(crystal_channel_type),
+            f'Expected "crystal-channel" "type" to be "string", but it was "{crystal_channel_type}"',
         )
 
         crystal_channel_default = crystal_channel["default"]
         self.assertThat(
             crystal_channel_default,
             Equals("latest/stable"),
-            'Expected "crystal-channel" "default" to be '
-            '"latest/stable", but it was "{}"'.format(crystal_channel_default),
+            f'Expected "crystal-channel" "default" to be "latest/stable", but it was "{crystal_channel_default}"',
         )
 
         # Check crystal-build-options
@@ -84,16 +82,14 @@ class CrystalPluginPropertiesTest(unit.TestCase):
         self.assertThat(
             crystal_build_options_type,
             Equals("string"),
-            'Expected "crystal-build-options" "type" to be "string", but '
-            'it was "{}"'.format(crystal_build_options_type),
+            f'Expected "crystal-build-options" "type" to be "string", but it was "{crystal_build_options_type}"',
         )
 
         crystal_build_options_default = crystal_build_options["default"]
         self.assertThat(
             crystal_build_options_default,
             Equals([]),
-            'Expected "crystal-build-options" "default" to be '
-            '"[]", but it was "{}"'.format(crystal_build_options_default),
+            f'Expected "crystal-build-options" "default" to be "[]", but it was "{crystal_build_options_default}"',
         )
 
         # Check required properties

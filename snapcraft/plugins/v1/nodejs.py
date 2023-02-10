@@ -180,11 +180,9 @@ class NodePlugin(PluginV1):
         if self.options.nodejs_package_manager == "npm":
             installed_node_packages = self._get_installed_node_packages(self.installdir)
             self._manifest["node-packages"] = [
-                "{}={}".format(name, installed_node_packages[name])
+                f"{name}={installed_node_packages[name]}"
                 for name in installed_node_packages
             ]
-        # Skip this step if yarn is used, as it may produce different
-        # dependency trees than npm
         else:
             self._manifest["node-packages"] = []
 
@@ -241,9 +239,7 @@ class NodePlugin(PluginV1):
                 os.path.join(package_dir, "yarn.lock"),
             )
 
-        flags.append("--offline")
-        flags.append("--prod")
-
+        flags.extend(("--offline", "--prod"))
         self.run(cmd + ["install"] + flags, package_dir)
 
         return package_dir
@@ -258,11 +254,7 @@ class NodePlugin(PluginV1):
         env = os.environ.copy()
         npm_bin = os.path.join(self._npm_dir, "bin")
 
-        if env.get("PATH"):
-            new_path = "{}:{}".format(npm_bin, env.get("PATH"))
-        else:
-            new_path = npm_bin
-
+        new_path = f'{npm_bin}:{env.get("PATH")}' if env.get("PATH") else npm_bin
         # npm has the behavior that, if it detects that SUDO_UID is set,
         # it will then set the uid of some of its child processes (such as
         # git when installing a package that specifies a git repository)
@@ -344,7 +336,7 @@ def _create_bins(package_json, directory):
 def _get_nodejs_base(node_engine, machine):
     if machine not in _NODEJS_ARCHES:
         raise errors.SnapcraftEnvironmentError(
-            "architecture not supported ({})".format(machine)
+            f"architecture not supported ({machine})"
         )
     return _NODEJS_BASE.format(version=node_engine, arch=_NODEJS_ARCHES[machine])
 

@@ -42,11 +42,7 @@ class Project(ProjectOptions):
     ) -> None:
 
         project_dir = os.getcwd()
-        if is_managed_host:
-            work_dir = os.path.expanduser("~")
-        else:
-            work_dir = project_dir
-
+        work_dir = os.path.expanduser("~") if is_managed_host else project_dir
         super().__init__(target_deb_arch, debug, work_dir=work_dir)
 
         # This here check is mostly for backwards compatibility with the
@@ -87,7 +83,7 @@ class Project(ProjectOptions):
         # This function uses md5 hashes because they are fast, and because
         # the hashes only need to be unique per project, so clashes are
         # tremendously unlikely and not a big deal even if they happen.
-        hashes: List[str] = list()
+        hashes: List[str] = []
         for root, dirs, files in os.walk(self._project_dir):
             # Sort contents, we need this to be stable so it's reproducible
             dirs.sort()
@@ -106,13 +102,11 @@ class Project(ProjectOptions):
 
     def _get_content_snaps(self) -> Set[str]:
         """Return the set of content snaps from snap_meta."""
-        return set(
-            [
-                x.provider
-                for x in self._snap_meta.get_content_plugs()
-                if x.provider is not None
-            ]
-        )
+        return {
+            x.provider
+            for x in self._snap_meta.get_content_plugs()
+            if x.provider is not None
+        }
 
     def _get_provider_content_dirs(self) -> Set[str]:
         """Return the set installed provider content directories."""
@@ -145,12 +139,11 @@ class Project(ProjectOptions):
             return os.path.join(assets_dir, "plugins")
 
     def _get_global_state_file_path(self) -> str:
-        if self._is_managed_host:
-            state_file_path = os.path.join(self._work_dir, "state")
-        else:
-            state_file_path = os.path.join(self._parts_dir, ".snapcraft_global_state")
-
-        return state_file_path
+        return (
+            os.path.join(self._work_dir, "state")
+            if self._is_managed_host
+            else os.path.join(self._parts_dir, ".snapcraft_global_state")
+        )
 
     def _get_stage_packages_target_arch(self) -> str:
         """Get architecture for staging packages.

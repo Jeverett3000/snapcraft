@@ -86,7 +86,7 @@ class MesonPlugin(PluginV1):
         super().pull()
 
         if self.options.meson_version:
-            meson_package = "meson=={}".format(self.options.meson_version)
+            meson_package = f"meson=={self.options.meson_version}"
         else:
             meson_package = "meson"
 

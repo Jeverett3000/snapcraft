@@ -301,9 +301,7 @@ class LXD(Provider):
         # Replace home directory with "snapcraft".
         name = target.replace(home_dir, "snapcraft", 1)
 
-        # Replace path separators with dashes.
-        name = name.replace("/", "-")
-        return name
+        return name.replace("/", "-")
 
     def _is_mounted(self, target: str) -> bool:
         """Query if there is a mount at target mount point."""

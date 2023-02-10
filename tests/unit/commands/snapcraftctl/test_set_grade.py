@@ -39,7 +39,7 @@ class SetGradeCommandTestCase(CommandBaseTestCase):
             self.assertThat(data["args"], Equals({"grade": grade}))
 
     def test_invalid_grades(self):
-        for grade in ["", "invalid-grade"]:
+        for _ in ["", "invalid-grade"]:
             result = self.run_command(["set-grade", ""])
             assert result != 0
 

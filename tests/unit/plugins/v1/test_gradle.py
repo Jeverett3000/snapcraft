@@ -66,14 +66,13 @@ def test_build_properties():
 
 
 def _get_expected_java_version(gradle_plugin) -> str:
-    ant_openjdk_version = gradle_plugin.options.gradle_openjdk_version
-
-    if ant_openjdk_version:
-        expected_java_version = ant_openjdk_version
-    else:
-        expected_java_version = "11"
-
-    return expected_java_version
+    return (
+        ant_openjdk_version
+        if (
+            ant_openjdk_version := gradle_plugin.options.gradle_openjdk_version
+        )
+        else "11"
+    )
 
 
 _BASE_JAVA_COMBINATIONS = [

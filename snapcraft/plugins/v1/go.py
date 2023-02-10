@@ -96,18 +96,15 @@ class GoModRequiredVersionError(errors.SnapcraftException):
 
 
 def _get_cgo_ldflags(library_paths: List[str]) -> str:
-    cgo_ldflags: List[str] = list()
+    cgo_ldflags: List[str] = []
 
-    existing_cgo_ldflags = os.getenv("CGO_LDFLAGS")
-    if existing_cgo_ldflags:
+    if existing_cgo_ldflags := os.getenv("CGO_LDFLAGS"):
         cgo_ldflags.append(existing_cgo_ldflags)
 
-    flags = common.combine_paths(library_paths, "-L", " ")
-    if flags:
+    if flags := common.combine_paths(library_paths, "-L", " "):
         cgo_ldflags.append(flags)
 
-    ldflags = os.getenv("LDFLAGS")
-    if ldflags:
+    if ldflags := os.getenv("LDFLAGS"):
         cgo_ldflags.append(ldflags)
 
     return " ".join(cgo_ldflags)
@@ -172,7 +169,7 @@ class GoPlugin(PluginV1):
 
     def _setup_base_tools(self, go_channel: str, base: Optional[str]) -> None:
         if go_channel:
-            self.build_snaps.append("go/{}".format(go_channel))
+            self.build_snaps.append(f"go/{go_channel}")
         else:
             self.build_packages.append("golang-go")
 
@@ -223,14 +220,14 @@ class GoPlugin(PluginV1):
         # use -t to also get the test-deps
         # since we are not using -u the sources will stick to the
         # original checkout.
-        if any(iglob("{}/**/*.go".format(self.sourcedir), recursive=True)):
+        if any(iglob(f"{self.sourcedir}/**/*.go", recursive=True)):
             go_package = self._get_local_go_package()
             go_package_path = os.path.join(self._gopath_src, go_package)
             if os.path.islink(go_package_path):
                 os.unlink(go_package_path)
             os.makedirs(os.path.dirname(go_package_path), exist_ok=True)
             os.symlink(self.sourcedir, go_package_path)
-            self._run(["go", "get", "-t", "-d", "./{}/...".format(go_package)])
+            self._run(["go", "get", "-t", "-d", f"./{go_package}/..."])
 
         for go_package in self.options.go_packages:
             self._run(["go", "get", "-t", "-d", go_package])
@@ -252,23 +249,20 @@ class GoPlugin(PluginV1):
 
     def _get_local_go_package(self) -> str:
         if self.options.go_importpath:
-            go_package = self.options.go_importpath
-        else:
-            logger.warning(
-                "Please consider setting `go-importpath` for the {!r} "
-                "part".format(self.name)
-            )
-            go_package = os.path.basename(os.path.abspath(self.options.source))
-        return go_package
+            return self.options.go_importpath
+        logger.warning(
+            "Please consider setting `go-importpath` for the {!r} "
+            "part".format(self.name)
+        )
+        return os.path.basename(os.path.abspath(self.options.source))
 
     def _get_local_main_packages(self) -> List[str]:
-        search_path = "./{}/...".format(self._get_local_go_package())
+        search_path = f"./{self._get_local_go_package()}/..."
         packages = self._run_output(
             ["go", "list", "-f", "{{.ImportPath}} {{.Name}}", search_path]
         )
         packages_split = [p.split() for p in packages.splitlines()]
-        main_packages = [p[0] for p in packages_split if p[1] == "main"]
-        return main_packages
+        return [p[0] for p in packages_split if p[1] == "main"]
 
     def _get_module(self) -> str:
         pattern = re.compile(r"module\s*(?P<module>.*)\s")
@@ -276,7 +270,7 @@ class GoPlugin(PluginV1):
             for line in go_mod_file:
                 match = pattern.search(line)
                 if match is not None:
-                    module = match.group("module")
+                    module = match["module"]
                     break
             else:
                 raise RuntimeError("Expected a module in go.mod")
@@ -287,7 +281,7 @@ class GoPlugin(PluginV1):
         build_cmd = ["go", "build"]
 
         if self.options.go_buildtags:
-            build_cmd.extend(["-tags={}".format(",".join(self.options.go_buildtags))])
+            build_cmd.extend([f'-tags={",".join(self.options.go_buildtags)}'])
 
         relink_cmd = build_cmd + ["-ldflags", "-linkmode=external"]
 
@@ -328,11 +322,7 @@ class GoPlugin(PluginV1):
                 self._run(relink_cmd + build_type_args, cwd=work_dir)
 
     def _build_go_packages(self) -> None:
-        if self.options.go_packages:
-            packages = self.options.go_packages
-        else:
-            packages = self._get_local_main_packages()
-
+        packages = self.options.go_packages or self._get_local_main_packages()
         for package in packages:
             self._build(package=package)
 
@@ -379,13 +369,12 @@ class GoPlugin(PluginV1):
                 common.get_library_paths(root, self.project.arch_triplet)
             )
 
-        cgo_ldflags = _get_cgo_ldflags(library_paths)
-        if cgo_ldflags:
+        if cgo_ldflags := _get_cgo_ldflags(library_paths):
             env["CGO_LDFLAGS"] = cgo_ldflags
 
         if self.project.is_cross_compiling:
-            env["CC"] = "{}-gcc".format(self.project.arch_triplet)
-            env["CXX"] = "{}-g++".format(self.project.arch_triplet)
+            env["CC"] = f"{self.project.arch_triplet}-gcc"
+            env["CXX"] = f"{self.project.arch_triplet}-g++"
             env["CGO_ENABLED"] = "1"
             # See https://golang.org/doc/install/source#environment
             go_archs = {"armhf": "arm", "i386": "386", "ppc64el": "ppc64le"}

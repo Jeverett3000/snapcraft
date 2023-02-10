@@ -47,10 +47,7 @@ class BuildState(PartState):
         # FIXME: for 3.x the name `schema_properties` is leaking
         #        implementation details from a higher layer.
         self.schema_properties = property_names
-        if plugin_assets:
-            self.assets = plugin_assets
-        else:
-            self.assets = {}
+        self.assets = plugin_assets or {}
         if machine_assets:
             self.assets.update(machine_assets)
 
@@ -72,10 +69,9 @@ class BuildState(PartState):
     def properties_of_interest(self, part_properties):
         """Extract the properties concerning this step from part_properties."""
 
-        properties = {}
-        for name in self.schema_properties:
-            properties[name] = part_properties.get(name)
-
+        properties = {
+            name: part_properties.get(name) for name in self.schema_properties
+        }
         for name in _schema_properties():
             properties[name] = part_properties.get(name)
 

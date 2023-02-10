@@ -54,8 +54,7 @@ class SnapAPI(Requests):
         """
         headers = {}
 
-        brand_store = os.getenv("SNAPCRAFT_UBUNTU_STORE")
-        if brand_store:
+        if brand_store := os.getenv("SNAPCRAFT_UBUNTU_STORE"):
             if api == "v2":
                 headers["Snap-Device-Store"] = brand_store
             elif api == "v1":
@@ -82,14 +81,13 @@ class SnapAPI(Requests):
             }
         )
 
-        params = dict()
-        params[
-            "fields"
-        ] = "channel-map,snap-id,name,publisher,confinement,revision,download"
+        params = {
+            "fields": "channel-map,snap-id,name,publisher,confinement,revision,download"
+        }
         if arch is not None:
             params["architecture"] = arch
-        logger.debug("Getting information for {}".format(snap_name))
-        url = "/v2/snaps/info/{}".format(snap_name)
+        logger.debug(f"Getting information for {snap_name}")
+        url = f"/v2/snaps/info/{snap_name}"
         resp = self.get(url, headers=headers, params=params)
 
         if resp.status_code == 404:
@@ -109,7 +107,7 @@ class SnapAPI(Requests):
         :returns: Assertion for the snap.
         """
         headers = self._get_default_headers(api="v1")
-        logger.debug("Getting snap-declaration for {}".format(snap_id))
+        logger.debug(f"Getting snap-declaration for {snap_id}")
         url = f"/api/v1/snaps/assertions/{assertion_type}/{constants.DEFAULT_SERIES}/{snap_id}"
         response = self.get(url, headers=headers)
         if response.status_code != 200:

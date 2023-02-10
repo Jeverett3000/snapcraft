@@ -58,13 +58,13 @@ class BaseDeltaGenerationTestCase(TestCase):
         )
 
         unique_file_name = tmp_delta.find_unique_file_name(tmp_delta.source_path)
-        self.assertThat(unique_file_name, m.Equals(tmp_delta.source_path + "-0"))
+        self.assertThat(unique_file_name, m.Equals(f"{tmp_delta.source_path}-0"))
         with open(unique_file_name, "wb") as f:
             f.write(b"tmp file.")
 
         self.assertThat(
             tmp_delta.find_unique_file_name(tmp_delta.source_path),
-            m.Equals(tmp_delta.source_path + "-1"),
+            m.Equals(f"{tmp_delta.source_path}-1"),
         )
 
     def test_not_set_delta_property_correctly(self):

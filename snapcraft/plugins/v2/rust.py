@@ -99,9 +99,7 @@ class RustPlugin(PluginV2):
         ]
 
         if self.options.rust_features:
-            cmd.extend(
-                ["--features", "'{}'".format(" ".join(self.options.rust_features))]
-            )
+            cmd.extend(["--features", f"""'{" ".join(self.options.rust_features)}'"""])
 
         return " ".join(cmd)
 

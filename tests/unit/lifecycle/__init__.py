@@ -34,7 +34,7 @@ class LifecycleTestBase(unit.TestCase):
 
         self.fake_install_build_packages = fixtures.MockPatch(
             "snapcraft.internal.lifecycle._runner._install_build_packages",
-            return_value=list(),
+            return_value=[],
         )
         self.useFixture(self.fake_install_build_packages)
 
@@ -47,7 +47,7 @@ class LifecycleTestBase(unit.TestCase):
 
         self.fake_install_build_snaps = fixtures.MockPatch(
             "snapcraft.internal.lifecycle._runner._install_build_snaps",
-            return_value=list(),
+            return_value=[],
         )
         self.useFixture(self.fake_install_build_snaps)
 

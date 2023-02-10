@@ -551,13 +551,11 @@ class _Tracefile:
         self._test = test
 
     def __eq__(self, other):
-        if not hasattr(other, "name"):
-            return False
-
-        if re.match("{}.*/trace.txt".format(tempfile.gettempdir()), other.name):
-            return True
-
-        return False
+        return (
+            bool(re.match(f"{tempfile.gettempdir()}.*/trace.txt", other.name))
+            if hasattr(other, "name")
+            else False
+        )
 
 
 class _Stdout:
@@ -565,10 +563,4 @@ class _Stdout:
         self._test = test
 
     def __eq__(self, other):
-        if not hasattr(other, "name"):
-            return False
-
-        if other.name == "<stdout>":
-            return True
-
-        return False
+        return other.name == "<stdout>" if hasattr(other, "name") else False

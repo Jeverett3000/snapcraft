@@ -103,7 +103,7 @@ def _get_icon_from_snap_file(snap_path):
             raise SnapDataExtractionError(os.path.basename(snap_path))
         logger.debug("Output extracting icon from snap: %s", output)
         for extension in ("png", "svg"):
-            icon_name = "icon.{}".format(extension)
+            icon_name = f"icon.{extension}"
             icon_path = os.path.join(temp_dir, "squashfs-root", "meta/gui", icon_name)
             if os.path.exists(icon_path):
                 icon_file = open(icon_path, "rb")
@@ -116,9 +116,7 @@ def _get_icon_from_snap_file(snap_path):
 
 
 def _get_url_from_error(error: storeapi.errors.StoreAccountInformationError) -> str:
-    if error.extra:  # type: ignore
-        return error.extra[0].get("url")  # type: ignore
-    return ""
+    return error.extra[0].get("url") if error.extra else ""
 
 
 def _check_dev_agreement_and_namespace_statuses(store) -> None:
@@ -137,18 +135,17 @@ def _check_dev_agreement_and_namespace_statuses(store) -> None:
                 storeapi.constants.STORE_DASHBOARD_URL, "/dev/tos"
             )
             choice = echo.prompt(storeapi.constants.AGREEMENT_INPUT_MSG.format(url))
-            if choice in {"y", "Y"}:
-                try:
-                    store.sign_developer_agreement(latest_tos_accepted=True)
-                except:  # noqa LP: #1733003
-                    raise storeapi.errors.NeedTermsSignedError(
-                        storeapi.constants.AGREEMENT_SIGN_ERROR.format(url)
-                    )
-            else:
+            if choice not in {"y", "Y"}:
                 raise storeapi.errors.NeedTermsSignedError(
                     storeapi.constants.AGREEMENT_ERROR
                 )
 
+            try:
+                store.sign_developer_agreement(latest_tos_accepted=True)
+            except:  # noqa LP: #1733003
+                raise storeapi.errors.NeedTermsSignedError(
+                    storeapi.constants.AGREEMENT_SIGN_ERROR.format(url)
+                )
     # Now check account information for the `namespace` status.
     try:
         store.get_account_information()
@@ -446,30 +443,29 @@ def _get_usable_keys(name=None):
 
 
 def _select_key(keys):
-    if len(keys) > 1:
-        print("Select a key:")
-        print()
-        tabulated_keys = tabulate(
-            [(i + 1, key["name"], key["sha3-384"]) for i, key in enumerate(keys)],
-            headers=["Number", "Name", "SHA3-384 fingerprint"],
-            tablefmt="plain",
-        )
-        print(tabulated_keys)
-        print()
-        while True:
-            try:
-                keynum = int(echo.prompt("Key number: ")) - 1
-            except ValueError:
-                continue
-            if keynum >= 0 and keynum < len(keys):
-                return keys[keynum]
-    else:
+    if len(keys) <= 1:
         return keys[0]
+    print("Select a key:")
+    print()
+    tabulated_keys = tabulate(
+        [(i + 1, key["name"], key["sha3-384"]) for i, key in enumerate(keys)],
+        headers=["Number", "Name", "SHA3-384 fingerprint"],
+        tablefmt="plain",
+    )
+    print(tabulated_keys)
+    print()
+    while True:
+        try:
+            keynum = int(echo.prompt("Key number: ")) - 1
+        except ValueError:
+            continue
+        if keynum >= 0 and keynum < len(keys):
+            return keys[keynum]
 
 
 def _export_key(name, account_id):
     return subprocess.check_output(
-        ["snap", "export-key", "--account={}".format(account_id), name],
+        ["snap", "export-key", f"--account={account_id}", name],
         universal_newlines=True,
     )
 
@@ -514,8 +510,7 @@ def list_keys():
 def create_key(name):
     if not name:
         name = "default"
-    keys = list(_get_usable_keys(name=name))
-    if keys:
+    if keys := list(_get_usable_keys(name=name)):
         # `snap create-key` would eventually fail, but we can save the user
         # some time in this obvious error case by not bothering to talk to
         # the store first.
@@ -560,14 +555,12 @@ def register_key(name, use_candid: bool = False) -> None:
     account_key_request = _export_key(key["name"], account_info["account_id"])
     store_client.register_key(account_key_request)
     logger.info(
-        'Done. The key "{}" ({}) may be used to sign your assertions.'.format(
-            key["name"], key["sha3-384"]
-        )
+        f'Done. The key "{key["name"]}" ({key["sha3-384"]}) may be used to sign your assertions.'
     )
 
 
 def register(snap_name: str, is_private: bool = False, store_id: str = None) -> None:
-    logger.info("Registering {}.".format(snap_name))
+    logger.info(f"Registering {snap_name}.")
     StoreClientCLI().register(
         snap_name=snap_name, is_private=is_private, store_id=store_id
     )
@@ -579,9 +572,9 @@ def _generate_snap_build(authority_id, snap_id, grade, key_name, snap_filename):
     cmd = [
         snap_path,
         "sign-build",
-        "--developer-id=" + authority_id,
-        "--snap-id=" + snap_id,
-        "--grade=" + grade,
+        f"--developer-id={authority_id}",
+        f"--snap-id={snap_id}",
+        f"--grade={grade}",
     ]
     if key_name:
         cmd.extend(["-k", key_name])
@@ -611,7 +604,7 @@ def sign_build(snap_filename, key_name=None, local=False):
             snap_name, DEFAULT_SERIES
         ) from e
 
-    snap_build_path = snap_filename + "-build"
+    snap_build_path = f"{snap_filename}-build"
     if os.path.isfile(snap_build_path):
         logger.info("A signed build assertion for this snap already exists.")
         with open(snap_build_path, "rb") as fd:
@@ -631,11 +624,11 @@ def sign_build(snap_filename, key_name=None, local=False):
         )
         with open(snap_build_path, "w+") as fd:
             fd.write(snap_build_content.decode())
-        logger.info("Build assertion {} saved to disk.".format(snap_build_path))
+        logger.info(f"Build assertion {snap_build_path} saved to disk.")
 
     if not local:
         store_client.push_snap_build(snap_id, snap_build_content.decode())
-        logger.info("Build assertion {} uploaded to the Store.".format(snap_build_path))
+        logger.info(f"Build assertion {snap_build_path} uploaded to the Store.")
 
 
 def upload_metadata(snap_filename, force):
@@ -718,13 +711,11 @@ def upload(snap_filename, release_channels=None) -> Tuple[str, int]:
             )
         except storeapi.errors.StoreDeltaApplicationError as e:
             logger.warning(
-                "Error generating delta: {}\n"
-                "Falling back to uploading full snap...".format(str(e))
+                f"Error generating delta: {str(e)}\nFalling back to uploading full snap..."
             )
         except storeapi.errors.StoreUploadError as upload_error:
             logger.warning(
-                "Unable to upload delta to store: {}\n"
-                "Falling back to uploading full snap...".format(upload_error.error_list)
+                f"Unable to upload delta to store: {upload_error.error_list}\nFalling back to uploading full snap..."
             )
 
     if result is None:
@@ -771,7 +762,7 @@ def _upload_delta(
     channels: Optional[List[str]] = None,
 ) -> Dict[str, Any]:
     delta_format = "xdelta3"
-    logger.debug("Found cached source snap {}.".format(source_snap))
+    logger.debug(f"Found cached source snap {source_snap}.")
     target_snap = os.path.join(os.getcwd(), snap_filename)
 
     try:
@@ -814,40 +805,33 @@ def _upload_delta(
             try:
                 os.remove(delta_filename)
             except OSError:
-                logger.warning("Unable to remove delta {}.".format(delta_filename))
+                logger.warning(f"Unable to remove delta {delta_filename}.")
     return result
 
 
 def _get_text_for_opened_channels(opened_channels):
     if len(opened_channels) == 1:
         return "The {!r} channel is now open.".format(opened_channels[0])
-    else:
-        channels = ("{!r}".format(channel) for channel in opened_channels[:-1])
-        return "The {} and {!r} channels are now open.".format(
-            ", ".join(channels), opened_channels[-1]
-        )
+    channels = ("{!r}".format(channel) for channel in opened_channels[:-1])
+    return "The {} and {!r} channels are now open.".format(
+        ", ".join(channels), opened_channels[-1]
+    )
 
 
 def _get_text_for_channel(channel):
     if "progressive" in channel:
-        notes = "progressive ({}%)".format(channel["progressive"]["percentage"])
+        notes = f'progressive ({channel["progressive"]["percentage"]}%)'
     else:
         notes = "-"
 
     if channel["info"] == "none":
-        channel_text = (channel["channel"], "-", "-", notes, "")
+        return channel["channel"], "-", "-", notes, ""
     elif channel["info"] == "tracking":
-        channel_text = (channel["channel"], "^", "^", notes, "")
+        return channel["channel"], "^", "^", notes, ""
     elif channel["info"] == "specific":
-        channel_text = (
-            channel["channel"],
-            channel["version"],
-            channel["revision"],
-            notes,
-            "",
-        )
+        return channel["channel"], channel["version"], channel["revision"], notes, ""
     elif channel["info"] == "branch":
-        channel_text = (
+        return (
             channel["channel"],
             channel["version"],
             channel["revision"],
@@ -860,9 +844,7 @@ def _get_text_for_channel(channel):
             channel["info"],
             channel["channel"],
         )
-        channel_text = (channel["channel"], "", "", "", "")
-
-    return channel_text
+        return channel["channel"], "", "", "", ""
 
 
 def _tabulated_channel_map_tree(channel_map_tree):
@@ -892,7 +874,7 @@ def _tabulated_channel_map_tree(channel_map_tree):
         for series, series_data in track_data.items():
             for arch, channel_map in series_data.items():
                 channel_maps[arch] = channel_map
-        parsed_channels = [channel for channel in _format_tree(channel_maps, track)]
+        parsed_channels = list(_format_tree(channel_maps, track))
         data += parsed_channels
 
     have_expiration = any(x[6] for x in data)
@@ -963,9 +945,9 @@ def gated(snap_name):
     except KeyError:
         raise storeapi.errors.SnapNotFoundError(snap_name=snap_name)
 
-    validations = store_client.get_assertion(snap_id, endpoint="validations")
-
-    if validations:
+    if validations := store_client.get_assertion(
+        snap_id, endpoint="validations"
+    ):
         table_data = []
         for v in validations:
             name = v["approved-snap-name"]
@@ -1035,13 +1017,11 @@ def validate(
             "snap-id": snap_id,
             "approved-snap-id": approved_snap_id,
             "approved-snap-revision": rev,
-            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "timestamp": f"{datetime.utcnow().isoformat()}Z",
             "revoked": "true" if revoke else "false",
         }
 
-        # check for existing validation assertions
-        existing = existing_validations.get((approved_snap_id, rev))
-        if existing:
+        if existing := existing_validations.get((approved_snap_id, rev)):
             previous_revision = int(existing.get("revision", "0"))
             assertion_payload["revision"] = str(previous_revision + 1)
 
@@ -1059,8 +1039,7 @@ validation_re = re.compile("^[^=]+=[0-9]+$")
 
 
 def _check_validations(validations):
-    invalids = [v for v in validations if not validation_re.match(v)]
-    if invalids:
+    if invalids := [v for v in validations if not validation_re.match(v)]:
         raise storeapi.errors.InvalidValidationRequestsError(invalids)
 
 
@@ -1072,7 +1051,7 @@ def _sign_assertion(snap_name, assertion, key, endpoint):
         cmdline, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
     data = json.dumps(assertion).encode("utf8")
-    echo.info("Signing {} assertion for {}".format(endpoint, snap_name))
+    echo.info(f"Signing {endpoint} assertion for {snap_name}")
     assertion, err = snap_sign.communicate(input=data)
     if snap_sign.returncode != 0:
         err = err.decode()

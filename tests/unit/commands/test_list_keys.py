@@ -32,9 +32,9 @@ class ListKeysCommandTestCase(FakeStoreCommandsBaseTestCase):
         # TODO: look into why this many calls are done inside snapcraft.storeapi
         self.fake_store_account_info.mock.side_effect = [
             storeapi.http_clients.errors.InvalidCredentialsError("error"),
-            {"account_id": "abcd", "account_keys": list()},
-            {"account_id": "abcd", "account_keys": list()},
-            {"account_id": "abcd", "account_keys": list()},
+            {"account_id": "abcd", "account_keys": []},
+            {"account_id": "abcd", "account_keys": []},
+            {"account_id": "abcd", "account_keys": []},
         ]
 
         result = self.run_command(

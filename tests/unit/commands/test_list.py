@@ -31,9 +31,9 @@ class ListTest(FakeStoreCommandsBaseTestCase):
         # TODO: look into why this many calls are done inside snapcraft.storeapi
         self.fake_store_account_info.mock.side_effect = [
             storeapi.http_clients.errors.InvalidCredentialsError("error"),
-            {"account_id": "abcd", "snaps": dict()},
-            {"account_id": "abcd", "snaps": dict()},
-            {"account_id": "abcd", "snaps": dict()},
+            {"account_id": "abcd", "snaps": {}},
+            {"account_id": "abcd", "snaps": {}},
+            {"account_id": "abcd", "snaps": {}},
         ]
 
         result = self.run_command(
@@ -46,7 +46,7 @@ class ListTest(FakeStoreCommandsBaseTestCase):
     def test_list_empty(self):
         self.fake_store_account_info.mock.return_value = {
             "account_id": "abcd",
-            "snaps": dict(),
+            "snaps": {},
         }
 
         result = self.run_command([self.command_name])
@@ -58,7 +58,7 @@ class ListTest(FakeStoreCommandsBaseTestCase):
         self.command_name = "list-registered"
         self.fake_store_account_info.mock.return_value = {
             "account_id": "abcd",
-            "snaps": dict(),
+            "snaps": {},
         }
 
         result = self.run_command([self.command_name])
@@ -70,7 +70,7 @@ class ListTest(FakeStoreCommandsBaseTestCase):
         self.command_name = "registered"
         self.fake_store_account_info.mock.return_value = {
             "account_id": "abcd",
-            "snaps": dict(),
+            "snaps": {},
         }
 
         result = self.run_command([self.command_name])

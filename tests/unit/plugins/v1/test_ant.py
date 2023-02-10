@@ -46,15 +46,13 @@ class AntPluginPropertiesTest(unit.TestCase):
         self.assertThat(
             properties_type,
             Equals("object"),
-            'Expected "ant-properties" "type" to be "object", '
-            'but it was "{}"'.format(properties_type),
+            f'Expected "ant-properties" "type" to be "object", but it was "{properties_type}"',
         )
         build_targets_type = schema["properties"]["ant-build-targets"]["type"]
         self.assertThat(
             build_targets_type,
             Equals("array"),
-            'Expected "ant-build-targets" "type" to be "object", '
-            'but it was "{}"'.format(build_targets_type),
+            f'Expected "ant-build-targets" "type" to be "object", but it was "{build_targets_type}"',
         )
 
     def test_get_pull_properties(self):
@@ -90,14 +88,11 @@ class AntPluginPropertiesTest(unit.TestCase):
 
 
 def _get_expected_java_version(ant_plugin) -> str:
-    ant_openjdk_version = ant_plugin.options.ant_openjdk_version
-
-    if ant_openjdk_version:
-        expected_java_version = ant_openjdk_version
-    else:
-        expected_java_version = "11"
-
-    return expected_java_version
+    return (
+        ant_openjdk_version
+        if (ant_openjdk_version := ant_plugin.options.ant_openjdk_version)
+        else "11"
+    )
 
 
 _BASE_JAVA_COMBINATIONS = [
@@ -243,7 +238,7 @@ class AntPluginSnapTest(PluginsV1BaseTestCase):
             "usr",
             "lib",
             "jvm",
-            "java-{}-openjdk-amd64".format(plugin._java_version),
+            f"java-{plugin._java_version}-openjdk-amd64",
             "bin",
             "java",
         )
@@ -267,7 +262,7 @@ class AntPluginSnapTest(PluginsV1BaseTestCase):
         self.run_mock.assert_called_once_with(
             ["ant"], cwd=plugin.builddir, env=mock.ANY
         )
-        self.assertEqual(plugin.build_snaps, ["ant/" + ant._DEFAULT_ANT_SNAP_CHANNEL])
+        self.assertEqual(plugin.build_snaps, [f"ant/{ant._DEFAULT_ANT_SNAP_CHANNEL}"])
 
     def test_build_with_explicit_snap(self):
         self.options.ant_channel = "other/channel"

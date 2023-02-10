@@ -43,7 +43,7 @@ class LogTestCase(unit.TestCase):
 
         stdout = self.fake_terminal.getvalue()
         self.assertThat(stdout, Contains("Test debug"))
-        expected_info = "{}Test info\033[0m".format(self.info_color)
+        expected_info = f"{self.info_color}Test info\033[0m"
         self.assertThat(stdout, Contains(expected_info))
         self.assertThat(self.fake_terminal.getvalue(stderr=True), Equals(""))
 
@@ -59,11 +59,11 @@ class LogTestCase(unit.TestCase):
         logger.critical("Test critical")
 
         stderr = self.fake_terminal.getvalue(stderr=True)
-        expected_warning = "{}Test warning\033[0m".format(self.warning_color)
+        expected_warning = f"{self.warning_color}Test warning\033[0m"
         self.assertThat(stderr, Contains(expected_warning))
-        expected_error = "{}Test error\033[0m".format(self.error_color)
+        expected_error = f"{self.error_color}Test error\033[0m"
         self.assertThat(stderr, Contains(expected_error))
-        expected_crit = "{}Test critical\033[0m".format(self.critical_color)
+        expected_crit = f"{self.critical_color}Test critical\033[0m"
         self.assertThat(stderr, Contains(expected_crit))
         self.assertThat(self.fake_terminal.getvalue(), Equals(""))
 
@@ -80,15 +80,15 @@ class LogTestCase(unit.TestCase):
 
         stdout = self.fake_terminal.getvalue()
         self.assertThat(stdout, Not(Contains("Test debug")))
-        expected_info = "{}Test info\033[0m".format(self.info_color)
+        expected_info = f"{self.info_color}Test info\033[0m"
         self.assertThat(stdout, Contains(expected_info))
 
         stderr = self.fake_terminal.getvalue(stderr=True)
-        expected_warning = "{}Test warning\033[0m".format(self.warning_color)
+        expected_warning = f"{self.warning_color}Test warning\033[0m"
         self.assertThat(stderr, Contains(expected_warning))
-        expected_error = "{}Test error\033[0m".format(self.error_color)
+        expected_error = f"{self.error_color}Test error\033[0m"
         self.assertThat(stderr, Contains(expected_error))
-        expected_crit = "{}Test critical\033[0m".format(self.critical_color)
+        expected_crit = f"{self.critical_color}Test critical\033[0m"
         self.assertThat(stderr, Contains(expected_crit))
 
     def test_configure_must_support_debug(self):
@@ -104,15 +104,15 @@ class LogTestCase(unit.TestCase):
 
         stdout = self.fake_terminal.getvalue()
         self.assertThat(stdout, Contains("Test debug"))
-        expected_info = "{}Test info\033[0m".format(self.info_color)
+        expected_info = f"{self.info_color}Test info\033[0m"
         self.assertThat(stdout, Contains(expected_info))
 
         stderr = self.fake_terminal.getvalue(stderr=True)
-        expected_warning = "{}Test warning\033[0m".format(self.warning_color)
+        expected_warning = f"{self.warning_color}Test warning\033[0m"
         self.assertThat(stderr, Contains(expected_warning))
-        expected_error = "{}Test error\033[0m".format(self.error_color)
+        expected_error = f"{self.error_color}Test error\033[0m"
         self.assertThat(stderr, Contains(expected_error))
-        expected_crit = "{}Test critical\033[0m".format(self.critical_color)
+        expected_crit = f"{self.critical_color}Test critical\033[0m"
         self.assertThat(stderr, Contains(expected_crit))
 
     def test_configure_must_support_no_tty(self):

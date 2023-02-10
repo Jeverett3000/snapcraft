@@ -55,11 +55,7 @@ class Tar(FileBase):
 
     def provision(self, dst, clean_target=True, keep_tarball=False, src=None):
         # TODO add unit tests.
-        if src:
-            tarball = src
-        else:
-            tarball = os.path.join(self.source_dir, os.path.basename(self.source))
-
+        tarball = src or os.path.join(self.source_dir, os.path.basename(self.source))
         if clean_target:
             tmp_tarball = tempfile.NamedTemporaryFile().name
             shutil.move(tarball, tmp_tarball)
@@ -87,7 +83,7 @@ class Tar(FileBase):
                 # check all members either start with common dir
                 for m in members:
                     if not (
-                        m.name.startswith(common + "/")
+                        m.name.startswith(f"{common}/")
                         or m.isdir()
                         and m.name == common
                     ):
@@ -108,12 +104,12 @@ class Tar(FileBase):
             tar.extractall(members=filter_members(tar), path=dst)
 
     def _strip_prefix(self, common, member):
-        if member.name.startswith(common + "/"):
-            member.name = member.name[len(common + "/") :]
+        if member.name.startswith(f"{common}/"):
+            member.name = member.name[len(f"{common}/"):]
         # strip leading '/', './' or '../' as many times as needed
         member.name = re.sub(r"^(\.{0,2}/)*", r"", member.name)
         # do the same for linkname if this is a hardlink
         if member.islnk() and not member.issym():
-            if member.linkname.startswith(common + "/"):
-                member.linkname = member.linkname[len(common + "/") :]
+            if member.linkname.startswith(f"{common}/"):
+                member.linkname = member.linkname[len(f"{common}/"):]
             member.linkname = re.sub(r"^(\.{0,2}/)*", r"", member.linkname)

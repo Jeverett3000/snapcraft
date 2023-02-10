@@ -174,10 +174,7 @@ class FakeTerminal(fixtures.Fixture):
         self.addCleanup(patcher.stop)
 
     def getvalue(self, stderr=False):
-        if stderr:
-            return self.mock_stderr.getvalue()
-        else:
-            return self.mock_stdout.getvalue()
+        return self.mock_stderr.getvalue() if stderr else self.mock_stdout.getvalue()
 
 
 class FakePartsWiki(fixtures.Fixture):
@@ -281,7 +278,7 @@ class FakeServerRunning(fixtures.Fixture):
         server_thread = threading.Thread(target=self.server.serve_forever)
         server_thread.start()
         self.addCleanup(self._stop_fake_server, server_thread)
-        self.url = "http://localhost:{}/".format(self.server.server_port)
+        self.url = f"http://localhost:{self.server.server_port}/"
 
     def _stop_fake_server(self, thread):
         self.server.shutdown()
@@ -374,7 +371,7 @@ class TestStore(fixtures.Fixture):
             self.register_count_limit = 10
             self.reserved_snap_name = "bash"
         else:
-            raise ValueError("Unknown test store option: {}".format(test_store))
+            raise ValueError(f"Unknown test store option: {test_store}")
 
         # Do not change this email address. If you use a different address, it
         # will pollute KPIs, so always notify the store team if you need to use
@@ -478,7 +475,7 @@ class SvnRepo(fixtures.Fixture):
             [
                 "svn",
                 "checkout",
-                "file://{}".format(os.path.join(os.getcwd(), self.name)),
+                f"file://{os.path.join(os.getcwd(), self.name)}",
                 working_tree,
             ]
         )
@@ -580,10 +577,10 @@ class SnapcraftYaml(fixtures.Fixture):
         super().__init__()
 
         if apps is None:
-            apps = dict()
+            apps = {}
 
         if parts is None:
-            parts = dict()
+            parts = {}
 
         self.path = path
         self.data = {
@@ -640,7 +637,7 @@ class SharedCache(fixtures.Fixture):
     def setUp(self) -> None:
         super().setUp()
         shared_cache_dir = os.path.join(
-            tempfile.gettempdir(), "snapcraft_test_cache_{}".format(self.name)
+            tempfile.gettempdir(), f"snapcraft_test_cache_{self.name}"
         )
         os.makedirs(shared_cache_dir, exist_ok=True)
         self.useFixture(
@@ -685,8 +682,7 @@ class FakeBaseEnvironment(fixtures.Fixture):
             architecture = self._WINDOWS_TRANSLATIONS[architecture]
 
         if platform.architecture()[0] == "32bit":
-            userspace = self._32BIT_USERSPACE_ARCHITECTURE[architecture]
-            if userspace:
+            if userspace := self._32BIT_USERSPACE_ARCHITECTURE[architecture]:
                 architecture = userspace
 
         return architecture

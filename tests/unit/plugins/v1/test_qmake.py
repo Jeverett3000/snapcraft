@@ -69,16 +69,14 @@ class QMakeTestCase(PluginsV1BaseTestCase):
         self.assertThat(
             options_type,
             Equals("array"),
-            'Expected "options" "type" to be "array", but it '
-            'was "{}"'.format(options_type),
+            f'Expected "options" "type" to be "array", but it was "{options_type}"',
         )
 
         options_minitems = options["minitems"]
         self.assertThat(
             options_minitems,
             Equals(1),
-            'Expected "options" "minitems" to be 1, but '
-            "it was {}".format(options_minitems),
+            f'Expected "options" "minitems" to be 1, but it was {options_minitems}',
         )
 
         self.assertTrue(options["uniqueItems"])
@@ -87,8 +85,7 @@ class QMakeTestCase(PluginsV1BaseTestCase):
         self.assertThat(
             options_default,
             Equals([]),
-            'Expected "options" "default" to be [], but '
-            "it was {}".format(options_default),
+            f'Expected "options" "default" to be [], but it was {options_default}',
         )
 
         options_items = options["items"]
@@ -101,8 +98,7 @@ class QMakeTestCase(PluginsV1BaseTestCase):
         self.assertThat(
             options_items_type,
             Equals("string"),
-            'Expected "options" "items" "type" to be '
-            '"string", but it was "{}"'.format(options_items_type),
+            f'Expected "options" "items" "type" to be "string", but it was "{options_items_type}"',
         )
 
         # Check qt-version property
@@ -113,14 +109,13 @@ class QMakeTestCase(PluginsV1BaseTestCase):
 
         qt_version_enum = qt_version["enum"]
         # Using sets for order independence in the comparison
-        self.assertThat(set(qt_version_enum), Equals(set(["qt4", "qt5"])))
+        self.assertThat(set(qt_version_enum), Equals({"qt4", "qt5"}))
 
         qt_version_default = qt_version["default"]
         self.assertThat(
             qt_version_default,
             Equals("qt5"),
-            'Expected "qt_version" "default" to be "qt5", but '
-            "it was {}".format(qt_version_default),
+            f'Expected "qt_version" "default" to be "qt5", but it was {qt_version_default}',
         )
 
         # Check project-files property
@@ -135,16 +130,14 @@ class QMakeTestCase(PluginsV1BaseTestCase):
         self.assertThat(
             project_files_type,
             Equals("array"),
-            'Expected "project_files" "type" to be "array", but '
-            'it was "{}"'.format(project_files_type),
+            f'Expected "project_files" "type" to be "array", but it was "{project_files_type}"',
         )
 
         project_files_minitems = project_files["minitems"]
         self.assertThat(
             project_files_minitems,
             Equals(1),
-            'Expected "project_files" "minitems" to be 1, but '
-            "it was {}".format(project_files_minitems),
+            f'Expected "project_files" "minitems" to be 1, but it was {project_files_minitems}',
         )
 
         self.assertTrue(project_files["uniqueItems"])
@@ -153,8 +146,7 @@ class QMakeTestCase(PluginsV1BaseTestCase):
         self.assertThat(
             project_files_default,
             Equals([]),
-            'Expected "project_files" "default" to be [], but '
-            "it was {}".format(project_files_default),
+            f'Expected "project_files" "default" to be [], but it was {project_files_default}',
         )
 
         project_files_items = project_files["items"]
@@ -167,8 +159,7 @@ class QMakeTestCase(PluginsV1BaseTestCase):
         self.assertThat(
             project_files_items_type,
             Equals("string"),
-            'Expected "project_files" "items" "type" to be '
-            '"string", but it was "{}"'.format(project_files_items_type),
+            f'Expected "project_files" "items" "type" to be "string", but it was "{project_files_items_type}"',
         )
 
     def test_get_build_properties(self):
@@ -211,7 +202,7 @@ class QMakeTestCase(PluginsV1BaseTestCase):
                 mock.call(["qmake"], cwd=plugin.builddir, env=mock.ANY),
                 mock.call(["make", "-j2"], cwd=plugin.builddir, env=mock.ANY),
                 mock.call(
-                    ["make", "install", "INSTALL_ROOT={}".format(plugin.installdir)],
+                    ["make", "install", f"INSTALL_ROOT={plugin.installdir}"],
                     cwd=plugin.builddir,
                     env=mock.ANY,
                 ),
@@ -230,7 +221,7 @@ class QMakeTestCase(PluginsV1BaseTestCase):
                 mock.call(["qmake"], cwd=plugin.builddir, env=mock.ANY),
                 mock.call(["make", "-j2"], cwd=plugin.builddir, env=mock.ANY),
                 mock.call(
-                    ["make", "install", "INSTALL_ROOT={}".format(plugin.installdir)],
+                    ["make", "install", f"INSTALL_ROOT={plugin.installdir}"],
                     cwd=plugin.builddir,
                     env=mock.ANY,
                 ),
@@ -252,7 +243,7 @@ class QMakeTestCase(PluginsV1BaseTestCase):
                 ),
                 mock.call(["make", "-j2"], cwd=plugin.builddir, env=mock.ANY),
                 mock.call(
-                    ["make", "install", "INSTALL_ROOT={}".format(plugin.installdir)],
+                    ["make", "install", f"INSTALL_ROOT={plugin.installdir}"],
                     cwd=plugin.builddir,
                     env=mock.ANY,
                 ),
@@ -277,7 +268,7 @@ class QMakeTestCase(PluginsV1BaseTestCase):
                 ),
                 mock.call(["make", "-j2"], cwd=plugin.builddir, env=mock.ANY),
                 mock.call(
-                    ["make", "install", "INSTALL_ROOT={}".format(plugin.installdir)],
+                    ["make", "install", f"INSTALL_ROOT={plugin.installdir}"],
                     cwd=plugin.builddir,
                     env=mock.ANY,
                 ),
@@ -296,7 +287,7 @@ class QMakeTestCase(PluginsV1BaseTestCase):
                 mock.call(["qmake", "-foo"], cwd=plugin.builddir, env=mock.ANY),
                 mock.call(["make", "-j2"], cwd=plugin.builddir, env=mock.ANY),
                 mock.call(
-                    ["make", "install", "INSTALL_ROOT={}".format(plugin.installdir)],
+                    ["make", "install", f"INSTALL_ROOT={plugin.installdir}"],
                     cwd=plugin.builddir,
                     env=mock.ANY,
                 ),
@@ -315,15 +306,15 @@ class QMakeTestCase(PluginsV1BaseTestCase):
                 mock.call(
                     [
                         "qmake",
-                        'LIBS+="-L{}/lib"'.format(plugin.installdir),
-                        'INCLUDEPATH+="{}/include"'.format(plugin.installdir),
+                        f'LIBS+="-L{plugin.installdir}/lib"',
+                        f'INCLUDEPATH+="{plugin.installdir}/include"',
                     ],
                     cwd=plugin.builddir,
                     env=mock.ANY,
                 ),
                 mock.call(["make", "-j2"], cwd=plugin.builddir, env=mock.ANY),
                 mock.call(
-                    ["make", "install", "INSTALL_ROOT={}".format(plugin.installdir)],
+                    ["make", "install", f"INSTALL_ROOT={plugin.installdir}"],
                     cwd=plugin.builddir,
                     env=mock.ANY,
                 ),
@@ -342,15 +333,15 @@ class QMakeTestCase(PluginsV1BaseTestCase):
                 mock.call(
                     [
                         "qmake",
-                        'LIBS+="-L{}/lib"'.format(plugin.project.stage_dir),
-                        'INCLUDEPATH+="{}/include"'.format(plugin.project.stage_dir),
+                        f'LIBS+="-L{plugin.project.stage_dir}/lib"',
+                        f'INCLUDEPATH+="{plugin.project.stage_dir}/include"',
                     ],
                     cwd=plugin.builddir,
                     env=mock.ANY,
                 ),
                 mock.call(["make", "-j2"], cwd=plugin.builddir, env=mock.ANY),
                 mock.call(
-                    ["make", "install", "INSTALL_ROOT={}".format(plugin.installdir)],
+                    ["make", "install", f"INSTALL_ROOT={plugin.installdir}"],
                     cwd=plugin.builddir,
                     env=mock.ANY,
                 ),
@@ -400,7 +391,5 @@ class QMakeTestCase(PluginsV1BaseTestCase):
                 self.assertThat(
                     environment[variable],
                     Equals(value),
-                    "Expected ${}={}, but it was {}".format(
-                        variable, value, environment[variable]
-                    ),
+                    f"Expected ${variable}={value}, but it was {environment[variable]}",
                 )

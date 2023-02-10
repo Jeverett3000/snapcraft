@@ -61,7 +61,7 @@ class TestSetupPy:
     scenarios = multiply_scenarios(metadata, tools)
 
     def create_setuppy(self, import_statement, method, parameters):
-        params = ['    {}="{}",'.format(k, v) for k, v in parameters.items() if v]
+        params = [f'    {k}="{v}",' for k, v in parameters.items() if v]
 
         fmt = dict(
             params="\n".join(params), import_statement=import_statement, method=method

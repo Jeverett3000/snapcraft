@@ -31,7 +31,7 @@ if TYPE_CHECKING:
 def annotate_snapcraft(project: "Project", data: Dict[str, Any]) -> Dict[str, Any]:
     manifest = OrderedDict()  # type: Dict[str, Any]
     manifest["snapcraft-version"] = snapcraft._get_version()
-    manifest["snapcraft-started-at"] = project._get_start_time().isoformat() + "Z"
+    manifest["snapcraft-started-at"] = f"{project._get_start_time().isoformat()}Z"
 
     release = os_release.OsRelease()
     with contextlib.suppress(errors.OsReleaseIdError):
@@ -41,8 +41,7 @@ def annotate_snapcraft(project: "Project", data: Dict[str, Any]) -> Dict[str, An
 
     for k, v in data.items():
         manifest[k] = v
-    image_info = os.environ.get("SNAPCRAFT_IMAGE_INFO")
-    if image_info:
+    if image_info := os.environ.get("SNAPCRAFT_IMAGE_INFO"):
         try:
             image_info_dict = json.loads(image_info)
         except json.decoder.JSONDecodeError as exception:
@@ -62,8 +61,7 @@ def annotate_snapcraft(project: "Project", data: Dict[str, Any]) -> Dict[str, An
         manifest["parts"][part]["stage-packages"] = sorted(
             pull_state.assets.get("stage-packages", [])
         )
-        source_details = pull_state.assets.get("source-details", {})
-        if source_details:
+        if source_details := pull_state.assets.get("source-details", {}):
             manifest["parts"][part].update(source_details)
         build_state = get_state(state_dir, steps.BUILD)
         manifest["parts"][part].update(build_state.assets)

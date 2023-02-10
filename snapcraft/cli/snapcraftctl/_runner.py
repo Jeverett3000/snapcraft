@@ -31,11 +31,7 @@ from snapcraft.internal import errors, log
 def run(debug):
     """snapcraftctl is how snapcraft.yaml can communicate with snapcraft"""
 
-    if debug:
-        log_level = logging.DEBUG
-    else:
-        log_level = logging.INFO
-
+    log_level = logging.DEBUG if debug else logging.INFO
     # Setup global exception handler (to be called for unhandled exceptions)
     sys.excepthook = functools.partial(exception_handler, debug=debug)
 
@@ -69,7 +65,7 @@ def prime():
 
 def validate_version(ctx, param, value):
     if not value:
-        raise click.BadParameter(f"Version must be a non-empty string.")
+        raise click.BadParameter("Version must be a non-empty string.")
     return value
 
 
@@ -82,7 +78,7 @@ def set_version(version):
 
 def validate_grade(ctx, param, value):
     if value not in ["stable", "devel"]:
-        raise click.BadParameter(f"Grade must be 'stable' or 'devel'.")
+        raise click.BadParameter("Grade must be 'stable' or 'devel'.")
     return value
 
 

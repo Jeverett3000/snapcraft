@@ -58,10 +58,7 @@ def download_requests_stream(request_stream, destination, message=None, total_re
     progress_bar = _init_progress_bar(total_length, destination, message)
     progress_bar.start()
 
-    if os.path.exists(destination):
-        mode = "ab"
-    else:
-        mode = "wb"
+    mode = "ab" if os.path.exists(destination) else "wb"
     with open(destination, mode) as destination_file:
         for buf in request_stream.iter_content(1024):
             destination_file.write(buf)

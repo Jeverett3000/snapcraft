@@ -129,7 +129,7 @@ class SignBuildTestCase(CommandBaseTestCase):
                 "for use with snap."
             ),
         )
-        snap_build_path = self.snap_test.snap_path + "-build"
+        snap_build_path = f"{self.snap_test.snap_path}-build"
         self.assertThat(snap_build_path, Not(FileExists()))
 
     @mock.patch.object(storeapi._dashboard_api.DashboardAPI, "get_account_information")
@@ -160,7 +160,7 @@ class SignBuildTestCase(CommandBaseTestCase):
             Contains("See the keys available in your system with `snapcraft keys`."),
         )
 
-        snap_build_path = self.snap_test.snap_path + "-build"
+        snap_build_path = f"{self.snap_test.snap_path}-build"
         self.assertThat(snap_build_path, Not(FileExists()))
 
     @mock.patch.object(storeapi._dashboard_api.DashboardAPI, "get_account_information")
@@ -197,7 +197,7 @@ class SignBuildTestCase(CommandBaseTestCase):
                 "before signing and uploading signatures to the Store."
             ),
         )
-        snap_build_path = self.snap_test.snap_path + "-build"
+        snap_build_path = f"{self.snap_test.snap_path}-build"
         self.assertThat(snap_build_path, Not(FileExists()))
 
     @mock.patch.object(storeapi._dashboard_api.DashboardAPI, "get_account_information")
@@ -235,7 +235,7 @@ class SignBuildTestCase(CommandBaseTestCase):
                 )
             ),
         )
-        snap_build_path = self.snap_test.snap_path + "-build"
+        snap_build_path = f"{self.snap_test.snap_path}-build"
         self.assertThat(snap_build_path, Not(FileExists()))
 
     @mock.patch.object(storeapi._dashboard_api.DashboardAPI, "get_account_information")
@@ -257,10 +257,10 @@ class SignBuildTestCase(CommandBaseTestCase):
         result = self.run_command(["sign-build", self.snap_test.snap_path, "--local"])
 
         self.assertThat(result.exit_code, Equals(0))
-        snap_build_path = self.snap_test.snap_path + "-build"
+        snap_build_path = f"{self.snap_test.snap_path}-build"
         self.assertThat(
             result.output,
-            Contains("Build assertion {} saved to disk.".format(snap_build_path)),
+            Contains(f"Build assertion {snap_build_path} saved to disk."),
         )
         self.assertThat(snap_build_path, FileExists())
         fake_check_output.mock.assert_called_with(
@@ -296,10 +296,10 @@ class SignBuildTestCase(CommandBaseTestCase):
         result = self.run_command(["sign-build", self.snap_test.snap_path, "--local"])
 
         self.assertThat(result.exit_code, Equals(0))
-        snap_build_path = self.snap_test.snap_path + "-build"
+        snap_build_path = f"{self.snap_test.snap_path}-build"
         self.assertThat(
             result.output,
-            Contains("Build assertion {} saved to disk.".format(snap_build_path)),
+            Contains(f"Build assertion {snap_build_path} saved to disk."),
         )
         self.assertThat(snap_build_path, FileExists())
         fake_check_output.mock.assert_called_with(
@@ -339,16 +339,14 @@ class SignBuildTestCase(CommandBaseTestCase):
         result = self.run_command(["sign-build", self.snap_test.snap_path])
 
         self.assertThat(result.exit_code, Equals(0))
-        snap_build_path = self.snap_test.snap_path + "-build"
+        snap_build_path = f"{self.snap_test.snap_path}-build"
         self.assertThat(
             result.output,
-            Contains("Build assertion {} saved to disk.".format(snap_build_path)),
+            Contains(f"Build assertion {snap_build_path} saved to disk."),
         )
         self.assertThat(
             result.output,
-            Contains(
-                "Build assertion {} uploaded to the Store.".format(snap_build_path)
-            ),
+            Contains(f"Build assertion {snap_build_path} uploaded to the Store."),
         )
         self.assertThat(snap_build_path, FileExists())
         fake_check_output.mock.assert_called_with(
@@ -377,22 +375,20 @@ class SignBuildTestCase(CommandBaseTestCase):
         }
         mock_get_snap_data.return_value = {"name": "test-snap", "grade": "stable"}
 
-        snap_build_path = self.snap_test.snap_path + "-build"
+        snap_build_path = f"{self.snap_test.snap_path}-build"
         with open(snap_build_path, "wb") as fd:
             fd.write(b"Already signed assertion")
 
         result = self.run_command(["sign-build", self.snap_test.snap_path])
 
         self.assertThat(result.exit_code, Equals(0))
-        snap_build_path = self.snap_test.snap_path + "-build"
+        snap_build_path = f"{self.snap_test.snap_path}-build"
         self.assertThat(
             result.output,
             Contains("A signed build assertion for this snap already exists."),
         )
         self.assertThat(
             result.output,
-            Contains(
-                "Build assertion {} uploaded to the Store.".format(snap_build_path)
-            ),
+            Contains(f"Build assertion {snap_build_path} uploaded to the Store."),
         )
         mock_push_snap_build.assert_called_with("snap-id", "Already signed assertion")

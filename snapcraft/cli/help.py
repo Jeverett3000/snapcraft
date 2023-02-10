@@ -93,7 +93,7 @@ def help_command(ctx, topic, devel, base):
         except ImportError:
             # 10 is the limit which determines ellipsis is needed
             if len(topic) > 10:
-                topic = "{}...".format(topic[:10])
+                topic = f"{topic[:10]}..."
             echo.wrapped(
                 dedent(
                     """\
@@ -124,19 +124,14 @@ def _topic_help(module_name, devel):
 
 
 def _module_help(plugin_name: str, devel: bool, base: str):
-    module_name = plugin_name.replace("-", "_")
-
     if base is None:
         try:
             base = get_project()._snap_meta.get_build_base()
         except (errors.ProjectNotFoundError, project_errors.MissingSnapcraftYamlError):
             base = "core20"
 
-    if base == "core20":
-        plugin_version = "v2"
-    else:
-        plugin_version = "v1"
-
+    plugin_version = "v2" if base == "core20" else "v1"
+    module_name = plugin_name.replace("-", "_")
     module = importlib.import_module(
         f"snapcraft.plugins.{plugin_version}.{module_name}"
     )
@@ -144,8 +139,7 @@ def _module_help(plugin_name: str, devel: bool, base: str):
         help(module)
     elif module.__doc__:
         click.echo_via_pager(
-            f"Displaying help for the {plugin_name!r} plugin for {base!r}.\n\n"
-            + module.__doc__
+            f"Displaying help for the {plugin_name!r} plugin for {base!r}.\n\n{module.__doc__}"
         )
     else:
         click.echo("The plugin has no documentation")

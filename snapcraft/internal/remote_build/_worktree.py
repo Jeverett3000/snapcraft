@@ -123,7 +123,7 @@ class WorkTree:
         :param str selector: Source selector, if any (e.g. "on amd64").
         :return: File path for tarball.
         """
-        tarball_filename = part_name + ".tar.gz"
+        tarball_filename = f"{part_name}.tar.gz"
         if selector:
             return os.path.join(
                 self._repo_sources_dir, part_name, selector, tarball_filename
@@ -140,7 +140,7 @@ class WorkTree:
         source_path = self._get_part_cache_dir(part_name, selector)
         archive_path = self._get_part_tarball_path(part_name, selector)
 
-        logger.debug("creating source archive: {}".format(archive_path))
+        logger.debug(f"creating source archive: {archive_path}")
 
         os.makedirs(os.path.split(archive_path)[0], exist_ok=True)
         command = ["tar", "czf", archive_path, "-C", source_path, "."]
@@ -161,11 +161,7 @@ class WorkTree:
         download_dir = self._get_part_cache_dir(part_name, selector)
         source_handler = self._get_part_source_handler(part_name, source, download_dir)
 
-        if selector:
-            print_name = "{} [selector='{}']".format(part_name, selector)
-        else:
-            print_name = part_name
-
+        print_name = f"{part_name} [selector='{selector}']" if selector else part_name
         # Skip non-local sources (the remote builder can fetch those directly),
         # unless configured to package all sources.
         is_local_source = isinstance(
@@ -175,10 +171,10 @@ class WorkTree:
             and source_handler.is_local()
         )
         if not self._package_all_sources and not is_local_source:
-            logger.debug("passing through source for {}: {}".format(print_name, source))
+            logger.debug(f"passing through source for {print_name}: {source}")
             return source
 
-        logger.info("Packaging sources for {}...".format(print_name))
+        logger.info(f"Packaging sources for {print_name}...")
 
         # Remove existing cache directory (if exists)
         if os.path.exists(download_dir):
@@ -203,7 +199,7 @@ class WorkTree:
         :param OrderedDict part_config: Part configuration for specified part.
         :return: Modified part configuration for prepared snapcraft.yaml.
         """
-        logger.debug("processing {}: {}".format(part_name, part_config))
+        logger.debug(f"processing {part_name}: {part_config}")
 
         # We will be modifying part_config, copy it.
         part_config = deepcopy(part_config)
@@ -259,15 +255,13 @@ class WorkTree:
     def _copy_assets(self):
         """Copy assets directly to repository, if exists."""
         assets_dir = self._project._get_snapcraft_assets_dir()
-        logger.debug("assets expected at: {}".format(assets_dir))
+        logger.debug(f"assets expected at: {assets_dir}")
 
         # Assets directory exists, but may not actually contain assets.
         # The snapd project is an example of this.  The sanity checker
         # will warn to the user when the project is built.
         if os.path.exists(assets_dir):
-            logger.debug(
-                "copying assets: {} -> {}".format(assets_dir, self._repo_snap_dir)
-            )
+            logger.debug(f"copying assets: {assets_dir} -> {self._repo_snap_dir}")
 
             # Remove existing assets, and update copy.
             if os.path.exists(self._repo_snap_dir):
@@ -283,9 +277,7 @@ class WorkTree:
 
         self._repo_plugins_dir = os.path.join(self._repo_snap_dir, "plugins")
         logger.debug(
-            "copying local plugins: {} -> {}".format(
-                plugins_dir, self._repo_plugins_dir
-            )
+            f"copying local plugins: {plugins_dir} -> {self._repo_plugins_dir}"
         )
         shutil.copytree(plugins_dir, self._repo_plugins_dir)
 

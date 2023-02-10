@@ -320,13 +320,9 @@ class ColconPlugin(PluginV1):
         """Runtime environment for ROS binaries and services."""
 
         env = [
-            'AMENT_PYTHON_EXECUTABLE="{}"'.format(
-                os.path.join(root, "usr", "bin", "python3")
-            ),
-            'COLCON_PYTHON_EXECUTABLE="{}"'.format(
-                os.path.join(root, "usr", "bin", "python3")
-            ),
-            'SNAP_COLCON_ROOT="{}"'.format(root),
+            f'AMENT_PYTHON_EXECUTABLE="{os.path.join(root, "usr", "bin", "python3")}"',
+            f'COLCON_PYTHON_EXECUTABLE="{os.path.join(root, "usr", "bin", "python3")}"',
+            f'SNAP_COLCON_ROOT="{root}"',
         ]
 
         # Each of these lines is prepended with an `export` when the environment is
@@ -503,10 +499,7 @@ class ColconPlugin(PluginV1):
         # /usr/lib, /usr/include, etc.). They need to be rewritten to point to
         # the install directory.
         def _new_path(path):
-            if not path.startswith(self.installdir):
-                # Not using os.path.join here as `path` is absolute.
-                return self.installdir + path
-            return path
+            return path if path.startswith(self.installdir) else self.installdir + path
 
         self._rewrite_cmake_paths(_new_path)
 
@@ -654,26 +647,20 @@ class ColconPlugin(PluginV1):
                 ["--packages-ignore"] + self.options.colcon_packages_ignore
             )
 
-        # Don't clutter the real ROS workspace-- use the Snapcraft build
-        # directory
-        colconcmd.extend(["--build-base", self.builddir])
-
-        # Account for a non-default source space by always specifying it
-        colconcmd.extend(["--base-paths", self._ros_package_path])
-
-        # Specify that the packages should be installed into the overlay
-        colconcmd.extend(["--install-base", self._ros_overlay])
-
-        # Specify the number of workers
-        colconcmd.append("--parallel-workers={}".format(self.parallel_build_count))
-
-        # All the arguments that follow are meant for CMake
-        colconcmd.append("--cmake-args")
-
-        build_type = "Release"
-        if "debug" in self.options.build_attributes:
-            build_type = "Debug"
-        colconcmd.extend(["-DCMAKE_BUILD_TYPE={}".format(build_type)])
+        colconcmd.extend(
+            [
+                "--build-base",
+                self.builddir,
+                "--base-paths",
+                self._ros_package_path,
+                "--install-base",
+                self._ros_overlay,
+                f"--parallel-workers={self.parallel_build_count}",
+                "--cmake-args",
+            ]
+        )
+        build_type = "Debug" if "debug" in self.options.build_attributes else "Release"
+        colconcmd.extend([f"-DCMAKE_BUILD_TYPE={build_type}"])
 
         # Finally, add any cmake-args requested from the plugin options
         colconcmd.extend(self.options.colcon_cmake_args)

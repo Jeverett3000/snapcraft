@@ -69,11 +69,11 @@ def convert_metrics_to_table(
     series = sorted(results.series, key=key_as_version)
 
     # Determine headers from series, taking into account whether table will be transposed.
-    if not transpose:
-        initial_column_header = "Date"
-    else:
-        initial_column_header = get_series_label_from_metric_name(results.metric_name)
-
+    initial_column_header = (
+        get_series_label_from_metric_name(results.metric_name)
+        if transpose
+        else "Date"
+    )
     header_row = [
         initial_column_header,
         *[s.name.capitalize() for s in series],

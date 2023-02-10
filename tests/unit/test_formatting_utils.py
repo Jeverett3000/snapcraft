@@ -59,7 +59,7 @@ class HumanizeListTestCases(unit.TestCase):
 
 def test_no_paths():
     with pytest.raises(ValueError):
-        formatting_utils.format_path_variable("PATH", list(), "/usr", ":")
+        formatting_utils.format_path_variable("PATH", [], "/usr", ":")
 
 
 def test_one_path():

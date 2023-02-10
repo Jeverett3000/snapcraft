@@ -115,7 +115,7 @@ class GodepsPlugin(PluginV1):
 
     def _setup_base_tools(self, go_channel):
         if go_channel:
-            self.build_snaps.append("go/{}".format(go_channel))
+            self.build_snaps.append(f"go/{go_channel}")
         else:
             self.build_packages.append("golang-go")
 
@@ -192,7 +192,7 @@ class GodepsPlugin(PluginV1):
         for go_package in self.options.go_packages:
             self._run(["go", "install", go_package])
         if not self.options.go_packages:
-            self._run(["go", "install", "./{}/...".format(self.options.go_importpath)])
+            self._run(["go", "install", f"./{self.options.go_importpath}/..."])
 
         install_bin_path = os.path.join(self.installdir, "bin")
         os.makedirs(install_bin_path, exist_ok=True)
@@ -224,9 +224,7 @@ class GodepsPlugin(PluginV1):
         env["GOBIN"] = self._gopath_bin
 
         # Add $GOPATH/bin so godeps is actually callable.
-        env["PATH"] = "{}:{}".format(
-            os.path.join(self._gopath, "bin"), env.get("PATH", "")
-        )
+        env["PATH"] = f'{os.path.join(self._gopath, "bin")}:{env.get("PATH", "")}'
 
         include_paths = []
         for root in [self.installdir, self.project.stage_dir]:
@@ -235,8 +233,8 @@ class GodepsPlugin(PluginV1):
             )
 
         flags = common.combine_paths(include_paths, "-L", " ")
-        env["CGO_LDFLAGS"] = "{} {} {}".format(
-            env.get("CGO_LDFLAGS", ""), flags, env.get("LDFLAGS", "")
-        )
+        env[
+            "CGO_LDFLAGS"
+        ] = f'{env.get("CGO_LDFLAGS", "")} {flags} {env.get("LDFLAGS", "")}'
 
         return env

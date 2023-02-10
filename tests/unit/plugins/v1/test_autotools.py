@@ -78,31 +78,28 @@ class AutotoolsPluginTestCase(PluginsV1BaseTestCase):
         for item in ["type", "minitems", "items", "default"]:
             self.assertTrue(
                 item in configflags,
-                'Expected "{}" to be included in "configflags"'.format(item),
+                f'Expected "{item}" to be included in "configflags"',
             )
 
         configflags_type = configflags["type"]
         self.assertThat(
             configflags_type,
             Equals("array"),
-            'Expected "configflags" "type" to be "array", but it '
-            'was "{}"'.format(configflags_type),
+            f'Expected "configflags" "type" to be "array", but it was "{configflags_type}"',
         )
 
         configflags_minitems = configflags["minitems"]
         self.assertThat(
             configflags_minitems,
             Equals(1),
-            'Expected "configflags" "minitems" to be 1, but '
-            "it was {}".format(configflags_minitems),
+            f'Expected "configflags" "minitems" to be 1, but it was {configflags_minitems}',
         )
 
         configflags_default = configflags["default"]
         self.assertThat(
             configflags_default,
             Equals([]),
-            'Expected "configflags" "default" to be [], but '
-            "it was {}".format(configflags_default),
+            f'Expected "configflags" "default" to be [], but it was {configflags_default}',
         )
 
         configflags_items = configflags["items"]
@@ -115,8 +112,7 @@ class AutotoolsPluginTestCase(PluginsV1BaseTestCase):
         self.assertThat(
             configflags_items_type,
             Equals("string"),
-            'Expected "configflags" "items" "type" to be '
-            '"string", but it was "{}"'.format(configflags_items_type),
+            f'Expected "configflags" "items" "type" to be "string", but it was "{configflags_items_type}"',
         )
 
         # Check install-via property
@@ -131,14 +127,13 @@ class AutotoolsPluginTestCase(PluginsV1BaseTestCase):
 
         installvia_enum = installvia["enum"]
         # Using sets for order independence in the comparison
-        self.assertThat(set(installvia_enum), Equals(set(["destdir", "prefix"])))
+        self.assertThat(set(installvia_enum), Equals({"destdir", "prefix"}))
 
         installvia_default = installvia["default"]
         self.assertThat(
             installvia_default,
             Equals("destdir"),
-            'Expected "install-via" "default" to be "destdir", '
-            'but it was "{}"'.format(installvia_default),
+            f'Expected "install-via" "default" to be "destdir", but it was "{installvia_default}"',
         )
 
     def test_get_build_properties(self):
@@ -191,8 +186,7 @@ class AutotoolsPluginTestCase(PluginsV1BaseTestCase):
                 mock.call(["./configure", "--prefix="]),
                 mock.call(["make", "-j2"], env=None),
                 mock.call(
-                    ["make", "install", "DESTDIR={}".format(plugin.installdir)],
-                    env=None,
+                    ["make", "install", f"DESTDIR={plugin.installdir}"], env=None
                 ),
             ]
         )
@@ -205,7 +199,7 @@ class AutotoolsPluginTestCase(PluginsV1BaseTestCase):
         self.assertThat(run_mock.call_count, Equals(3))
         run_mock.assert_has_calls(
             [
-                mock.call(["./configure", "--prefix={}".format(plugin.installdir)]),
+                mock.call(["./configure", f"--prefix={plugin.installdir}"]),
                 mock.call(["make", "-j2"], env=None),
                 mock.call(["make", "install"], env=None),
             ]
@@ -245,8 +239,7 @@ class AutotoolsPluginTestCase(PluginsV1BaseTestCase):
                 mock.call(["./configure", "--prefix="]),
                 mock.call(["make", "-j2"], env=None),
                 mock.call(
-                    ["make", "install", "DESTDIR={}".format(plugin.installdir)],
-                    env=None,
+                    ["make", "install", f"DESTDIR={plugin.installdir}"], env=None
                 ),
             ]
         )
@@ -282,8 +275,7 @@ class AutotoolsPluginTestCase(PluginsV1BaseTestCase):
                 mock.call(["./configure", "--prefix="]),
                 mock.call(["make", "-j2"], env=None),
                 mock.call(
-                    ["make", "install", "DESTDIR={}".format(plugin.installdir)],
-                    env=None,
+                    ["make", "install", f"DESTDIR={plugin.installdir}"], env=None
                 ),
             ]
         )
@@ -301,8 +293,7 @@ class AutotoolsPluginTestCase(PluginsV1BaseTestCase):
                 mock.call(["./configure", "--prefix="]),
                 mock.call(["make", "-j2"], env=None),
                 mock.call(
-                    ["make", "install", "DESTDIR={}".format(plugin.installdir)],
-                    env=None,
+                    ["make", "install", f"DESTDIR={plugin.installdir}"], env=None
                 ),
             ]
         )
@@ -318,7 +309,7 @@ class AutotoolsPluginTestCase(PluginsV1BaseTestCase):
                 mock.call(
                     ["env", "NOCONFIGURE=1", Path(plugin.builddir) / "autogen.sh"]
                 ),
-                mock.call(["./configure", "--prefix={}".format(plugin.installdir)]),
+                mock.call(["./configure", f"--prefix={plugin.installdir}"]),
                 mock.call(["make", "-j2"], env=None),
                 mock.call(["make", "install"], env=None),
             ]
@@ -345,8 +336,7 @@ class AutotoolsPluginTestCase(PluginsV1BaseTestCase):
                 mock.call(["./configure", "--prefix="]),
                 mock.call(["make", "-j2"], env=None),
                 mock.call(
-                    ["make", "install", "DESTDIR={}".format(plugin.installdir)],
-                    env=None,
+                    ["make", "install", f"DESTDIR={plugin.installdir}"], env=None
                 ),
             ]
         )
@@ -360,7 +350,7 @@ class AutotoolsPluginTestCase(PluginsV1BaseTestCase):
         run_mock.assert_has_calls(
             [
                 mock.call(["autoreconf", "-i"]),
-                mock.call(["./configure", "--prefix={}".format(plugin.installdir)]),
+                mock.call(["./configure", f"--prefix={plugin.installdir}"]),
                 mock.call(["make", "-j2"], env=None),
                 mock.call(["make", "install"], env=None),
             ]
@@ -378,8 +368,7 @@ class AutotoolsPluginTestCase(PluginsV1BaseTestCase):
                 mock.call(["./configure", "--prefix="]),
                 mock.call(["make", "-j1"], env=None),
                 mock.call(
-                    ["make", "install", "DESTDIR={}".format(plugin.installdir)],
-                    env=None,
+                    ["make", "install", f"DESTDIR={plugin.installdir}"], env=None
                 ),
             ]
         )

@@ -33,8 +33,8 @@ def setup_directories(plugin, python_version, create_setup_py=True):
     os.makedirs(plugin.sourcedir)
     os.makedirs(plugin.builddir)
     python_home = os.path.join(plugin.installdir, "usr")
-    python_lib_path = os.path.join(python_home, "lib", "python" + version)
-    python_include_path = os.path.join(python_home, "include", "python" + version)
+    python_lib_path = os.path.join(python_home, "lib", f"python{version}")
+    python_include_path = os.path.join(python_home, "include", f"python{version}")
 
     os.makedirs(os.path.join(python_lib_path, "dist-packages"))
     os.makedirs(python_include_path)
@@ -42,7 +42,7 @@ def setup_directories(plugin, python_version, create_setup_py=True):
         open(os.path.join(plugin.sourcedir, "setup.py"), "w").close()
 
     site_path = os.path.join(
-        plugin.installdir, "lib", "python" + version, "site-packages"
+        plugin.installdir, "lib", f"python{version}", "site-packages"
     )
     os.makedirs(site_path)
     with open(os.path.join(python_lib_path, "site.py"), "w") as f:
@@ -518,7 +518,7 @@ class PythonPluginTest(PythonPluginBaseTest):
         # This should be an error but given that we default to
         # 'source: .' and now that pip 10 has been released
         # we run into the need of fixing this situation.
-        self.mock_pip.return_value.list.return_value = dict()
+        self.mock_pip.return_value.list.return_value = {}
 
         self.useFixture(fixture_setup.CleanEnvironment())
         plugin = python.PythonPlugin("test-part", self.options, self.project)

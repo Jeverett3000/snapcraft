@@ -159,8 +159,8 @@ class GradlePlugin(PluginV1):
                 version=version, base=base, valid_versions=valid_versions
             )
 
-        self.stage_packages.append("openjdk-{}-jre-headless".format(version))
-        self.build_packages.append("openjdk-{}-jdk-headless".format(version))
+        self.stage_packages.append(f"openjdk-{version}-jre-headless")
+        self.build_packages.append(f"openjdk-{version}-jdk-headless")
         self.build_packages.append("ca-certificates-java")
         self._java_version = version
 
@@ -233,7 +233,7 @@ class GradlePlugin(PluginV1):
                 "usr",
                 "lib",
                 "jvm",
-                "java-{}-openjdk-*".format(self._java_version),
+                f"java-{self._java_version}-openjdk-*",
                 "bin",
                 "java",
             )
@@ -252,37 +252,24 @@ class GradlePlugin(PluginV1):
 
         env = os.environ.copy()
         gradle_bin = os.path.join(
-            self._gradle_dir, "gradle-{}".format(self._gradle_version), "bin"
+            self._gradle_dir, f"gradle-{self._gradle_version}", "bin"
         )
         print(gradle_bin)
 
-        if env.get("PATH"):
-            new_path = "{}:{}".format(gradle_bin, env.get("PATH"))
-        else:
-            new_path = gradle_bin
-
+        new_path = f'{gradle_bin}:{env.get("PATH")}' if env.get("PATH") else gradle_bin
         env["PATH"] = new_path
         return env
 
     def _get_proxy_options(self):
         proxy_options = []
         for var in ("http", "https"):
-            proxy = os.environ.get("{}_proxy".format(var), False)
-            if proxy:
+            if proxy := os.environ.get(f"{var}_proxy", False):
                 parsed_url = urllib.parse.urlparse(proxy)
-                proxy_options.append(
-                    "-D{}.proxyHost={}".format(var, parsed_url.hostname)
-                )
+                proxy_options.append(f"-D{var}.proxyHost={parsed_url.hostname}")
                 if parsed_url.port:
-                    proxy_options.append(
-                        "-D{}.proxyPort={}".format(var, parsed_url.port)
-                    )
+                    proxy_options.append(f"-D{var}.proxyPort={parsed_url.port}")
                 if parsed_url.username:
-                    proxy_options.append(
-                        "-D{}.proxyUser={}".format(var, parsed_url.username)
-                    )
+                    proxy_options.append(f"-D{var}.proxyUser={parsed_url.username}")
                 if parsed_url.password:
-                    proxy_options.append(
-                        "-D{}.proxyPassword={}".format(var, parsed_url.password)
-                    )
+                    proxy_options.append(f"-D{var}.proxyPassword={parsed_url.password}")
         return proxy_options

@@ -116,10 +116,7 @@ class CLIConfig:
 
         :param bool value: if true, errors should automatically be sent.
         """
-        if value:
-            string_value = "true"
-        else:
-            string_value = "false"
+        string_value = "true" if value else "false"
         self._set_option("Sentry", "always_send", string_value)
 
     def get_sentry_send_always(self) -> bool:
@@ -145,8 +142,7 @@ class CLIConfig:
         :returns: The action to take
         :rtype: OutdatedStepAction.
         """
-        action = self._get_option("Lifecycle", "outdated_step_action")
-        if action:
+        if action := self._get_option("Lifecycle", "outdated_step_action"):
             return OutdatedStepAction[action.upper()]
         else:
             # Clean by default

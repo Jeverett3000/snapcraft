@@ -62,11 +62,7 @@ class GrammarProcessor:
         self.project = project
         self.checker = checker
 
-        if transformer:
-            self._transformer = transformer
-        else:
-            # By default, no transformation
-            self._transformer = lambda s, p, o: p
+        self._transformer = transformer or (lambda s, p, o: p)
 
     def process(
         self, *, grammar: typing.Grammar = None, call_stack: typing.CallStack = None
@@ -86,7 +82,7 @@ class GrammarProcessor:
         if call_stack is None:
             call_stack = []
 
-        primitives: List[Any] = list()
+        primitives: List[Any] = []
         statements = _StatementCollection()
         statement: Optional[Statement] = None
 

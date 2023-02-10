@@ -35,19 +35,19 @@ class Hook:
     ) -> None:
         self._hook_name = hook_name
 
-        self.command_chain: List[str] = list()
+        self.command_chain: List[str] = []
         if command_chain:
             self.command_chain = command_chain
 
-        self.environment: Dict[str, str] = dict()
+        self.environment: Dict[str, str] = {}
         if environment:
             self.environment = environment
 
-        self.plugs: List[str] = list()
+        self.plugs: List[str] = []
         if plugs:
             self.plugs = plugs
 
-        self.passthrough: Dict[str, Any] = dict()
+        self.passthrough: Dict[str, Any] = {}
         if passthrough:
             self.passthrough = passthrough
 
@@ -89,7 +89,7 @@ class Hook:
     def from_dict(cls, hook_dict: Dict[str, Any], hook_name: str) -> "Hook":
         """Create hook from dictionary."""
 
-        environment = hook_dict.get("environment", dict())
+        environment = hook_dict.get("environment", {})
         for k, v in environment.items():
             # Ensure alll environment values are converted to string.
             environment[k] = str(v)
@@ -117,7 +117,7 @@ class Hook:
             hook_dict["plugs"] = self.plugs
 
         # Apply passthrough keys.
-        hook_dict.update(self.passthrough)
+        hook_dict |= self.passthrough
         return hook_dict
 
     def __repr__(self) -> str:

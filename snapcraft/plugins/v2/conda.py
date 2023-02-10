@@ -86,8 +86,7 @@ def _get_architecture() -> str:
 def _get_miniconda_source(version: str) -> str:
     """Return tuple of source_url and source_checksum (if known)."""
     arch = _get_architecture()
-    source = f"https://repo.anaconda.com/miniconda/Miniconda3-{version}-Linux-{arch}.sh"
-    return source
+    return f"https://repo.anaconda.com/miniconda/Miniconda3-{version}-Linux-{arch}.sh"
 
 
 class CondaPlugin(PluginV2):
@@ -138,7 +137,7 @@ class CondaPlugin(PluginV2):
         conda_target_prefix = "/snap/${SNAPCRAFT_PROJECT_NAME}/current"
 
         deploy_cmd = [
-            "CONDA_TARGET_PREFIX_OVERRIDE=" + conda_target_prefix,
+            f"CONDA_TARGET_PREFIX_OVERRIDE={conda_target_prefix}",
             "conda",
             "create",
             "--prefix",
@@ -146,7 +145,7 @@ class CondaPlugin(PluginV2):
             "--yes",
         ]
         if self.options.conda_python_version:
-            deploy_cmd.append("python={}".format(self.options.conda_python_version))
+            deploy_cmd.append(f"python={self.options.conda_python_version}")
 
         deploy_cmd.extend(self.options.conda_packages)
 

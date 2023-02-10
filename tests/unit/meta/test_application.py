@@ -173,9 +173,9 @@ class TestWrapperUse:
 
     def test_wrapper(self, tmp_work_path, extra_app_properties, base, expect_wrappers):
         app_properties = dict(command="foo")
-        app_properties.update(extra_app_properties)
+        app_properties |= extra_app_properties
 
-        for exe in ["foo"] + app_properties.get("command-chain", list()):
+        for exe in ["foo"] + app_properties.get("command-chain", []):
             exe_path = pathlib.Path(exe)
             exe_path.touch()
             exe_path.chmod(0o755)

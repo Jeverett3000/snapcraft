@@ -31,7 +31,7 @@ class InstanceInfoGeneralTest(unit.TestCase):
             name="instance-name",
             state="RUNNING",
             image_release="16.04 LTS",
-            mounts=dict(),
+            mounts={},
         )
 
         self.assertThat(instance_info.name, Equals("instance-name"))
@@ -44,7 +44,7 @@ class InstanceInfoGeneralTest(unit.TestCase):
             name="instance-name",
             state="STOPPED",
             image_release="16.04 LTS",
-            mounts=dict(),
+            mounts={},
         )
 
         self.assertThat(instance_info.is_stopped(), Equals(True))
@@ -54,7 +54,7 @@ class InstanceInfoGeneralTest(unit.TestCase):
             name="instance-name",
             state="STOPPED",
             image_release="16.04 LTS",
-            mounts=dict(project=dict()),
+            mounts=dict(project={}),
         )
 
         self.assertThat(instance_info.is_mounted("project"), Equals(True))

@@ -98,16 +98,14 @@ class Local(Base):
 
 
 def _ignore(source, current_directory, directory, files, check=False):
-    if directory == source or directory == current_directory:
-        ignored = copy.copy(common.SNAPCRAFT_FILES)
-        if check:
-            # TODO: We hardcode the snap directory here, but we really need
-            # to ignore the directory where snapcraft.yaml is hosted.
-            ignored.extend(["snap", "snapcraft.yaml", ".snapcraft.yaml"])
-        snaps = glob.glob(os.path.join(directory, "*.snap"))
-        if snaps:
-            snaps = [os.path.basename(s) for s in snaps]
-            ignored += snaps
-        return ignored
-    else:
+    if directory not in [source, current_directory]:
         return []
+    ignored = copy.copy(common.SNAPCRAFT_FILES)
+    if check:
+        # TODO: We hardcode the snap directory here, but we really need
+        # to ignore the directory where snapcraft.yaml is hosted.
+        ignored.extend(["snap", "snapcraft.yaml", ".snapcraft.yaml"])
+    if snaps := glob.glob(os.path.join(directory, "*.snap")):
+        snaps = [os.path.basename(s) for s in snaps]
+        ignored += snaps
+    return ignored

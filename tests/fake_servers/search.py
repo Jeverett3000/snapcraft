@@ -44,9 +44,7 @@ class FakeStoreSearchServer(base.BaseFakeServer):
     def info(self, request):
         snap = request.matchdict["snap"]
         logger.debug(
-            "Handling details request for package {}, with headers {}".format(
-                snap, request.headers
-            )
+            f"Handling details request for package {snap}, with headers {request.headers}"
         )
         if "User-Agent" not in request.headers:
             response_code = 500
@@ -88,37 +86,32 @@ class FakeStoreSearchServer(base.BaseFakeServer):
         else:
             return None
 
-        channel_map = list()
+        channel_map = []
         for arch in ("amd64", "i386", "s390x", "arm64", "armhf", "ppc64el"):
-            for risk in ("stable", "edge"):
-                channel_map.append(
-                    {
-                        "channel": {
-                            "architecture": arch,
-                            "name": risk,
-                            "released-at": "019-01-17T15:01:26.537392+00:00",
-                            "risk": risk,
-                            "track": "latest",
-                        },
-                        "download": {
-                            "deltas": [],
-                            "sha3-384": sha3_384,
-                            "url": urllib.parse.urljoin(
-                                "http://localhost:{}".format(self.server.server_port),
-                                "download-snap/test-snap.snap",
-                            ),
-                        },
-                        "created-at": "2019-01-16T14:59:16.711111+00:00",
-                        "confinement": confinement,
-                        "revision": revision,
-                    }
-                )
-
-        if snap == "snap-1":
-            snap_id = "snap-id-1"
-        else:
-            snap_id = f"{snap}-snap-id"
-
+            channel_map.extend(
+                {
+                    "channel": {
+                        "architecture": arch,
+                        "name": risk,
+                        "released-at": "019-01-17T15:01:26.537392+00:00",
+                        "risk": risk,
+                        "track": "latest",
+                    },
+                    "download": {
+                        "deltas": [],
+                        "sha3-384": sha3_384,
+                        "url": urllib.parse.urljoin(
+                            f"http://localhost:{self.server.server_port}",
+                            "download-snap/test-snap.snap",
+                        ),
+                    },
+                    "created-at": "2019-01-16T14:59:16.711111+00:00",
+                    "confinement": confinement,
+                    "revision": revision,
+                }
+                for risk in ("stable", "edge")
+            )
+        snap_id = "snap-id-1" if snap == "snap-1" else f"{snap}-snap-id"
         return json.dumps(
             {
                 "channel-map": channel_map,
@@ -126,7 +119,7 @@ class FakeStoreSearchServer(base.BaseFakeServer):
                     "name": snap,
                     "snap-id": snap_id,
                     "publisher": {
-                        "id": snap + "-developer-id",
+                        "id": f"{snap}-developer-id",
                         "validation": "unproven",
                     },
                 },
@@ -137,7 +130,7 @@ class FakeStoreSearchServer(base.BaseFakeServer):
 
     def download(self, request):
         snap = request.matchdict["snap"]
-        logger.debug("Handling download request for snap {}".format(snap))
+        logger.debug(f"Handling download request for snap {snap}")
         if "User-Agent" not in request.headers:
             response_code = 500
             return response.Response(None, response_code)

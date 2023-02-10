@@ -35,11 +35,7 @@ class Plug:
         use_string_representation: bool = False,
     ) -> None:
         self._plug_name = plug_name
-        if plug_dict is None:
-            self._plug_dict: Dict[str, Any] = dict()
-        else:
-            self._plug_dict = plug_dict
-
+        self._plug_dict = {} if plug_dict is None else plug_dict
         self.use_string_representation = use_string_representation
 
     @property
@@ -87,10 +83,7 @@ class Plug:
             return self._plug_dict["interface"]
 
         # To output shortest-form: "slot-name-is-interface: <empty>"
-        if not self._plug_dict:
-            return None
-
-        return OrderedDict(deepcopy(self._plug_dict))
+        return OrderedDict(deepcopy(self._plug_dict)) if self._plug_dict else None
 
     def __repr__(self) -> str:
         return repr(self.__dict__)
@@ -122,11 +115,7 @@ class ContentPlug(Plug):
 
     @property
     def content(self) -> str:
-        if self._content:
-            return self._content
-
-        # Defaults to plug_name if unspecified.
-        return self.plug_name
+        return self._content or self.plug_name
 
     @content.setter
     def content(self, content) -> None:
@@ -155,10 +144,10 @@ class ContentPlug(Plug):
         if interface != "content":
             raise PlugValidationError(
                 plug_name=plug_name,
-                message="`interface={}` is invalid for content slot".format(interface),
+                message=f"`interface={interface}` is invalid for content slot",
             )
 
-        target = plug_dict.get("target", None)
+        target = plug_dict.get("target")
         if target is None:
             raise PlugValidationError(
                 plug_name=plug_name, message="`target` is required for content slot"

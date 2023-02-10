@@ -197,10 +197,10 @@ class PackageRepositoryValidationError(errors.SnapcraftException):
         return f"Invalid package-repository for {self.url!r}: {self.brief}"
 
     def get_resolution(self) -> str:
-        if self.resolution:
-            return self.resolution
-
-        return "You can verify package repository configuration according to the referenced documentation."
+        return (
+            self.resolution
+            or "You can verify package repository configuration according to the referenced documentation."
+        )
 
     def get_details(self) -> Optional[str]:
         return self.details

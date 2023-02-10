@@ -67,7 +67,7 @@ def clear_execstack(*, elf_files: FrozenSet[elf.ElfFile]) -> None:
     elf_files_with_execstack = [e for e in elf_files if e.execstack_set]
 
     if elf_files_with_execstack:
-        formatted_items = ["- {}".format(e.path) for e in elf_files_with_execstack]
+        formatted_items = [f"- {e.path}" for e in elf_files_with_execstack]
         logger.warning(
             "The execstacks are going to be cleared for the following "
             "files:\n{}\n"

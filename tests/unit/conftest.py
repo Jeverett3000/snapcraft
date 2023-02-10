@@ -92,15 +92,18 @@ def in_snap(monkeypatch):
 def fake_exists(monkeypatch):
     """Fakely return True when checking for preconfigured paths."""
 
+
+
     class FileCheck:
         def __init__(self) -> None:
             self._original_exists = os.path.exists
-            self.paths: List[str] = list()
+            self.paths: List[str] = []
 
         def exists(self, path: str) -> bool:
             if pathlib.Path(path) in self.paths:
                 return True
             return self._original_exists(path)
+
 
     file_checker = FileCheck()
     monkeypatch.setattr(os.path, "exists", file_checker.exists)

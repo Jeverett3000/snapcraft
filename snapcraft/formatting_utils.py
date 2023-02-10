@@ -25,7 +25,7 @@ def combine_paths(paths: Iterable[str], prepend: str, separator: str) -> str:
     :param str separator: String to place between each path in the string.
     """
 
-    paths = ["{}{}".format(prepend, p) for p in paths]
+    paths = [f"{prepend}{p}" for p in paths]
     return separator.join(paths)
 
 
@@ -40,16 +40,15 @@ def format_path_variable(
     :param str separator: String to place between each path in the definition.
     """
     if not paths:
-        raise ValueError("Failed to format '${}': no paths supplied".format(envvar))
+        raise ValueError(f"Failed to format '${envvar}': no paths supplied")
 
     combined_paths = combine_paths(paths, prepend, separator)
 
-    if separator.isspace():
-        formatted = f'{envvar}="${envvar}{separator}{combined_paths}"'
-    else:
-        formatted = f'{envvar}="${{{envvar}:+${envvar}{separator}}}{combined_paths}"'
-
-    return formatted
+    return (
+        f'{envvar}="${envvar}{separator}{combined_paths}"'
+        if separator.isspace()
+        else f'{envvar}="${{{envvar}:+${envvar}{separator}}}{combined_paths}"'
+    )
 
 
 def humanize_list(
@@ -75,11 +74,8 @@ def humanize_list(
     if len(quoted_items) > 2:
         humanized += ","
 
-    return "{} {} {}".format(humanized, conjunction, quoted_items[-1])
+    return f"{humanized} {conjunction} {quoted_items[-1]}"
 
 
 def pluralize(container: Sized, if_one: str, if_multiple: str) -> str:
-    if len(container) == 1:
-        return if_one
-    else:
-        return if_multiple
+    return if_one if len(container) == 1 else if_multiple

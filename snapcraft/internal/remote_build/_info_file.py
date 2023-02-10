@@ -33,9 +33,8 @@ class InfoFile(dict):
                 self.update(yaml_utils.load(info_file))
 
     def save(self, **data: Any) -> None:
-        dirpath = os.path.dirname(self._path)
-        if dirpath:
+        if dirpath := os.path.dirname(self._path):
             os.makedirs(dirpath, exist_ok=True)
         with open(self._path, "w") as info_file:
-            data.update(dict(self))
+            data |= dict(self)
             yaml_utils.dump(data, stream=info_file)

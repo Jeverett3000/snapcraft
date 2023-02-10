@@ -271,7 +271,7 @@ class TestPrimeTypeIncludesPatching:
         if stage_packages:
             part_properties["stage-packages"] = stage_packages
         else:
-            stage_packages = list()
+            stage_packages = []
 
         handler = load_part(
             "test-part",

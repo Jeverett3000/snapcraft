@@ -67,16 +67,14 @@ class GoPluginPropertiesTest(unit.TestCase):
         self.assertThat(
             go_channel_type,
             Equals("string"),
-            'Expected "go-channel" "type" to be "string", but '
-            'it was "{}"'.format(go_channel_type),
+            f'Expected "go-channel" "type" to be "string", but it was "{go_channel_type}"',
         )
 
         go_channel_default = go_channel["default"]
         self.assertThat(
             go_channel_default,
             Equals("1.15/stable"),
-            'Expected "go-channel" "default" to be '
-            '"1.15/stable", but it was "{}"'.format(go_channel_default),
+            f'Expected "go-channel" "default" to be "1.15/stable", but it was "{go_channel_default}"',
         )
 
         # Check godeps-file
@@ -91,16 +89,14 @@ class GoPluginPropertiesTest(unit.TestCase):
         self.assertThat(
             godeps_file_type,
             Equals("string"),
-            'Expected "godeps-file" "type" to be "string", but '
-            'it was "{}"'.format(godeps_file_type),
+            f'Expected "godeps-file" "type" to be "string", but it was "{godeps_file_type}"',
         )
 
         godeps_file_default = godeps_file["default"]
         self.assertThat(
             godeps_file_default,
             Equals("dependencies.tsv"),
-            'Expected "godeps-file" "default" to be '
-            '"dependencies.tsv", but it was "{}"'.format(godeps_file_default),
+            f'Expected "godeps-file" "default" to be "dependencies.tsv", but it was "{godeps_file_default}"',
         )
 
         # Check go-importpath
@@ -115,8 +111,7 @@ class GoPluginPropertiesTest(unit.TestCase):
         self.assertThat(
             go_importpath_type,
             Equals("string"),
-            'Expected "go-importpath" "type" to be "string", but '
-            'it was "{}"'.format(go_importpath_type),
+            f'Expected "go-importpath" "type" to be "string", but it was "{go_importpath_type}"',
         )
 
         # go-importpath should be required
@@ -137,16 +132,14 @@ class GoPluginPropertiesTest(unit.TestCase):
         self.assertThat(
             go_packages_type,
             Equals("array"),
-            'Expected "go-packages" "type" to be "array", but '
-            'it was "{}"'.format(go_packages_type),
+            f'Expected "go-packages" "type" to be "array", but it was "{go_packages_type}"',
         )
 
         go_packages_default = go_packages["default"]
         self.assertThat(
             go_packages_default,
             Equals([]),
-            'Expected "go-packages" "default" to be "[]", but '
-            'it was "{}"'.format(go_packages_default),
+            f'Expected "go-packages" "default" to be "[]", but it was "{go_packages_default}"',
         )
 
     def test_get_pull_properties(self):
@@ -197,10 +190,10 @@ class GodepsPluginTest(GodepsPluginBaseTest):
                 "CGO_LDFLAGS" in env, "Expected environment to include CGO_LDFLAGS"
             )
             expected_flags = [
-                "-L{}/lib".format(plugin.installdir),
-                "-L{}/usr/lib".format(plugin.installdir),
-                "-L{}/lib".format(plugin.project.stage_dir),
-                "-L{}/usr/lib".format(plugin.project.stage_dir),
+                f"-L{plugin.installdir}/lib",
+                f"-L{plugin.installdir}/usr/lib",
+                f"-L{plugin.project.stage_dir}/lib",
+                f"-L{plugin.project.stage_dir}/usr/lib",
             ]
             for flag in expected_flags:
                 self.assertTrue(
@@ -224,17 +217,17 @@ class GodepsPluginTest(GodepsPluginBaseTest):
             ),
             mock.call(
                 ["git", "checkout", "4e9e0ee19b60b13eb79915933f44d8ed5f268bdd"],
-                cwd=plugin._gopath_src + "/github.com/pelletier/go-toml",
+                cwd=f"{plugin._gopath_src}/github.com/pelletier/go-toml",
                 env=mock.ANY,
             ),
             mock.call(
                 ["git", "checkout", "d6ce6262d87e3a4e153e86023ff56ae771554a41"],
-                cwd=plugin._gopath_src + "/github.com/kisielk/gotool",
+                cwd=f"{plugin._gopath_src}/github.com/kisielk/gotool",
                 env=mock.ANY,
             ),
             mock.call(
                 ["git", "checkout", "1937f90a1bb43667aff4059b1bab13eb15121e8e"],
-                cwd=plugin._gopath_src + "/golang.org/x/tools",
+                cwd=f"{plugin._gopath_src}/golang.org/x/tools",
                 env=mock.ANY,
             ),
             mock.call(

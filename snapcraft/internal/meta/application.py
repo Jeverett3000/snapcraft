@@ -58,7 +58,7 @@ class Application:
         """
         self._app_name = app_name
 
-        self._app_properties: Dict[str, Any] = dict()
+        self._app_properties: Dict[str, Any] = {}
         if app_properties:
             self._app_properties = app_properties
 
@@ -66,15 +66,15 @@ class Application:
         self.desktop = desktop
         self.install_mode = install_mode
 
-        self.command_chain: List[str] = list()
+        self.command_chain: List[str] = []
         if command_chain:
             self.command_chain = command_chain
 
-        self.commands: Dict[str, Command] = dict()
+        self.commands: Dict[str, Command] = {}
         if commands:
             self.commands = commands
 
-        self.passthrough: Dict[str, Any] = dict()
+        self.passthrough: Dict[str, Any] = {}
         if passthrough:
             self.passthrough = passthrough
 
@@ -90,15 +90,11 @@ class Application:
             return False
 
         # We only allow wrappers for core and core18.
-        if not self._massage_commands(base=base):
-            return False
-
-        # Now that command-chain and bases have been checked for,
-        # check if the none adapter has been forced.
-        if self.adapter == ApplicationAdapter.NONE:
-            return False
-
-        return True
+        return (
+            self.adapter != ApplicationAdapter.NONE
+            if self._massage_commands(base=base)
+            else False
+        )
 
     def _massage_commands(self, *, base: Optional[str]) -> bool:
         return base in _MASSAGED_BASES
@@ -194,7 +190,7 @@ class Application:
             app_dict["install-mode"] = self.install_mode
 
         # Adjust socket values to formats snap.yaml accepts
-        sockets = app_dict.get("sockets", dict())
+        sockets = app_dict.get("sockets", {})
         for socket in sockets.values():
             mode = socket.get("socket-mode")
             if mode is not None:

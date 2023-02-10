@@ -50,9 +50,7 @@ class ProviderImpl(Provider):
         self.loaded_info: Optional[Dict[str, str]] = None
 
     def _load_info(self) -> Dict[str, str]:
-        if self.loaded_info is None:
-            return super()._load_info()
-        return self.loaded_info
+        return super()._load_info() if self.loaded_info is None else self.loaded_info
 
     def _run(self, command, hide_output=False) -> Optional[bytes]:
         return self.run_mock(command)

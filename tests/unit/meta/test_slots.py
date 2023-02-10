@@ -55,7 +55,7 @@ class GenericSlotTests(unit.TestCase):
         slot = Slot.from_object(slot_name="slot-name", slot_object=None)
         slot.validate()
 
-        self.assertThat(slot._slot_dict, Equals(dict()))
+        self.assertThat(slot._slot_dict, Equals({}))
 
     def test_from_object_string(self):
         slot = Slot.from_object(slot_name="slot-name", slot_object="some-interface")
@@ -168,7 +168,7 @@ class ContentSlotTests(unit.TestCase):
         slot.use_source_key = True
         slot.validate()
         transformed_dict = slot_dict.copy()
-        transformed_dict["source"] = dict()
+        transformed_dict["source"] = {}
         transformed_dict["source"]["read"] = transformed_dict.pop("read")
 
         self.assertEqual(transformed_dict, slot.to_yaml_object())
@@ -216,7 +216,7 @@ class ContentSlotTests(unit.TestCase):
         slot.use_source_key = True
         slot.validate()
         transformed_dict = slot_dict.copy()
-        transformed_dict["source"] = dict()
+        transformed_dict["source"] = {}
         transformed_dict["source"]["write"] = transformed_dict.pop("write")
 
         self.assertEqual(transformed_dict, slot.to_yaml_object())

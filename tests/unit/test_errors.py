@@ -619,15 +619,13 @@ class StrangeExceptionWithFormatting(errors.SnapcraftException):
         self._ghosts = ghosts
 
     def get_brief(self):
-        return "something's strange, in the neighborhood of {}".format(
-            self._neighborhood
-        )
+        return f"something's strange, in the neighborhood of {self._neighborhood}"
 
     def get_resolution(self):
-        return "who you gonna call? {}!!".format(self._contact)
+        return f"who you gonna call? {self._contact}!!"
 
     def get_details(self):
-        return "i ain't afraid of no ghosts: {}".format(self._ghosts)
+        return f"i ain't afraid of no ghosts: {self._ghosts}"
 
     def get_docs_url(self):
         return "https://docs.snapcraft.io/the-snapcraft-format/8337"

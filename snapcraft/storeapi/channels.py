@@ -38,17 +38,15 @@ class Channel:
         cls: Type["Channel"], *, track: str, risk: str, branch: Optional[str]
     ) -> "Channel":
         if track and risk and branch:
-            channel = "{}/{}/{}".format(track, risk, branch)
+            channel = f"{track}/{risk}/{branch}"
         elif track and risk:
-            channel = "{}/{}".format(track, risk)
+            channel = f"{track}/{risk}"
         elif risk and branch:
-            channel = "{}/{}".format(risk, branch)
+            channel = f"{risk}/{branch}"
         elif risk:
             channel = risk
         else:
-            raise RuntimeError(
-                "Incorrect channel tuple {}/{}/{}.".format(track, risk, branch)
-            )
+            raise RuntimeError(f"Incorrect channel tuple {track}/{risk}/{branch}.")
 
         return cls(channel)
 
@@ -76,10 +74,7 @@ class Channel:
 
     @property
     def track(self) -> str:
-        if self._track is None:
-            return "latest"
-        else:
-            return self._track
+        return "latest" if self._track is None else self._track
 
     @property
     def risk(self) -> str:

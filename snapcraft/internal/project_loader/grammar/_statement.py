@@ -49,11 +49,7 @@ class Statement:
                                       checked for validity as part of
                                       evaluating the elses.
         """
-        if call_stack:
-            self.__call_stack = call_stack
-        else:
-            self.__call_stack = []
-
+        self.__call_stack = call_stack or []
         self._body = body
         self._processor = processor
         self._check_primitives = check_primitives
@@ -77,10 +73,7 @@ class Statement:
         :return: Primitives as determined by evaluating the statement or its
                  else clauses.
         """
-        if self._check():
-            return self._process_body()
-        else:
-            return self._process_else()
+        return self._process_body() if self._check() else self._process_else()
 
     def _process_body(self) -> List[str]:
         """Process the main body of this statement.
@@ -102,16 +95,15 @@ class Statement:
         if self.__processed_else is not None:
             return self.__processed_else
 
-        self.__processed_else = list()
+        self.__processed_else = []
         for else_body in self._else_bodies:
             if not else_body:
                 # Handle the 'else fail' case.
                 raise UnsatisfiedStatementError(self)
 
-            processed_else = self._processor.process(
+            if processed_else := self._processor.process(
                 grammar=else_body, call_stack=self._call_stack()
-            )
-            if processed_else:
+            ):
                 self.__processed_else = processed_else
                 if not self._check_primitives or self._validate_primitives(
                     processed_else
@@ -128,10 +120,7 @@ class Statement:
         :return: Whether or not all primitives are valid.
         :rtype: bool
         """
-        for primitive in primitives:
-            if not self._processor.checker(primitive):
-                return False
-        return True
+        return all(self._processor.checker(primitive) for primitive in primitives)
 
     def _call_stack(self, *, include_self=False) -> List["Statement"]:
         """The call stack when processing this statement.
@@ -142,10 +131,7 @@ class Statement:
         :return: The call stack
         :rtype: list
         """
-        if include_self:
-            return self.__call_stack + [self]
-        else:
-            return self.__call_stack
+        return self.__call_stack + [self] if include_self else self.__call_stack
 
     def __repr__(self):
         return "{!r}".format(self.__str__())

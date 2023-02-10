@@ -39,7 +39,7 @@ def load_yaml_file(yaml_file_path: str) -> collections.OrderedDict:
     with open(yaml_file_path, "rb") as fp:
         bs = fp.read(2)
 
-    if bs == codecs.BOM_UTF16_LE or bs == codecs.BOM_UTF16_BE:
+    if bs in [codecs.BOM_UTF16_LE, codecs.BOM_UTF16_BE]:
         encoding = "utf-16"
     else:
         encoding = "utf-8"
@@ -49,9 +49,7 @@ def load_yaml_file(yaml_file_path: str) -> collections.OrderedDict:
             yaml_contents = load(fp)  # type: ignore
     except yaml.MarkedYAMLError as e:
         raise YamlValidationError(
-            "{} on line {}, column {}".format(
-                e.problem, e.problem_mark.line + 1, e.problem_mark.column + 1
-            ),
+            f"{e.problem} on line {e.problem_mark.line + 1}, column {e.problem_mark.column + 1}",
             yaml_file_path,
         ) from e
     except yaml.reader.ReaderError as e:

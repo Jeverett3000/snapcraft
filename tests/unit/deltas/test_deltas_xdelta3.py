@@ -60,10 +60,10 @@ class XDelta3TestCase(unit.TestCase):
         self.source_file = os.path.join(scratchdir, "source-snap")
         self.target_file = os.path.join(scratchdir, "target-snap")
         # source snap is completely random:
-        with open(self.source_file, "wb") as source, open(
-            self.target_file, "wb"
-        ) as target:
-            for i in range(0, snap_size, 1024):
+        with (open(self.source_file, "wb") as source, open(
+                self.target_file, "wb"
+            ) as target):
+            for _ in range(0, snap_size, 1024):
                 block = os.urandom(1024)
                 source.write(block)
                 if random.randint(0, 9) == 0:
@@ -79,9 +79,7 @@ class XDelta3TestCase(unit.TestCase):
         path = base_delta.make_delta(is_for_test=True)
 
         self.assertThat(path, m.FileExists())
-        expect_path = "{}.{}".format(
-            base_delta.target_path, base_delta.delta_file_extname
-        )
+        expect_path = f"{base_delta.target_path}.{base_delta.delta_file_extname}"
         self.assertThat(path, m.Equals(expect_path))
 
     def test_xdelta3_with_progress_indicator(self):
@@ -103,9 +101,7 @@ class XDelta3TestCase(unit.TestCase):
         progress_indicator.finish()
 
         self.assertThat(path, m.FileExists())
-        expect_path = "{}.{}".format(
-            base_delta.target_path, base_delta.delta_file_extname
-        )
+        expect_path = f"{base_delta.target_path}.{base_delta.delta_file_extname}"
         self.assertThat(path, m.Equals(expect_path))
 
     def test_xdelta3_with_custom_output_dir(self):
@@ -113,9 +109,7 @@ class XDelta3TestCase(unit.TestCase):
         base_delta = deltas.XDelta3Generator(
             source_path=self.source_file, target_path=self.target_file
         )
-        delta_filename = "{}.{}".format(
-            os.path.split(base_delta.target_path)[1], base_delta.delta_file_extname
-        )
+        delta_filename = f"{os.path.split(base_delta.target_path)[1]}.{base_delta.delta_file_extname}"
 
         existed_output_dir = self.useFixture(fixtures.TempDir()).path
         path = base_delta.make_delta(existed_output_dir, is_for_test=True)
@@ -125,7 +119,7 @@ class XDelta3TestCase(unit.TestCase):
         self.assertThat(path, m.Equals(expect_path))
 
         none_existed_output_dir = (
-            self.useFixture(fixtures.TempDir()).path + "/whatever/"
+            f"{self.useFixture(fixtures.TempDir()).path}/whatever/"
         )
         path = base_delta.make_delta(none_existed_output_dir, is_for_test=True)
 

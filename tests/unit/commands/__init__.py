@@ -61,7 +61,7 @@ def mock_check_output(command, *args, **kwargs):
         return json.dumps(_sample_keys)
     elif command[0].endswith("snap") and command[1] == "export-key":
         if not command[2].startswith("--account="):
-            raise AssertionError("Unhandled command: {}".format(command))
+            raise AssertionError(f"Unhandled command: {command}")
         account_id = command[2][len("--account=") :]
         name = command[3]
         # This isn't a full account-key-request assertion, but it's enough
@@ -76,13 +76,11 @@ def mock_check_output(command, *args, **kwargs):
         ).format(
             account_id=account_id, name=name, sha3_384=get_sample_key(name)["sha3-384"]
         )
-    elif command[0].endswith("snap") and command[1:] == [
+    elif not command[0].endswith("snap") or command[1:] != [
         "create-key",
         "new-key",
     ]:
-        pass
-    else:
-        raise AssertionError("Unhandled command: {}".format(command))
+        raise AssertionError(f"Unhandled command: {command}")
 
 
 class CommandBaseTestCase(unit.TestCase):
@@ -177,7 +175,7 @@ class FakeStoreCommandsBaseTestCase(CommandBaseTestCase):
 
         self.fake_store_account_info_data = {
             "account_id": "abcd",
-            "account_keys": list(),
+            "account_keys": [],
             "snaps": {
                 "16": {
                     "snap-test": {
@@ -206,7 +204,7 @@ class FakeStoreCommandsBaseTestCase(CommandBaseTestCase):
         self.useFixture(self.fake_store_account_info)
 
         self.fake_store_status = fixtures.MockPatchObject(
-            storeapi._dashboard_api.DashboardAPI, "snap_status", return_value=dict()
+            storeapi._dashboard_api.DashboardAPI, "snap_status", return_value={}
         )
         self.useFixture(self.fake_store_status)
 

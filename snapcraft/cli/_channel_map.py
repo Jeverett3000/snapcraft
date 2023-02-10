@@ -48,7 +48,7 @@ def _get_channel_order(
 
     for snap_channel in snap_channels:
         if snap_channel.track not in channel_order:
-            channel_order[snap_channel.track] = list()
+            channel_order[snap_channel.track] = []
         if snap_channel.fallback is None:
             channel_order[snap_channel.track].append(snap_channel.name)
         else:
@@ -106,7 +106,7 @@ def _get_channel_lines_for_channel(  # noqa: C901
     architecture: str,
     current_tick: str,
 ) -> Tuple[str, List[List[str]]]:
-    channel_lines: List[List[str]] = list()
+    channel_lines: List[List[str]] = []
 
     channel_info = snap_channel_map.get_channel_info(channel_name)
 
@@ -228,7 +228,7 @@ def get_tabulated_channel_map(
 ):
     channel_order = _get_channel_order(snap_channel_map.snap.channels, tracks)
 
-    channel_lines = list()
+    channel_lines = []
     for track_name in channel_order:
         track_mentioned = False
         for architecture in sorted(architectures):

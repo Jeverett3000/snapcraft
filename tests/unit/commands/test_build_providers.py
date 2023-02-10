@@ -59,7 +59,7 @@ parts:
 
         parts = []
         for i in range(n):
-            part_dir = os.path.join(self.parts_dir, "{}{}".format(step, i))
+            part_dir = os.path.join(self.parts_dir, f"{step}{i}")
             state_dir = os.path.join(part_dir, "state")
             parts.append({"part_dir": part_dir, "state_dir": state_dir})
 
@@ -281,15 +281,13 @@ class BuildProviderDebugCommandTestCase(LifecycleCommandsBaseTestCase):
 
         shell_mock = mock.Mock()
 
+
+
         class Provider(ProviderImpl):
             def execute_step(
-                self, step: steps.Step, part_names: Optional[Sequence[str]] = None
-            ) -> None:
-                if part_names is None:
-                    part_names = []
-                else:
-                    part_names = list(part_names)
-
+                        self, step: steps.Step, part_names: Optional[Sequence[str]] = None
+                    ) -> None:
+                part_names = [] if part_names is None else list(part_names)
                 raise ProviderExecError(
                     provider_name="fake",
                     command=["snapcraft", "pull"] + part_names,
@@ -298,6 +296,7 @@ class BuildProviderDebugCommandTestCase(LifecycleCommandsBaseTestCase):
 
             def shell(self):
                 shell_mock()
+
 
         patcher = mock.patch(
             "snapcraft.internal.build_providers.get_provider_for", return_value=Provider
@@ -483,15 +482,13 @@ class BuildProviderCleanCommandTestCase(LifecycleCommandsBaseTestCase):
         clean_project_mock = mock.Mock()
         clean_mock = mock.Mock()
 
+
+
         class Provider(ProviderImpl):
             def execute_step(
-                self, step: steps.Step, part_names: Optional[Sequence[str]] = None
-            ) -> None:
-                if part_names is None:
-                    part_names = []
-                else:
-                    part_names = list(part_names)
-
+                        self, step: steps.Step, part_names: Optional[Sequence[str]] = None
+                    ) -> None:
+                part_names = [] if part_names is None else list(part_names)
                 raise ProviderExecError(
                     provider_name="fake",
                     command=["snapcraft", "pull"] + part_names,
@@ -503,6 +500,7 @@ class BuildProviderCleanCommandTestCase(LifecycleCommandsBaseTestCase):
 
             def clean_parts(self, part_names):
                 clean_mock(part_names=part_names)
+
 
         patcher = mock.patch(
             "snapcraft.internal.build_providers.get_provider_for", return_value=Provider

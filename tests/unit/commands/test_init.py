@@ -68,8 +68,7 @@ class InitCommandExistingProjectTestCase(CommandBaseTestCase):
         """Test that init bails if project yaml already exists"""
         yaml_path = os.path.join("snap", "snapcraft.yaml")
 
-        dirname = os.path.dirname(yaml_path)
-        if dirname:
+        if dirname := os.path.dirname(yaml_path):
             os.mkdir(dirname)
 
         open(yaml_path, "w").close()
@@ -80,4 +79,4 @@ class InitCommandExistingProjectTestCase(CommandBaseTestCase):
             ["init"],
         )
 
-        self.assertThat(str(raised), Equals("{} already exists!".format(yaml_path)))
+        self.assertThat(str(raised), Equals(f"{yaml_path} already exists!"))

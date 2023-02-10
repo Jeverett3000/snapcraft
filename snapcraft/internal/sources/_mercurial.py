@@ -68,8 +68,8 @@ class Mercurial(Base):
             self._call_kwargs["stderr"] = subprocess.DEVNULL
 
     def pull(self):
+        ref = []
         if os.path.exists(os.path.join(self.source_dir, ".hg")):
-            ref = []
             if self.source_tag:
                 ref = ["-r", self.source_tag]
             elif self.source_commit:
@@ -78,7 +78,6 @@ class Mercurial(Base):
                 ref = ["-b", self.source_branch]
             cmd = [self.command, "pull"] + ref + [self.source]
         else:
-            ref = []
             if self.source_tag or self.source_branch or self.source_commit:
                 ref = [
                     "-u",

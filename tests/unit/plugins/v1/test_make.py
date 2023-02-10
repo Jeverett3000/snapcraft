@@ -64,8 +64,7 @@ class MakePluginTest(PluginsV1BaseTestCase):
         self.assertThat(
             makefile_type,
             Equals("string"),
-            'Expected "makefile" "type" to be "string", but it '
-            'was "{}"'.format(makefile_type),
+            f'Expected "makefile" "type" to be "string", but it was "{makefile_type}"',
         )
 
         make_parameters = properties["make-parameters"]
@@ -78,8 +77,7 @@ class MakePluginTest(PluginsV1BaseTestCase):
         self.assertThat(
             make_parameters_type,
             Equals("array"),
-            'Expected "make-parameters" "type" to be "array", but it '
-            'was "{}"'.format(make_parameters_type),
+            f'Expected "make-parameters" "type" to be "array", but it was "{make_parameters_type}"',
         )
 
         make_install_var = properties["make-install-var"]
@@ -92,16 +90,14 @@ class MakePluginTest(PluginsV1BaseTestCase):
         self.assertThat(
             make_install_var_type,
             Equals("string"),
-            'Expected "make-install-var" "type" to be "string", but it '
-            'was "{}"'.format(make_install_var_type),
+            f'Expected "make-install-var" "type" to be "string", but it was "{make_install_var_type}"',
         )
 
         make_install_var_default = make_install_var["default"]
         self.assertThat(
             make_install_var_default,
             Equals("DESTDIR"),
-            'Expected "make-install-var" "default" to be "DESTDIR", but it '
-            'was "{}"'.format(make_install_var_default),
+            f'Expected "make-install-var" "default" to be "DESTDIR", but it was "{make_install_var_default}"',
         )
 
     def test_get_build_properties(self):
@@ -132,8 +128,7 @@ class MakePluginTest(PluginsV1BaseTestCase):
             [
                 mock.call(["make", "-j2"], env=None),
                 mock.call(
-                    ["make", "install", "DESTDIR={}".format(plugin.installdir)],
-                    env=None,
+                    ["make", "install", f"DESTDIR={plugin.installdir}"], env=None
                 ),
             ]
         )
@@ -151,8 +146,7 @@ class MakePluginTest(PluginsV1BaseTestCase):
             [
                 mock.call(["make", "-j1"], env=None),
                 mock.call(
-                    ["make", "install", "DESTDIR={}".format(plugin.installdir)],
-                    env=None,
+                    ["make", "install", f"DESTDIR={plugin.installdir}"], env=None
                 ),
             ]
         )
@@ -175,7 +169,7 @@ class MakePluginTest(PluginsV1BaseTestCase):
                         "-f",
                         "makefile.linux",
                         "install",
-                        "DESTDIR={}".format(plugin.installdir),
+                        f"DESTDIR={plugin.installdir}",
                     ],
                     env=None,
                 ),
@@ -195,7 +189,7 @@ class MakePluginTest(PluginsV1BaseTestCase):
             [
                 mock.call(["make", "-j2"], env=None),
                 mock.call(
-                    ["make", "install", "PREFIX={}".format(plugin.installdir)], env=None
+                    ["make", "install", f"PREFIX={plugin.installdir}"], env=None
                 ),
             ]
         )
@@ -261,7 +255,7 @@ class MakePluginTest(PluginsV1BaseTestCase):
             [
                 mock.call(["make", "-j2"], env=env),
                 mock.call(
-                    ["make", "install", "DESTDIR={}".format(plugin.installdir)], env=env
+                    ["make", "install", f"DESTDIR={plugin.installdir}"], env=env
                 ),
             ]
         )

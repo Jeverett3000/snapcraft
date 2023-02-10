@@ -22,13 +22,15 @@ from snapcraft.internal import common, elf
 
 def runtime_env(root: str, arch_triplet: str) -> List[str]:
     """Set the environment variables required for running binaries."""
-    env = []
-
-    env.append(
-        'PATH="'
-        + ":".join(["{0}/usr/sbin", "{0}/usr/bin", "{0}/sbin", "{0}/bin"]).format(root)
-        + '${PATH:+:$PATH}"'
-    )
+    env = [
+        (
+            'PATH="'
+            + ":".join(
+                ["{0}/usr/sbin", "{0}/usr/bin", "{0}/sbin", "{0}/bin"]
+            ).format(root)
+            + '${PATH:+:$PATH}"'
+        )
+    ]
 
     # Add the default LD_LIBRARY_PATH
     paths = common.get_library_paths(root, arch_triplet)
@@ -53,25 +55,21 @@ def build_env(root: str, snap_name: str, arch_triplet: str) -> List[str]:
     """
     env = []
 
-    paths = common.get_include_paths(root, arch_triplet)
-    if paths:
-        for envvar in ["CPPFLAGS", "CFLAGS", "CXXFLAGS"]:
-            env.append(
-                formatting_utils.format_path_variable(
-                    envvar, paths, prepend="-isystem", separator=" "
-                )
+    if paths := common.get_include_paths(root, arch_triplet):
+        env.extend(
+            formatting_utils.format_path_variable(
+                envvar, paths, prepend="-isystem", separator=" "
             )
-
-    paths = common.get_library_paths(root, arch_triplet)
-    if paths:
+            for envvar in ["CPPFLAGS", "CFLAGS", "CXXFLAGS"]
+        )
+    if paths := common.get_library_paths(root, arch_triplet):
         env.append(
             formatting_utils.format_path_variable(
                 "LDFLAGS", paths, prepend="-L", separator=" "
             )
         )
 
-    paths = common.get_pkg_config_paths(root, arch_triplet)
-    if paths:
+    if paths := common.get_pkg_config_paths(root, arch_triplet):
         env.append(
             formatting_utils.format_path_variable(
                 "PKG_CONFIG_PATH", paths, prepend="", separator=":"
@@ -92,7 +90,7 @@ def environment_to_replacements(environment: Dict[str, str]) -> Dict[str, str]:
     replacements = {}  # type: Dict[str, str]
     for variable, value in environment.items():
         # Support both $VAR and ${VAR} syntax
-        replacements["${}".format(variable)] = value
+        replacements[f"${variable}"] = value
         replacements["${{{}}}".format(variable)] = value
 
     return replacements

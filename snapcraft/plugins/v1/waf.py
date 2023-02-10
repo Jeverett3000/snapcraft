@@ -70,8 +70,8 @@ class WafPlugin(PluginV1):
         if self.project.is_cross_compiling:
             env.extend(
                 [
-                    "CC={}-gcc".format(self.project.arch_triplet),
-                    "CXX={}-g++".format(self.project.arch_triplet),
+                    f"CC={self.project.arch_triplet}-gcc",
+                    f"CXX={self.project.arch_triplet}-g++",
                 ]
             )
         return env
@@ -86,6 +86,4 @@ class WafPlugin(PluginV1):
         self.run(["./waf", "distclean"])
         self.run(["./waf", "configure"] + self.options.configflags)
         self.run(["./waf", "build"])
-        self.run(
-            ["./waf", "install", "--destdir=" + self.installdir]
-        )  # target from snappy env
+        self.run(["./waf", "install", f"--destdir={self.installdir}"])

@@ -58,7 +58,7 @@ def apply_extensions(yaml_data: Dict[str, Any]) -> Dict[str, Any]:
     # applied.
     declared_extensions = collections.defaultdict(set)  # type: Dict[str, Set[str]]
 
-    for app_name, app_definition in yaml_data.get("apps", dict()).items():
+    for app_name, app_definition in yaml_data.get("apps", {}).items():
         extension_names = app_definition.get("extensions", [])
         _validate_extension_format(extension_names)
 
@@ -94,9 +94,7 @@ def find_extension(extension_name: str) -> Type[Extension]:
 
     try:
         extension_module = importlib.import_module(
-            "snapcraft.internal.project_loader._extensions.{}".format(
-                extension_name.replace("-", "_")
-            )
+            f'snapcraft.internal.project_loader._extensions.{extension_name.replace("-", "_")}'
         )
     except ImportError:
         raise errors.ExtensionNotFoundError(extension_name)
@@ -112,13 +110,11 @@ def supported_extension_names() -> List[str]:
     :rtype: list
     """
 
-    extension_names = []  # type: List[str]
-    for _, modname, _ in pkgutil.iter_modules([os.path.dirname(__file__)]):
-        # Only add non-private modules/packages to the extension list
-        if not modname.startswith("_"):
-            extension_names.append(modname)
-
-    return extension_names
+    return [
+        modname
+        for _, modname, _ in pkgutil.iter_modules([os.path.dirname(__file__)])
+        if not modname.startswith("_")
+    ]
 
 
 def _load_extension(
@@ -182,34 +178,33 @@ def _apply_extension(
 
 
 def _apply_extension_property(existing_property: Any, extension_property: Any):
-    if existing_property:
-        # If the property is not scalar, merge them
-        if isinstance(existing_property, list) and isinstance(extension_property, list):
-            merged = extension_property + existing_property
+    if not existing_property:
+        return extension_property
+    # If the property is not scalar, merge them
+    if isinstance(existing_property, list) and isinstance(extension_property, list):
+        merged = extension_property + existing_property
 
-            # If the lists are just strings, remove duplicates.
-            if all(isinstance(item, str) for item in merged):
-                return _remove_list_duplicates(merged)
+        # If the lists are just strings, remove duplicates.
+        if all(isinstance(item, str) for item in merged):
+            return _remove_list_duplicates(merged)
 
-            return merged
+        return merged
 
-        elif isinstance(existing_property, dict) and isinstance(
-            extension_property, dict
-        ):
-            for key, value in extension_property.items():
-                existing_property[key] = _apply_extension_property(
-                    existing_property.get(key), value
-                )
-            return existing_property
+    elif isinstance(existing_property, dict) and isinstance(
+        extension_property, dict
+    ):
+        for key, value in extension_property.items():
+            existing_property[key] = _apply_extension_property(
+                existing_property.get(key), value
+            )
         return existing_property
-
-    return extension_property
+    return existing_property
 
 
 def _remove_list_duplicates(seq: List[str]) -> List[str]:
     """De-dupe string list maintaining ordering."""
     seen: Set[str] = set()
-    deduped: List[str] = list()
+    deduped: List[str] = []
 
     for item in seq:
         if item not in seen:

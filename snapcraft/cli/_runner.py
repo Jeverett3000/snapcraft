@@ -98,9 +98,7 @@ def run(ctx, debug, catch_exceptions=False, **kwargs):
     if is_snapcraft_developer_debug:
         log_level = logging.DEBUG
         click.echo(
-            "Starting snapcraft {} from {}.".format(
-                snapcraft.__version__, os.path.dirname(__file__)
-            )
+            f"Starting snapcraft {snapcraft.__version__} from {os.path.dirname(__file__)}."
         )
     else:
         log_level = logging.INFO

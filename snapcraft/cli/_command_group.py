@@ -47,8 +47,7 @@ _CMD_DEPRECATION_NOTICES = {
 
 class SnapcraftGroup(click.Group):
     def get_command(self, ctx, cmd_name):
-        new_cmd_name = _CMD_DEPRECATED_REPLACEMENTS.get(cmd_name)
-        if new_cmd_name:
+        if new_cmd_name := _CMD_DEPRECATED_REPLACEMENTS.get(cmd_name):
             if _CMD_DEPRECATION_NOTICES.get(cmd_name):
                 deprecations.handle_deprecation_notice(
                     _CMD_DEPRECATION_NOTICES.get(cmd_name)
@@ -59,11 +58,10 @@ class SnapcraftGroup(click.Group):
                         new_cmd_name, cmd_name
                     )
                 )
-            cmd = click.Group.get_command(self, ctx, new_cmd_name)
+            return click.Group.get_command(self, ctx, new_cmd_name)
         else:
             cmd_name = _CMD_ALIASES.get(cmd_name, cmd_name)
-            cmd = click.Group.get_command(self, ctx, cmd_name)
-        return cmd
+            return click.Group.get_command(self, ctx, cmd_name)
 
     def list_commands(self, ctx):
         commands = super().list_commands(ctx)

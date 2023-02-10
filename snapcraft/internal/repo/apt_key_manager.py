@@ -51,13 +51,10 @@ class AptKeyManager:
 
         :returns: Path of key asset if match found, otherwise None.
         """
-        key_file = key_id[-8:].upper() + ".asc"
+        key_file = f"{key_id[-8:].upper()}.asc"
         key_path = self._key_assets / key_file
 
-        if key_path.exists():
-            return key_path
-
-        return None
+        return key_path if key_path.exists() else None
 
     def get_key_fingerprints(self, *, key: str) -> List[str]:
         """List fingerprints found in specified key.
@@ -130,8 +127,7 @@ class AptKeyManager:
 
         try:
             logger.debug(f"Executing: {cmd!r}")
-            env = dict()
-            env["LANG"] = "C.UTF-8"
+            env = {"LANG": "C.UTF-8"}
             subprocess.run(
                 cmd,
                 input=key.encode(),
@@ -155,9 +151,7 @@ class AptKeyManager:
 
         :raises: AptGPGKeyInstallError if unable to install key.
         """
-        env = dict()
-        env["LANG"] = "C.UTF-8"
-
+        env = {"LANG": "C.UTF-8"}
         cmd = [
             "sudo",
             "apt-key",

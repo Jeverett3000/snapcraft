@@ -212,9 +212,7 @@ class DashboardAPI(Requests):
         if not response.ok:
             raise errors.StoreReleaseError(data["name"], response)
 
-        response_json = response.json()
-
-        return response_json
+        return response.json()
 
     def push_assertion(self, snap_id, assertion, endpoint, force):
         if endpoint == "validations":
@@ -224,12 +222,12 @@ class DashboardAPI(Requests):
         else:
             raise RuntimeError("No valid endpoint")
 
-        url = "/dev/api/snaps/{}/{}".format(snap_id, endpoint)
+        url = f"/dev/api/snaps/{snap_id}/{endpoint}"
 
         # For `snap-developer`, revoking developers will require their uploads
         # to be invalidated.
         if force:
-            url = url + "?ignore_revoked_uploads"
+            url += "?ignore_revoked_uploads"
 
         response = self.put(
             url,
@@ -242,9 +240,7 @@ class DashboardAPI(Requests):
         try:
             response_json = response.json()
         except JSONDecodeError:
-            message = (
-                "Invalid response from the server when pushing validations: {} {}"
-            ).format(response.status_code, response)
+            message = f"Invalid response from the server when pushing validations: {response.status_code} {response}"
             logger.debug(message)
             raise errors.StoreValidationError(
                 snap_id, response, message="Invalid response from the server"
@@ -263,9 +259,7 @@ class DashboardAPI(Requests):
         try:
             response_json = response.json()
         except JSONDecodeError:
-            message = "Invalid response from the server when getting {}: {} {}".format(
-                endpoint, response.status_code, response
-            )
+            message = f"Invalid response from the server when getting {endpoint}: {response.status_code} {response}"
             logger.debug(message)
             raise errors.StoreValidationError(
                 snap_id, response, message="Invalid response from the server"
@@ -289,9 +283,9 @@ class DashboardAPI(Requests):
             qs["series"] = series
         if arch:
             qs["architecture"] = arch
-        url = "/dev/api/snaps/" + snap_id + "/state"
+        url = f"/dev/api/snaps/{snap_id}/state"
         if qs:
-            url += "?" + urlencode(qs)
+            url += f"?{urlencode(qs)}"
         response = self.get(
             url,
             headers={"Content-Type": "application/json", "Accept": "application/json"},
@@ -299,12 +293,10 @@ class DashboardAPI(Requests):
         if not response.ok:
             raise errors.StoreSnapStatusError(response, snap_id, series, arch)
 
-        response_json = response.json()
-
-        return response_json
+        return response.json()
 
     def close_channels(self, snap_id, channel_names):
-        url = "/dev/api/snaps/{}/close".format(snap_id)
+        url = f"/dev/api/snaps/{snap_id}/close"
         data = {"channels": channel_names}
         headers = {"Content-Type": "application/json", "Accept": "application/json"}
 
@@ -317,10 +309,7 @@ class DashboardAPI(Requests):
             return results["closed_channels"], results["channel_map_tree"]
         except (JSONDecodeError, KeyError):
             logger.debug(
-                "Invalid response from the server on channel closing:\n"
-                "{} {}\n{}".format(
-                    response.status_code, response.reason, response.content
-                )
+                f"Invalid response from the server on channel closing:\n{response.status_code} {response.reason}\n{response.content}"
             )
             raise errors.StoreChannelClosingError(response)
 
@@ -428,8 +417,8 @@ class DashboardAPI(Requests):
     ) -> validation_sets.ValidationSets:
         url = "/api/v2/validation-sets"
         if name is not None:
-            url += "/" + name
-        params = dict()
+            url += f"/{name}"
+        params = {}
         if sequence is not None:
             params["sequence"] = sequence
 

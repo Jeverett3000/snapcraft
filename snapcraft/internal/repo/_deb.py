@@ -220,9 +220,7 @@ def _run_dpkg_query_search(file_path: str) -> str:
             .strip()
         )
     except subprocess.CalledProcessError as call_error:
-        logger.debug(
-            "Error finding package for {}: {}".format(file_path, str(call_error))
-        )
+        logger.debug(f"Error finding package for {file_path}: {str(call_error)}")
         raise errors.FileProviderNotFound(file_path=file_path) from call_error
 
     # Remove diversions
@@ -267,11 +265,11 @@ def get_packages_in_base(*, base: str) -> List[DebPackage]:
 
     base_package_list_path = _get_dpkg_list_path(base)
     if not base_package_list_path.exists():
-        return list()
+        return []
 
     # Lines we care about in dpkg.list had the following format:
     # ii adduser 3.118ubuntu1 all add and rem
-    package_list = list()
+    package_list = []
     with fileinput.input(str(base_package_list_path)) as fp:
         for line in fp:
             if not line.startswith("ii "):
@@ -294,23 +292,21 @@ class Ubuntu(BaseRepo):
     @classmethod
     def get_packages_for_source_type(cls, source_type):
         if source_type == "bzr":
-            packages = {"bzr"}
+            return {"bzr"}
         elif source_type == "git":
-            packages = {"git"}
+            return {"git"}
         elif source_type == "tar":
-            packages = {"tar"}
-        elif source_type == "hg" or source_type == "mercurial":
-            packages = {"mercurial"}
-        elif source_type == "subversion" or source_type == "svn":
-            packages = {"subversion"}
+            return {"tar"}
+        elif source_type in ["hg", "mercurial"]:
+            return {"mercurial"}
+        elif source_type in ["subversion", "svn"]:
+            return {"subversion"}
         elif source_type == "rpm2cpio":
-            packages = {"rpm2cpio"}
+            return {"rpm2cpio"}
         elif source_type == "7zip":
-            packages = {"p7zip-full"}
+            return {"p7zip-full"}
         else:
-            packages = set()
-
-        return packages
+            return set()
 
     @classmethod
     def refresh_build_packages(cls) -> None:
@@ -431,9 +427,7 @@ class Ubuntu(BaseRepo):
                 ["sudo", "apt-mark", "auto"] + versionless_names, env=env
             )
         except subprocess.CalledProcessError as e:
-            logger.warning(
-                "Impossible to mark packages as auto-installed: {}".format(e)
-            )
+            logger.warning(f"Impossible to mark packages as auto-installed: {e}")
 
     @classmethod
     def fetch_stage_packages(

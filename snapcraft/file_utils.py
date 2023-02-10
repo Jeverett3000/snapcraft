@@ -119,12 +119,7 @@ def link(source: str, destination: str, *, follow_symlinks: bool = False) -> Non
 
     :raises SnapcraftCopyFileNotFoundError: If source doesn't exist.
     """
-    # Note that follow_symlinks doesn't seem to work for os.link, so we'll
-    # implement this logic ourselves using realpath.
-    source_path = source
-    if follow_symlinks:
-        source_path = os.path.realpath(source)
-
+    source_path = os.path.realpath(source) if follow_symlinks else source
     if not os.path.exists(os.path.dirname(destination)):
         create_similar_directory(
             os.path.dirname(source_path), os.path.dirname(destination)
@@ -267,7 +262,7 @@ def create_similar_directory(source: str, destination: str) -> None:
     try:
         os.chown(destination, uid, gid, follow_symlinks=False)
     except PermissionError as exception:
-        logger.debug("Unable to chown {}: {}".format(destination, exception))
+        logger.debug(f"Unable to chown {destination}: {exception}")
 
     shutil.copystat(source, destination, follow_symlinks=False)
 
@@ -399,8 +394,9 @@ def get_linker_version_from_file(linker_file: str) -> str:
     :raises snapcraft.internal.errors.errors.SnapcraftEnvironmentError:
        if linker_file is not of the expected format.
     """
-    m = re.search(r"ld-(?P<linker_version>[\d.]+).so$", linker_file)
-    if not m:
+    if m := re.search(r"ld-(?P<linker_version>[\d.]+).so$", linker_file):
+        return m["linker_version"]
+    else:
         # This is a programmatic error, we don't want to be friendly
         # about this.
         raise errors.SnapcraftEnvironmentError(
@@ -408,9 +404,6 @@ def get_linker_version_from_file(linker_file: str) -> str:
             "<root>/ld-<X>.<Y>.so. {!r} does not match that format. "
             "Ensure you are targeting an appropriate base".format(linker_file)
         )
-    linker_version = m.group("linker_version")
-
-    return linker_version
 
 
 def get_resolved_relative_path(relative_path: str, base_directory: str) -> str:
@@ -429,9 +422,7 @@ def get_resolved_relative_path(relative_path: str, base_directory: str) -> str:
     parent_abspath = os.path.realpath(os.path.join(base_directory, parent_relpath))
 
     filename_abspath = os.path.join(parent_abspath, filename)
-    filename_relpath = os.path.relpath(filename_abspath, base_directory)
-
-    return filename_relpath
+    return os.path.relpath(filename_abspath, base_directory)
 
 
 def _remove_readonly(func, path, excinfo):

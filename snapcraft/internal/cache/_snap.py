@@ -83,7 +83,7 @@ class SnapCache(SnapcraftProjectCache):
                 # using fileutils.link_or_copy.
                 shutil.copyfile(snap_filename, cached_snap_path)
         except OSError:
-            logger.warning("Unable to cache snap {}.".format(snap_filename))
+            logger.warning(f"Unable to cache snap {snap_filename}.")
         return cached_snap_path
 
     def get(self, *, deb_arch, snap_hash=None):
@@ -103,11 +103,14 @@ class SnapCache(SnapcraftProjectCache):
             return None
 
         if snap_hash:
-            for cached_hash in cached_hashes:
-                if cached_hash == snap_hash:
-                    return os.path.join(snap_cache_dir, cached_hash)
-            return None
-
+            return next(
+                (
+                    os.path.join(snap_cache_dir, cached_hash)
+                    for cached_hash in cached_hashes
+                    if cached_hash == snap_hash
+                ),
+                None,
+            )
         cached_snaps = [os.path.join(snap_cache_dir, f) for f in cached_hashes]
         return max(cached_snaps, key=os.path.getctime)
 
@@ -127,5 +130,5 @@ class SnapCache(SnapcraftProjectCache):
                     os.remove(cached_snap)
                     pruned_files_list.append(cached_snap)
                 except OSError:
-                    logger.warning("Unable to prune snap {}.".format(cached_snap))
+                    logger.warning(f"Unable to prune snap {cached_snap}.")
         return pruned_files_list

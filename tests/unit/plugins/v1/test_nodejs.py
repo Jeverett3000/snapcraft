@@ -119,9 +119,7 @@ class NodejsPluginPropertiesTest(unit.TestCase):
         self.assertThat(
             node_channel["type"],
             Equals("string"),
-            'Expected "nodejs-version" "type" to be '
-            '"string", but it was '
-            '"{}"'.format(node_channel["type"]),
+            f'Expected "nodejs-version" "type" to be "string", but it was "{node_channel["type"]}"',
         )
         self.assertTrue(
             "default" in node_channel,
@@ -130,9 +128,7 @@ class NodejsPluginPropertiesTest(unit.TestCase):
         self.assertThat(
             node_channel["default"],
             Equals(nodejs._NODEJS_VERSION),
-            'Expected "nodejs-version" "default" to be '
-            '"{}", but it was '
-            '"{}"'.format(nodejs._NODEJS_VERSION, node_channel["default"]),
+            f'Expected "nodejs-version" "default" to be "{nodejs._NODEJS_VERSION}", but it was "{node_channel["default"]}"',
         )
 
         # Check nodejs-yarn-version
@@ -149,9 +145,7 @@ class NodejsPluginPropertiesTest(unit.TestCase):
         self.assertThat(
             node_channel["type"],
             Equals("string"),
-            'Expected "nodejs-yarn-version" "type" to be '
-            '"string", but it was '
-            '"{}"'.format(node_channel["type"]),
+            f'Expected "nodejs-yarn-version" "type" to be "string", but it was "{node_channel["type"]}"',
         )
         self.assertTrue(
             "default" in node_channel,
@@ -160,9 +154,7 @@ class NodejsPluginPropertiesTest(unit.TestCase):
         self.assertThat(
             node_channel["default"],
             Equals(""),
-            'Expected "nodejs-yarn-version" "default" to be '
-            '"", but it was '
-            '"{}"'.format(node_channel["default"]),
+            f'Expected "nodejs-yarn-version" "default" to be "", but it was "{node_channel["default"]}"',
         )
 
         # Check nodejs-package-manager
@@ -179,9 +171,7 @@ class NodejsPluginPropertiesTest(unit.TestCase):
         self.assertThat(
             nodejs_package_manager["type"],
             Equals("string"),
-            'Expected "nodejs-package-manager" "type" to be '
-            '"string", but it was '
-            '"{}"'.format(nodejs_package_manager["type"]),
+            f'Expected "nodejs-package-manager" "type" to be "string", but it was "{nodejs_package_manager["type"]}"',
         )
         self.assertTrue(
             "default" in nodejs_package_manager,
@@ -190,9 +180,7 @@ class NodejsPluginPropertiesTest(unit.TestCase):
         self.assertThat(
             nodejs_package_manager["default"],
             Equals("yarn"),
-            'Expected "nodejs-package-manager" "default" to be '
-            '"yarn", but it was '
-            '"{}"'.format(nodejs_package_manager["default"]),
+            f'Expected "nodejs-package-manager" "default" to be "yarn", but it was "{nodejs_package_manager["default"]}"',
         )
 
     def test_get_pull_properties(self):

@@ -58,34 +58,29 @@ class Subversion(Base):
             self._call_kwargs["stderr"] = subprocess.DEVNULL
 
     def pull(self):
-        opts = []
-
-        if self.source_commit:
-            opts = ["-r", self.source_commit]
-
+        opts = ["-r", self.source_commit] if self.source_commit else []
         if os.path.exists(os.path.join(self.source_dir, ".svn")):
             self._run(
                 [self.command, "update"] + opts,
                 cwd=self.source_dir,
                 **self._call_kwargs
             )
+        elif os.path.isdir(self.source):
+            self._run(
+                [
+                    self.command,
+                    "checkout",
+                    f"file://{os.path.abspath(self.source)}",
+                    self.source_dir,
+                ]
+                + opts,
+                **self._call_kwargs,
+            )
         else:
-            if os.path.isdir(self.source):
-                self._run(
-                    [
-                        self.command,
-                        "checkout",
-                        "file://{}".format(os.path.abspath(self.source)),
-                        self.source_dir,
-                    ]
-                    + opts,
-                    **self._call_kwargs
-                )
-            else:
-                self._run(
-                    [self.command, "checkout", self.source, self.source_dir] + opts,
-                    **self._call_kwargs
-                )
+            self._run(
+                [self.command, "checkout", self.source, self.source_dir] + opts,
+                **self._call_kwargs
+            )
 
         self.source_details = self._get_source_details()
 

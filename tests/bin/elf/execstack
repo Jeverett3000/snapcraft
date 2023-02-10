@@ -9,7 +9,7 @@ def main():
     if basename == 'fake_elf-with-bad-execstack':
         exit_code = 1
     elif basename == 'fake_elf-with-execstack':
-        open('{}.execstack'.format(sys.argv[-1]), 'w').close()
+        open(f'{sys.argv[-1]}.execstack', 'w').close()
     sys.exit(exit_code)
 
 

@@ -58,17 +58,17 @@ def provides(
     is_dir = os.path.isdir(absolute_file_path)
     is_file = os.path.isfile(absolute_file_path)
 
-    providing_parts = set()  # type: Set[pluginhandler.PluginHandler]
-    for part, state in _part_states_for_step(step, parts):
-        if is_dir and relative_file_path in state.directories:
-            providing_parts.add(part)
-        elif is_file and relative_file_path in state.files:
-            providing_parts.add(part)
-
-    if not providing_parts:
+    if providing_parts := {
+        part
+        for part, state in _part_states_for_step(step, parts)
+        if is_dir
+        and relative_file_path in state.directories
+        or is_file
+        and relative_file_path in state.files
+    }:
+        return providing_parts
+    else:
         raise errors.UntrackedFileError(path)
-
-    return providing_parts
 
 
 # Implemented as a generator since loading up the state could be heavy
@@ -92,6 +92,5 @@ def _part_states_for_step(
         raise RuntimeError("Only the stage or prime step is supported!")
 
     for part in parts:
-        state = state_getter(part)
-        if state:
+        if state := state_getter(part):
             yield (part, state)

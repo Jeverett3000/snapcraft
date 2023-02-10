@@ -42,10 +42,10 @@ class _YAMLStorage(tinydb.Storage):
             with self.path.open() as fd:
                 db_data = yaml.safe_load(fd)
         except FileNotFoundError:
-            return dict()
+            return {}
 
         if not isinstance(db_data, dict) or any(
-            [not isinstance(k, str) for k in db_data.keys()]
+            not isinstance(k, str) for k in db_data.keys()
         ):
             raise RuntimeError(
                 f"Invalid datastore contents for {str(self.path)}: {db_data!r}"
@@ -88,11 +88,7 @@ class Datastore:
         self.path = path
         self._snapcraft_version = snapcraft_version
 
-        if read_only:
-            storage_class: Type[_YAMLStorage] = _YAMLStorageReadOnly
-        else:
-            storage_class = _YAMLStorage
-
+        storage_class = _YAMLStorageReadOnly if read_only else _YAMLStorage
         self.db = tinydb.TinyDB(str(path), storage=storage_class)
 
         logger.debug(f"Datastore init: {self.path} read_only={read_only}")

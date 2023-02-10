@@ -58,9 +58,7 @@ class TestDesktopExec:
         desktop_file_path = tmp_work_path / "app.desktop"
         with desktop_file_path.open("w") as desktop_file:
             print("[Desktop Entry]", file=desktop_file)
-            print(
-                "Exec={}".format(" ".join(["in-snap-exe", app_args])), file=desktop_file
-            )
+            print(f'Exec={" ".join(["in-snap-exe", app_args])}', file=desktop_file)
 
         d = DesktopFile(
             snap_name=snap_name,
@@ -113,7 +111,7 @@ class TestDesktopIcon:
         with desktop_file_path.open("w") as desktop_file:
             print("[Desktop Entry]", file=desktop_file)
             print("Exec=in-snap-exe", file=desktop_file)
-            print("Icon={}".format(icon), file=desktop_file)
+            print(f"Icon={icon}", file=desktop_file)
 
         if icon_path is not None:
             (tmp_work_path / icon_path).touch()
@@ -155,10 +153,10 @@ class TestDesktopIcon:
         with desktop_file_path.open("w") as desktop_file:
             print("[Desktop Entry]", file=desktop_file)
             print("Exec=in-snap-exe", file=desktop_file)
-            print("Icon={}".format(icon), file=desktop_file)
+            print(f"Icon={icon}", file=desktop_file)
             print("[Desktop Entry Two]", file=desktop_file)
             print("Exec=in-snap-exe2", file=desktop_file)
-            print("Icon={}".format(icon), file=desktop_file)
+            print(f"Icon={icon}", file=desktop_file)
 
         if icon_path is not None:
             (tmp_work_path / icon_path).touch()

@@ -130,13 +130,8 @@ def _update_yaml_with_extracted_metadata(
     metadata.update(stage_state.scriptlet_metadata)
     metadata.update(prime_state.scriptlet_metadata)
 
-    if not metadata:
-        # If we didn't end up with any metadata, let's ensure this part was
-        # actually supposed to parse info. If not, let's try to be very
-        # clear about what's happening, here. We do this after checking for
-        # metadata because metadata could be supplied by scriptlets, too.
-        if "parse-info" not in config_data["parts"][part_name]:
-            raise meta_errors.AdoptedPartNotParsingInfo(part_name)
+    if not metadata and "parse-info" not in config_data["parts"][part_name]:
+        raise meta_errors.AdoptedPartNotParsingInfo(part_name)
 
     _adopt_info(config_data, metadata, prime_dir)
 
@@ -148,8 +143,7 @@ def _adopt_info(
     extracted_metadata: _metadata.ExtractedMetadata,
     prime_dir: str,
 ):
-    ignored_keys = _adopt_keys(config_data, extracted_metadata, prime_dir)
-    if ignored_keys:
+    if ignored_keys := _adopt_keys(config_data, extracted_metadata, prime_dir):
         logger.warning(
             "The {keys} {plural_property} {plural_is} specified in adopted "
             "info as well as the YAML: taking the {plural_property} from the "
@@ -216,16 +210,19 @@ def _find_icon_file() -> Optional[pathlib.Path]:
 
     :returns: Path of found icon, None otherwise.
     """
-    for icon_path in (
-        pathlib.Path(asset_dir, "gui", icon_file)
-        for (asset_dir, icon_file) in itertools.product(
-            ["setup", "snap"], ["icon.png", "icon.svg"]
-        )
-    ):
-        if icon_path.exists():
-            return icon_path
-
-    return None
+    return next(
+        (
+            icon_path
+            for icon_path in (
+                pathlib.Path(asset_dir, "gui", icon_file)
+                for (asset_dir, icon_file) in itertools.product(
+                    ["setup", "snap"], ["icon.png", "icon.svg"]
+                )
+            )
+            if icon_path.exists()
+        ),
+        None,
+    )
 
 
 def _get_app_name_from_common_id(
@@ -255,14 +252,13 @@ def _desktop_file_exists(app_name: str) -> bool:
     :params app_name: The name of the snap app.
     :returns: True if the desktop file exists, False otherwise.
     """
-    for desktop_path in (
-        os.path.join(asset_dir, "gui", "{}.desktop".format(app_name))
-        for asset_dir in ["setup", "snap"]
-    ):
-        if os.path.exists(desktop_path):
-            return True
-    else:
-        return False
+    return any(
+        os.path.exists(desktop_path)
+        for desktop_path in (
+            os.path.join(asset_dir, "gui", f"{app_name}.desktop")
+            for asset_dir in ["setup", "snap"]
+        )
+    )
 
 
 def _update_yaml_with_defaults(
@@ -296,10 +292,8 @@ def _update_yaml_with_defaults(
     ]
     default_adapter = app_schema["adapter"]["default"]
     for app in config_data.get("apps", {}).values():
-        if "adapter" not in app and "command-chain" not in app:
-            app["adapter"] = default_adapter
-        elif "adapter" not in app and "command-chain" in app:
-            app["adapter"] = "full"
+        if "adapter" not in app:
+            app["adapter"] = default_adapter if "command-chain" not in app else "full"
 
 
 def _check_passthrough_duplicates_section(yaml: Dict[str, Any]) -> None:
@@ -309,8 +303,7 @@ def _check_passthrough_duplicates_section(yaml: Dict[str, Any]) -> None:
         return
 
     passthrough = yaml["passthrough"]
-    duplicates = list(yaml.keys() & passthrough.keys())
-    if duplicates:
+    if duplicates := list(yaml.keys() & passthrough.keys()):
         raise meta_errors.AmbiguousPassthroughKeyError(duplicates)
 
 
@@ -349,7 +342,7 @@ class _SnapPackaging:
         self._original_snapcraft_yaml = project_config.project.info.get_raw_snapcraft()
 
         self._install_path_pattern = re.compile(
-            r"{}/[a-z0-9][a-z0-9+-]*/install".format(re.escape(self._parts_dir))
+            f"{re.escape(self._parts_dir)}/[a-z0-9][a-z0-9+-]*/install"
         )
 
         os.makedirs(self.meta_dir, exist_ok=True)
@@ -462,9 +455,9 @@ class _SnapPackaging:
     def warn_ld_library_paths(self) -> None:
         root_ld_library_path = self._snap_meta.environment.get("LD_LIBRARY_PATH")
         # Dictionary of app names with LD_LIBRARY_PATH in their environment.
-        app_environment: Dict[str, str] = dict()
+        app_environment: Dict[str, str] = {}
 
-        for app_name, app_props in self._config_data.get("apps", dict()).items():
+        for app_name, app_props in self._config_data.get("apps", {}).items():
             with contextlib.suppress(KeyError):
                 app_environment[app_name] = app_props["environment"]["LD_LIBRARY_PATH"]
 
@@ -472,16 +465,13 @@ class _SnapPackaging:
             return
 
         ld_library_path_empty: Set[str] = set()
-        if root_ld_library_path is None and app_environment:
+        if root_ld_library_path is None:
             ld_library_path_empty = {
                 name
                 for name, ld_env in app_environment.items()
                 if "$LD_LIBRARY_PATH" in ld_env or "${LD_LIBRARY_PATH}" in ld_env
             }
-        elif (
-            root_ld_library_path is not None
-            and "LD_LIBRARY_PATH" in root_ld_library_path
-        ):
+        elif "LD_LIBRARY_PATH" in root_ld_library_path:
             ld_library_path_empty = {"."}
 
         _EMPTY_LD_LIBRARY_PATH_ITEM_PATTERN = re.compile("^:|::|:$")
@@ -498,12 +488,7 @@ class _SnapPackaging:
 
         if ld_library_path_empty:
             logger.warning(
-                "CVE-2020-27348: A potentially empty LD_LIBRARY_PATH has been set for environment "
-                "in {}. "
-                "The current working directory will be added to the library path if empty. "
-                "This can cause unexpected libraries to be loaded.".format(
-                    formatting_utils.humanize_list(sorted(ld_library_path_empty), "and")
-                )
+                f'CVE-2020-27348: A potentially empty LD_LIBRARY_PATH has been set for environment in {formatting_utils.humanize_list(sorted(ld_library_path_empty), "and")}. The current working directory will be added to the library path if empty. This can cause unexpected libraries to be loaded.'
             )
 
     def setup_assets(self) -> None:
@@ -536,11 +521,12 @@ class _SnapPackaging:
             file_utils.link_or_copy(
                 "gadget.yaml", os.path.join(self.meta_dir, "gadget.yaml")
             )
-        if self._config_data.get("type", "") == "kernel":
-            if os.path.exists("kernel.yaml"):
-                file_utils.link_or_copy(
-                    "kernel.yaml", os.path.join(self.meta_dir, "kernel.yaml")
-                )
+        if self._config_data.get("type", "") == "kernel" and os.path.exists(
+            "kernel.yaml"
+        ):
+            file_utils.link_or_copy(
+                "kernel.yaml", os.path.join(self.meta_dir, "kernel.yaml")
+            )
 
     def _assemble_runtime_environment(self) -> str:
         # Classic confinement or building on a host that does not match the target base
@@ -551,7 +537,7 @@ class _SnapPackaging:
             # https://bugs.launchpad.net/snapd/+bug/1860369
             return ""
 
-        env = list()
+        env = []
         if self._project_config.project._snap_meta.base == "core18":
             common.env = self._project_config.snap_env()
             assembled_env = common.assemble_env()
@@ -565,14 +551,10 @@ class _SnapPackaging:
             runtime_env = project_loader.runtime_env(
                 self._prime_dir, self._project_config.project.arch_triplet
             )
-            for e in runtime_env:
-                env.append(re.sub(self._prime_dir, "$SNAP", e))
-
+            env.extend(re.sub(self._prime_dir, "$SNAP", e) for e in runtime_env)
         if all(
-            [
-                part._build_attributes.enable_patchelf()
-                for part in self._project_config.all_parts
-            ]
+            part._build_attributes.enable_patchelf()
+            for part in self._project_config.all_parts
         ):
             # All ELF files have had rpath and interpreter patched. Strip all LD_LIBRARY_PATH variables
             env = [e for e in env if not e.startswith("export LD_LIBRARY_PATH=")]
@@ -733,14 +715,11 @@ class _SnapPackaging:
     def _write_wrap_exe(self, wrapexec, wrappath, shebang=None, args=None, cwd=None):
         assembled_env = self._assemble_runtime_environment()
 
-        if args:
-            quoted_args = ['"{}"'.format(arg) for arg in args]
-        else:
-            quoted_args = []
+        quoted_args = [f'"{arg}"' for arg in args] if args else []
         args = " ".join(quoted_args) + ' "$@"' if args else '"$@"'
-        cwd = "cd {}".format(cwd) if cwd else ""
+        cwd = f"cd {cwd}" if cwd else ""
 
-        executable = '"{}"'.format(wrapexec)
+        executable = f'"{wrapexec}"'
 
         if shebang:
             if shebang.startswith("/usr/bin/env "):
@@ -751,14 +730,14 @@ class _SnapPackaging:
                 # If the shebang was pointing to and executable within the
                 # local 'parts' dir, have the wrapper script execute it
                 # directly, since we can't use $SNAP in the shebang itself.
-                executable = '"{}" "{}"'.format(new_shebang, wrapexec)
+                executable = f'"{new_shebang}" "{wrapexec}"'
 
         with open(wrappath, "w+") as f:
             print("#!/bin/sh", file=f)
             if cwd:
-                print("{}".format(cwd), file=f)
+                print(f"{cwd}", file=f)
             print(assembled_env, file=f)
-            print("exec {} {}".format(executable, args), file=f)
+            print(f"exec {executable} {args}", file=f)
 
         os.chmod(wrappath, 0o755)
 

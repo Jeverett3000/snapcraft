@@ -42,8 +42,8 @@ class FakeStoreAPIServer(base.BaseFakeServer):
         self.account_keys = []
         self.registered_names = {}
         self.pushed_snaps = set()
-        self.validation_set_revisions = dict()
-        self.validation_set_assertions = dict()
+        self.validation_set_revisions = {}
+        self.validation_set_assertions = {}
 
     def configure(self, configurator):
         # POST
@@ -302,7 +302,7 @@ class FakeStoreAPIServer(base.BaseFakeServer):
                 )
 
         permission = request.path.split("/")[-1]
-        logger.debug("Handling ACL request for {}".format(permission))
+        logger.debug(f"Handling ACL request for {permission}")
         sso_host = urllib.parse.urlparse(
             os.environ.get("UBUNTU_ONE_SSO_URL", "http://localhost")
         ).netloc
@@ -352,7 +352,7 @@ class FakeStoreAPIServer(base.BaseFakeServer):
         if self.fake_store.needs_refresh:
             return self._refresh_error()
         data = request.json_body
-        logger.debug("Handling account-key request with content {}".format(data))
+        logger.debug(f"Handling account-key request with content {data}")
         account_key_request = data["account_key_request"]
 
         if account_key_request == "test-not-implemented":
@@ -391,10 +391,10 @@ class FakeStoreAPIServer(base.BaseFakeServer):
         # Don't copy this.
         key_name = re.search(
             "^name: (.*)$", account_key_request, flags=re.MULTILINE
-        ).group(1)
+        )[1]
         key_id = re.search(
             "^public-key-sha3-384: (.*)$", account_key_request, flags=re.MULTILINE
-        ).group(1)
+        )[1]
         self.account_keys.append({"name": key_name, "public-key-sha3-384": key_id})
         account_key = {
             "account_key": {
@@ -519,9 +519,7 @@ class FakeStoreAPIServer(base.BaseFakeServer):
     def snap_push(self, request):
         if self.fake_store.needs_refresh:
             return self._refresh_error()
-        logger.debug(
-            "Handling upload request with content {}".format(request.json_body)
-        )
+        logger.debug(f"Handling upload request with content {request.json_body}")
 
         name = request.json_body["name"]
         if name == "test-snap-unregistered":
@@ -536,7 +534,6 @@ class FakeStoreAPIServer(base.BaseFakeServer):
                 }
             ).encode()
             response_code = 404
-            content_type = "application/json"
         elif name == "test-snap-forbidden":
             payload = json.dumps(
                 {
@@ -549,10 +546,8 @@ class FakeStoreAPIServer(base.BaseFakeServer):
                 }
             ).encode()
             response_code = 403
-            content_type = "application/json"
         else:
             response_code = 202
-            content_type = "application/json"
             if name == "test-review-snap":
                 details_path = "details/upload-id/review-snap"
             elif name == "test-duplicate-snap":
@@ -567,10 +562,11 @@ class FakeStoreAPIServer(base.BaseFakeServer):
             payload = json.dumps(
                 {
                     "status_details_url": urllib.parse.urljoin(
-                        "http://localhost:{}/".format(self.server_port), details_path
+                        f"http://localhost:{self.server_port}/", details_path
                     )
                 }
             ).encode()
+        content_type = "application/json"
         return response.Response(
             payload, response_code, [("Content-Type", content_type)]
         )
@@ -578,9 +574,7 @@ class FakeStoreAPIServer(base.BaseFakeServer):
     def snap_release(self, request):  # noqa: C901
         if self.fake_store.needs_refresh:
             return self._refresh_error()
-        logger.debug(
-            "Handling release request with content {}".format(request.json_body)
-        )
+        logger.debug(f"Handling release request with content {request.json_body}")
         response_code = 200
         content_type = "application/json"
         name = request.json_body["name"]
@@ -724,9 +718,7 @@ class FakeStoreAPIServer(base.BaseFakeServer):
     def register_name(self, request):
         if self.fake_store.needs_refresh:
             return self._refresh_error()
-        logger.debug(
-            "Handling registration request with content {}".format(request.json_body)
-        )
+        logger.debug(f"Handling registration request with content {request.json_body}")
         snap_name = request.json_body["snap_name"]
         store = request.json_body.get("store")
 
@@ -779,26 +771,13 @@ class FakeStoreAPIServer(base.BaseFakeServer):
     def _register_name_invalid(self, snap_name):
         # Emulates the current Store behaviour and never combines errors.
         if len(snap_name) > 40:
-            msg = (
-                "The name '{}' is not valid: it should be no longer than"
-                " 40 characters."
-            ).format(snap_name)
+            msg = f"The name '{snap_name}' is not valid: it should be no longer than 40 characters."
         elif snap_name.startswith("-") or snap_name.endswith("-"):
-            msg = (
-                "The name '{}' is not valid: it should not start"
-                " nor end with a hyphen."
-            ).format(snap_name)
+            msg = f"The name '{snap_name}' is not valid: it should not start nor end with a hyphen."
         elif "--" in snap_name:
-            msg = (
-                "The name '{}' is not valid: it should not have"
-                " two hyphens in a row."
-            ).format(snap_name)
+            msg = f"The name '{snap_name}' is not valid: it should not have two hyphens in a row."
         else:
-            msg = (
-                "The name '{}' is not valid: it should only have"
-                " ASCII lowercase letters, numbers, and hyphens,"
-                " and must have at least one letter."
-            ).format(snap_name)
+            msg = f"The name '{snap_name}' is not valid: it should only have ASCII lowercase letters, numbers, and hyphens, and must have at least one letter."
 
         payload = json.dumps(
             {"error_list": [{"code": "invalid", "message": msg}]}
@@ -835,7 +814,6 @@ class FakeStoreAPIServer(base.BaseFakeServer):
         else:
             if request.json_body["latest_tos_accepted"] is not True:
                 response_code = 400
-                content_type = "application/json"
                 payload = json.dumps(
                     {
                         "error_list": [
@@ -849,7 +827,6 @@ class FakeStoreAPIServer(base.BaseFakeServer):
                 ).encode()
             else:
                 response_code = 200
-                content_type = "application/json"
                 payload = json.dumps(
                     {
                         "content": {
@@ -861,6 +838,7 @@ class FakeStoreAPIServer(base.BaseFakeServer):
                     }
                 ).encode()
 
+            content_type = "application/json"
         return response.Response(
             payload, response_code, [("Content-Type", content_type)]
         )
@@ -891,10 +869,10 @@ class FakeStoreAPIServer(base.BaseFakeServer):
                     if name == "test-conflict-with-braces":
                         conflict_value = "value with {braces}"
                     else:
-                        conflict_value = value + "-changed"
+                        conflict_value = f"{value}-changed"
                     error_list.append(
                         {
-                            "message": "Conflict on {}".format(name),
+                            "message": f"Conflict on {name}",
                             "code": "conflict",
                             "extra": {
                                 "name": name,
@@ -937,10 +915,11 @@ class FakeStoreAPIServer(base.BaseFakeServer):
                 info = json.loads(request.params["info"].decode())
             else:
                 info = json.loads(request.params["info"])
-            invalid = any([e.get("filename", "").endswith("invalid") for e in info])
-            conflict = any([e.get("filename", "").endswith("conflict") for e in info])
+            invalid = any(e.get("filename", "").endswith("invalid") for e in info)
+            conflict = any(e.get("filename", "").endswith("conflict") for e in info)
             conflict_with_braces = any(
-                [e.get("filename", "").endswith("conflict-with-braces") for e in info]
+                e.get("filename", "").endswith("conflict-with-braces")
+                for e in info
             )
             if invalid:
                 err = {
@@ -1177,19 +1156,16 @@ class FakeStoreAPIServer(base.BaseFakeServer):
                 "price": None,
                 "since": "2016-12-12T01:01:01Z",
             },
-        }
-        snaps.update(
-            {
-                name: {
-                    "snap-id": snap_data["snap_id"],
-                    "status": "Approved",
-                    "private": snap_data["private"],
-                    "price": None,
-                    "since": "2016-12-12T01:01:01Z",
-                }
-                for name, snap_data in self.registered_names.items()
+        } | {
+            name: {
+                "snap-id": snap_data["snap_id"],
+                "status": "Approved",
+                "private": snap_data["private"],
+                "price": None,
+                "since": "2016-12-12T01:01:01Z",
             }
-        )
+            for name, snap_data in self.registered_names.items()
+        }
         payload = json.dumps(
             {
                 "account_id": "abcd",
@@ -1501,7 +1477,12 @@ class FakeStoreAPIServer(base.BaseFakeServer):
     def snap_developers(self, request):
         logger.debug("Handling snap developers request")
         snap_id = request.matchdict["snap_id"]
-        if snap_id == "good":
+        if (
+            snap_id == "good"
+            or snap_id not in ("test-snap-id-with-dev", "revoked", "no-revoked")
+            and snap_id != "no-dev"
+            and snap_id == "badrequest"
+        ):
             payload = json.dumps({"snap_developer": {}}).encode()
             response_code = 200
         elif snap_id in ("test-snap-id-with-dev", "revoked", "no-revoked"):
@@ -1532,9 +1513,6 @@ class FakeStoreAPIServer(base.BaseFakeServer):
                 }
             ).encode()
             response_code = 403
-        elif snap_id == "badrequest":
-            payload = json.dumps({"snap_developer": {}}).encode()
-            response_code = 200
         content_type = "application/json"
         return response.Response(
             payload, response_code, [("Content-Type", content_type)]
@@ -1562,10 +1540,7 @@ class FakeStoreAPIServer(base.BaseFakeServer):
 
     def put_snap_developers(self, request):
         snap_id = request.matchdict["snap_id"]
-        if snap_id in ("good", "test-snap-id-with-dev"):
-            payload = request.body
-            response_code = 200
-        elif snap_id == "no-dev":
+        if snap_id in ("good", "test-snap-id-with-dev", "no-dev"):
             payload = request.body
             response_code = 200
         elif snap_id == "badrequest":

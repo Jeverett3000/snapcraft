@@ -136,8 +136,7 @@ def _get_platform_architecture():
         architecture = _WINDOWS_TRANSLATIONS.get(architecture)
 
     if platform.architecture()[0] == "32bit":
-        userspace = _32BIT_USERSPACE_ARCHITECTURE.get(architecture)
-        if userspace:
+        if userspace := _32BIT_USERSPACE_ARCHITECTURE.get(architecture):
             architecture = userspace
 
     return architecture
@@ -235,9 +234,9 @@ class ProjectOptions:
         self._stage_dir = os.path.join(work_dir, "stage")
         self._prime_dir = os.path.join(work_dir, "prime")
 
-        logger.debug("Parts dir {}".format(self._parts_dir))
-        logger.debug("Stage dir {}".format(self._stage_dir))
-        logger.debug("Prime dir {}".format(self._prime_dir))
+        logger.debug(f"Parts dir {self._parts_dir}")
+        logger.debug(f"Stage dir {self._stage_dir}")
+        logger.debug(f"Prime dir {self._prime_dir}")
 
         self._set_machine(target_deb_arch)
 

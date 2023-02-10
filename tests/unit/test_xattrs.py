@@ -75,7 +75,7 @@ class TestXattrs(unit.TestCase):
             )
 
     def test_symlink(self):
-        test_symlink = self.test_file + "-symlink"
+        test_symlink = f"{self.test_file}-symlink"
         os.symlink(self.test_file, test_symlink)
 
         if sys.platform != "linux":

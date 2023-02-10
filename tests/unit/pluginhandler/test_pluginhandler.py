@@ -553,17 +553,13 @@ class TestMigratePartFiles:
         files, dirs = pluginhandler._migratable_filesets(fileset, srcdir.as_posix())
         pluginhandler._migrate_files(files, dirs, srcdir.as_posix(), dstdir.as_posix())
 
-        expected = []
-        for item in result:
-            expected.append(os.path.join(tmp_path, item))
+        expected = [os.path.join(tmp_path, item) for item in result]
         expected.sort()
 
         result = []
         for root, subdirs, files in os.walk(dstdir):
-            for item in files:
-                result.append(os.path.join(root, item))
-            for item in subdirs:
-                result.append(os.path.join(root, item))
+            result.extend(os.path.join(root, item) for item in files)
+            result.extend(os.path.join(root, item) for item in subdirs)
         result.sort()
 
         assert result == expected
@@ -837,13 +833,13 @@ class RealStageTestCase(unit.TestCase):
 
         fake_install_build_packages = fixtures.MockPatch(
             "snapcraft.internal.lifecycle._runner._install_build_packages",
-            return_value=list(),
+            return_value=[],
         )
         self.useFixture(fake_install_build_packages)
 
         fake_install_build_snaps = fixtures.MockPatch(
             "snapcraft.internal.lifecycle._runner._install_build_snaps",
-            return_value=list(),
+            return_value=[],
         )
         self.useFixture(fake_install_build_snaps)
 
@@ -927,7 +923,7 @@ Requires: cairo gee-0.8 glib-2.0 gio-unix-2.0 gobject-2.0
         # Simulate a .pc file was installed
         os.makedirs(os.path.dirname(stage_pc_install))
         with open(stage_pc_install, "w") as f:
-            f.write("prefix={}/usr\n".format(install_path))
+            f.write(f"prefix={install_path}/usr\n")
             f.write("exec_prefix=${prefix}\n")
             f.write("libdir=${prefix}/lib\n")
             f.write("includedir=${prefix}/include\n")
@@ -1300,40 +1296,40 @@ class CollisionTestCase(unit.TestCase):
         tmpdir = tmpdirObject.name
 
         part1 = self.load_part("part1")
-        part1.part_install_dir = tmpdir + "/install1"
-        os.makedirs(part1.part_install_dir + "/a")
-        open(part1.part_install_dir + "/a/1", mode="w").close()
-        with open(part1.part_install_dir + "/file.pc", mode="w") as f:
-            f.write("prefix={}\n".format(part1.part_install_dir))
+        part1.part_install_dir = f"{tmpdir}/install1"
+        os.makedirs(f"{part1.part_install_dir}/a")
+        open(f"{part1.part_install_dir}/a/1", mode="w").close()
+        with open(f"{part1.part_install_dir}/file.pc", mode="w") as f:
+            f.write(f"prefix={part1.part_install_dir}\n")
             f.write("Name: File\n")
 
         part2 = self.load_part("part2")
-        part2.part_install_dir = tmpdir + "/install2"
-        os.makedirs(part2.part_install_dir + "/a")
-        with open(part2.part_install_dir + "/1", mode="w") as f:
+        part2.part_install_dir = f"{tmpdir}/install2"
+        os.makedirs(f"{part2.part_install_dir}/a")
+        with open(f"{part2.part_install_dir}/1", mode="w") as f:
             f.write("1")
-        open(part2.part_install_dir + "/2", mode="w").close()
-        with open(part2.part_install_dir + "/a/2", mode="w") as f:
+        open(f"{part2.part_install_dir}/2", mode="w").close()
+        with open(f"{part2.part_install_dir}/a/2", mode="w") as f:
             f.write("a/2")
-        with open(part2.part_install_dir + "/file.pc", mode="w") as f:
-            f.write("prefix={}\n".format(part2.part_install_dir))
+        with open(f"{part2.part_install_dir}/file.pc", mode="w") as f:
+            f.write(f"prefix={part2.part_install_dir}\n")
             f.write("Name: File\n")
 
         part3 = self.load_part("part3")
-        part3.part_install_dir = tmpdir + "/install3"
-        os.makedirs(part3.part_install_dir + "/a")
-        os.makedirs(part3.part_install_dir + "/b")
-        with open(part3.part_install_dir + "/1", mode="w") as f:
+        part3.part_install_dir = f"{tmpdir}/install3"
+        os.makedirs(f"{part3.part_install_dir}/a")
+        os.makedirs(f"{part3.part_install_dir}/b")
+        with open(f"{part3.part_install_dir}/1", mode="w") as f:
             f.write("2")
-        with open(part2.part_install_dir + "/2", mode="w") as f:
+        with open(f"{part2.part_install_dir}/2", mode="w") as f:
             f.write("1")
-        open(part3.part_install_dir + "/a/2", mode="w").close()
+        open(f"{part3.part_install_dir}/a/2", mode="w").close()
 
         part4 = self.load_part("part4")
-        part4.part_install_dir = tmpdir + "/install4"
+        part4.part_install_dir = f"{tmpdir}/install4"
         os.makedirs(part4.part_install_dir)
-        with open(part4.part_install_dir + "/file.pc", mode="w") as f:
-            f.write("prefix={}\n".format(part4.part_install_dir))
+        with open(f"{part4.part_install_dir}/file.pc", mode="w") as f:
+            f.write(f"prefix={part4.part_install_dir}\n")
             f.write("Name: ConflictFile\n")
 
         # Create a new part with a symlink that collides with part1's
