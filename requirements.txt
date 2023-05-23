@@ -38,7 +38,7 @@ pytz==2021.1
 pyxdg==0.27
 PyYAML==5.3
 raven==6.10.0
-requests==2.26.0
+requests==2.31.0
 requests-toolbelt==0.9.1
 requests-unixsocket==0.2.0
 SecretStorage==3.3.1
