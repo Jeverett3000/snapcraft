@@ -84,7 +84,7 @@ if sys.platform == "win32":
 install_requires = [
     "attrs",
     "click",
-    "cryptography==3.4",
+    "cryptography==41.0.2",
     "gnupg",
     "jsonschema==2.5.1",
     "launchpadlib",
